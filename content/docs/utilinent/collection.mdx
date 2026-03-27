@@ -1,0 +1,53 @@
+---
+title: Iterative Rendering
+description: For and Repeat
+---
+
+# Iterative Rendering
+
+These components replace repetitive `map()` and array-from boilerplate with names that describe intent.
+
+## `For`
+
+`For` is a declarative alternative to `Array.prototype.map`.
+
+### Example
+
+```tsx
+import { For } from '@ilokesto/utilinent';
+
+function UserList({ users }: { users: Array<{ id: string; name: string }> }) {
+  return (
+    <For.ul each={users} fallback={<li>No users found</li>}>
+      {(user, index) => <li key={user.id}>{index}: {user.name}</li>}
+    </For.ul>
+  );
+}
+```
+
+- `each` accepts an array, `null`, or `undefined`.
+- `fallback` is rendered when `each` is empty or missing.
+- `children` receives `(item, index)`.
+
+## `Repeat`
+
+`Repeat` renders `children(index)` for each integer from `0` to `times - 1`.
+
+### Example
+
+```tsx
+import { Repeat } from '@ilokesto/utilinent';
+
+function SkeletonLoader() {
+  return <Repeat times={3}>{(i) => <div key={i}>Loading row...</div>}</Repeat>;
+}
+```
+
+If `times` is not a positive integer, `Repeat` renders `fallback` instead.
+
+Like `For`, `Repeat` is also proxy-backed, so tagged variants such as `Repeat.ul` are available.
+
+## Performance tips
+
+- provide stable `key` props inside the rendered children
+- treat these as readability helpers, not as a replacement for React's reconciliation rules

@@ -1,0 +1,34 @@
+---
+title: Introduction
+description: Declarative rendering and composition helpers for React
+---
+
+# @ilokesto/utilinent
+
+`@ilokesto/utilinent` is a React utility library for declarative rendering patterns. Instead of repeating ternaries, map callbacks, viewport wiring, and composition boilerplate in every component, it gives those patterns names.
+
+The package is built around a few families of exports:
+
+- conditional rendering helpers like `Show`, `Switch`, and `Match`
+- collection helpers like `For` and `Repeat`
+- async and visibility helpers like `Mount`, `Observer`, `Slacker`, and `useIntersectionObserver`
+- composition and extensibility helpers like `Slot`, `Slottable`, `createProxy`, and `PluginManager`
+
+## Installation
+
+```bash
+pnpm add @ilokesto/utilinent
+```
+
+## Mental model
+
+- **Declarative over ad hoc JSX logic**: move conditional and collection rules into named primitives.
+- **Composition over wrapper nesting**: use `Slot` and `Slottable` when a component should pass behavior down to a child.
+- **Extensibility over one-off helpers**: use proxy and plugin helpers when you want new tagged variants instead of duplicating component definitions.
+
+## Start with these pages
+
+- [`Conditional Rendering`](/en/utilinent/conditional)
+- [`Iterative Rendering`](/en/utilinent/collection)
+- [`Async & Visibility`](/en/utilinent/async)
+- [`Composition`](/en/utilinent/composition)

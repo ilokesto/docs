@@ -5,7 +5,7 @@ description: 최소한의 바닐라 JS 스토어 베이스
 
 # @ilokesto/store
 
-`@ilokesto/store`는 ilokesto 상태 관리 계층의 가장 작은 구성요소입니다. `Store<T>` 클래스 하나만 제공하며, 상태 보관, 상태 교체, 변경 구독이라는 핵심 기능에만 집중합니다.
+`@ilokesto/store`는 ilokesto 상태 관리 계층의 가장 작은 구성요소입니다. `Store<T>` 클래스 하나를 중심으로 상태 보관, 상태 교체, 변경 구독, 그리고 가벼운 미들웨어 등록 기능을 제공합니다.
 
 ## 설치
 
@@ -15,7 +15,7 @@ pnpm add @ilokesto/store
 
 ## 무엇을 위한 패키지인가
 
-이 패키지는 React hook, selector, middleware, persistence 같은 상위 기능을 포함하지 않습니다. 대신 다른 패키지나 런타임이 그 위에 얹을 수 있는 바닐라 store 코어를 제공합니다.
+이 패키지는 React hook, persistence helper, devtools 같은 상위 기능을 포함하지 않습니다. 대신 다른 패키지나 런타임이 그 위에 얹을 수 있는 바닐라 store 코어를 제공합니다.
 
 ## 문서 구성
 

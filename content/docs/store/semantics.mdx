@@ -64,6 +64,19 @@ Listeners are stored in a `Set`, so duplicate listener references are naturally 
 
 Notification also iterates over `Array.from(this.listeners)`, which means the store walks a snapshot of the current listeners when dispatching updates. That keeps notification safe even if a listener unsubscribes during notification.
 
-## Action names
+## Middleware behavior
 
-The API may allow passing an optional string as a second argument to `setState`. However, this `actionName` is currently **unused**. It is reserved for future tooling but does not affect the store's runtime behavior.
+Current versions of `@ilokesto/store` support a middleware chain directly on the store instance.
+
+- Middleware are stored in an **array**, not a `Set`.
+- That means registration order is preserved.
+- It also means the same middleware function can be registered more than once.
+
+When `setState()` runs, the store builds a runner with `reduceRight()`. In practice, the middleware near the front of the array becomes the outer part of the chain and sees the update first.
+
+That gives you two explicit ways to control order:
+
+- `pushMiddleware()` — add after existing middleware
+- `unshiftMiddleware()` — add before existing middleware
+
+Use that distinction when building logging, validation, or persistence flows on top of the vanilla store.

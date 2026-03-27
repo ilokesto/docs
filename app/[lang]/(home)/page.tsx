@@ -9,11 +9,11 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         React state management and utility components.
       </p>
       <div className="flex gap-4 justify-center">
-        <Link href={`/${resolvedParams.lang}/state`} className="font-medium underline">
-          @ilokesto/state
-        </Link>
         <Link href={`/${resolvedParams.lang}/store`} className="font-medium underline">
           @ilokesto/store
+        </Link>
+        <Link href={`/${resolvedParams.lang}/state`} className="font-medium underline">
+          @ilokesto/state
         </Link>
         <Link href={`/${resolvedParams.lang}/utilinent`} className="font-medium underline">
           @ilokesto/utilinent

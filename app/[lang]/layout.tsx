@@ -13,6 +13,10 @@ export default async function Layout({
     <RootProvider
       i18n={{
         locale: resolvedParams.lang,
+        locales: [
+          { locale: 'en', name: 'English' },
+          { locale: 'ko', name: '한국어' },
+        ],
         translations:
           resolvedParams.lang === 'ko'
             ? {

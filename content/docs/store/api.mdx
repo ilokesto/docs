@@ -68,6 +68,27 @@ If `Object.is(prevState, nextState)` is `true`, the update is ignored and subscr
 
 Function-valued state is also not a good fit here, because functions passed to `setState()` are always treated as updater functions.
 
+### `store.pushMiddleware(middleware: Middleware<T>): void`
+
+Appends a middleware to the end of the internal middleware array.
+
+Current middleware shape:
+
+```ts
+type Middleware<T> = (
+  nextState: T | ((prevState: T) => T),
+  next: (value: T | ((prevState: T) => T)) => void,
+) => void;
+```
+
+Use `pushMiddleware()` when you want to add middleware after the existing chain.
+
+### `store.unshiftMiddleware(middleware: Middleware<T>): void`
+
+Prepends a middleware to the beginning of the internal middleware array.
+
+Use `unshiftMiddleware()` when you want that middleware to run before the already-registered chain.
+
 ### `store.subscribe(listener: () => void): () => void`
 
 Registers a listener function to be called after every successful state change.
@@ -82,4 +103,3 @@ unsubscribe();
 ```
 
 - **Execution**: listeners are called synchronously after `setState` completes.
-- **Action Name**: the internal signature accepts an optional action name, but the core store does not use it for any behavior.

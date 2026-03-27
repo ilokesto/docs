@@ -5,4 +5,20 @@ description: 스토어 동작 확장
 
 # 미들웨어
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/state/middleware)을 참고해 주세요.
+`@ilokesto/state`의 미들웨어는 `@ilokesto/state/middleware` 엔트리포인트를 통해 제공됩니다. 현재 버전에서는 기본 store의 미들웨어 체인 위에서 동작하므로, 이전보다 조합 방식이 더 명확해졌습니다.
+
+## 주요 미들웨어
+
+- `logger` — `collapsed`, `diff`, `timestamp` 옵션 지원
+- `debounce` — 빠른 업데이트를 모아서 지연 실행
+- `devtools` — Redux DevTools 연동, RESET/COMMIT/ROLLBACK 처리
+- `validate` — Standard Schema v1 기반 검증, **async validation 미지원**
+- `persist` — `local`, `session`, `cookie` 저장소 지원
+
+## persist 관련 현재 동작
+
+- 저장 payload는 `{ state, version }` 형태입니다.
+- 마이그레이션은 현재 `local`/`cookie` 경로에서만 실행됩니다.
+- 중복 저장은 내부 write cache를 통해 건너뜁니다.
+
+세부 설명은 우선 [English version](/en/state/middleware)을 참고해 주세요.

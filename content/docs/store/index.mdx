@@ -5,9 +5,9 @@ description: The minimal vanilla state container behind @ilokesto/state
 
 # @ilokesto/store
 
-`@ilokesto/store` is the smallest package in the ilokesto state family. It gives you one class — `Store<T>` — with state storage, replacement, and subscriptions.
+`@ilokesto/store` is the smallest package in the ilokesto state family. It gives you one class — `Store<T>` — with state storage, replacement, subscriptions, and lightweight middleware registration.
 
-It does not include React hooks, selectors, middleware, persistence, or devtools integration. That is exactly why it is useful: it is the low-level primitive that higher-level packages can build on.
+It still does **not** include React hooks, persistence helpers, or devtools integration by itself. That is exactly why it is useful: it is the low-level primitive that higher-level packages such as `@ilokesto/state` can build on.
 
 ## Installation
 
@@ -22,13 +22,15 @@ The mental model is simple:
 1. create a store with an initial state
 2. read the current state with `getState()`
 3. replace the state with `setState(...)`
-4. subscribe to changes with `subscribe(...)`
+4. optionally register middleware with `pushMiddleware(...)` or `unshiftMiddleware(...)`
+5. subscribe to changes with `subscribe(...)`
 
 ### Key characteristics
 
 - **Vanilla JS**: zero dependencies on React or any other framework.
 - **Synchronous**: state updates and listener notifications happen synchronously.
 - **Reference equality**: updates are ignored if the new state is strictly equal (`Object.is`) to the current state.
+- **Composable middleware**: updates can flow through a middleware chain before the state is applied.
 - **Type-safe**: TypeScript types describe the stored shape and updater contract.
 
 ## Basic example
@@ -63,3 +65,5 @@ It is a good fit for:
 - small shared stores where full middleware or React integration would be overkill
 
 If you want hook-based access in React, use `@ilokesto/state` on top of it.
+
+If you want to intercept updates inside the vanilla store itself, use the middleware methods described in the API reference.

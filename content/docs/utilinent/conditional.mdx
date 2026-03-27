@@ -1,0 +1,81 @@
+---
+title: Conditional Rendering
+description: Show, Switch, Match, and OptionalWrapper
+---
+
+# Conditional Rendering
+
+Use these components when the branching logic itself deserves a name. They do not add new rendering semantics to React; they package common patterns into clearer APIs.
+
+## `Show`
+
+`Show` renders its children when `when` is truthy. Otherwise it renders `fallback`.
+
+It supports either regular children or a render function child.
+
+### Example
+
+```tsx
+import { Show } from '@ilokesto/utilinent';
+
+function MyComponent({ user }: { user: { name: string } | null }) {
+  return (
+    <Show when={user} fallback={<p>Please log in</p>}>
+      {(currentUser) => <h1>Welcome, {currentUser.name}!</h1>}
+    </Show>
+  );
+}
+```
+
+If `when` is an array, `Show` treats it as "all values must be truthy" because the shared `resolveWhen()` helper uses `every(Boolean)` for arrays.
+
+## `Switch` & `Match`
+
+`Switch` walks its children in order and returns the first `Match` whose `when` value resolves truthy. Non-`Match` children are ignored.
+
+### Example
+
+```tsx
+import { Match, Switch } from '@ilokesto/utilinent';
+
+function StatusIndicator({ status }: { status: 'loading' | 'success' | 'error' }) {
+  return (
+    <Switch fallback={<p>Unknown status</p>}>
+      <Match when={status === 'loading'}>
+        <p>Loading...</p>
+      </Match>
+      <Match when={status === 'success'}>
+        <p>Done</p>
+      </Match>
+      <Match when={status === 'error'}>
+        <p>Failed</p>
+      </Match>
+    </Switch>
+  );
+}
+```
+
+Like `Show`, `Match` can also receive a render function child.
+
+## `OptionalWrapper`
+
+`OptionalWrapper` is a small convenience built on `Show`. It wraps children when `when` is truthy and optionally transforms the fallback path when `when` is falsy.
+
+```tsx
+<OptionalWrapper
+  when={href}
+  wrapper={(children) => <a href={href}>{children}</a>}
+>
+  Open profile
+</OptionalWrapper>
+```
+
+## Tagged variants
+
+`Show` and `Switch` are proxy-based exports, so variants like `Show.div` or `Switch.section` are available for many intrinsic HTML tags.
+
+## Caveats
+
+- `Show` and `Match` use the same `resolveWhen()` helper, so array conditions require every entry to be truthy.
+- `Switch` only reacts to `Match` elements.
+- These helpers still follow normal React rendering rules; they are clearer JSX primitives, not a new runtime.

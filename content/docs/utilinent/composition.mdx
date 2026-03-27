@@ -1,0 +1,58 @@
+---
+title: Composition Utilities
+description: Slot, Slottable, prop merging, and as-child style composition
+---
+
+# Composition
+
+`Slot` and `Slottable` help you move behavior onto a child element instead of forcing another wrapper into the DOM tree.
+
+## `Slot`
+
+`Slot` looks at its children, finds the element that should receive merged props, and clones that element with:
+
+- merged props
+- composed refs
+- preserved children structure
+
+If there is no valid React element child, it returns `null`.
+
+### Example: as-child pattern
+
+```tsx
+import { Slot } from '@ilokesto/utilinent';
+
+function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const Component = asChild ? Slot : 'button';
+  return <Component className="btn" {...props} />;
+}
+```
+
+## `Slottable`
+
+`Slottable` marks which nested child should become the merge target when your component has more than one child node.
+
+```tsx
+import { Slot, Slottable } from '@ilokesto/utilinent';
+
+function ButtonWithIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <Slot className="btn-with-icon">
+      <span aria-hidden>★</span>
+      <Slottable>{children}</Slottable>
+    </Slot>
+  );
+}
+```
+
+## Mental model
+
+- `Slot` does not render its own element.
+- It clones the child that should receive props.
+- Refs are composed so both the parent and child refs keep working.
+
+## Caveats
+
+- `Slot` needs a valid React element target.
+- If `Slottable` exists, its child becomes the merge target.
+- If the `Slottable` child is not a valid element, `Slot` returns `null`.

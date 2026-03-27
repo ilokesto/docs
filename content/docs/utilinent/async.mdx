@@ -1,0 +1,71 @@
+---
+title: Async & Visibility
+description: Mount, Observer, Slacker, and useIntersectionObserver
+---
+
+# Async & Visibility
+
+## `Mount`
+
+`Mount` accepts either regular children or a function that returns a node or a promise.
+
+- if `children` is already a node, it renders immediately
+- if `children` is a function, `fallback` is shown until the function resolves
+- if the function throws or rejects, `fallback` stays visible and `onError` is called
+
+```tsx
+<Mount fallback={<p>Loading...</p>}>
+  {async () => <HeavyPanel />}
+</Mount>
+```
+
+## `Observer`
+
+`Observer` turns intersection state into rendering. It uses the public `useIntersectionObserver()` hook internally and renders through `Show.div`.
+
+Supported props include:
+
+- `threshold`
+- `rootMargin`
+- `triggerOnce`
+- `onIntersect`
+- `fallback`
+
+If `children` is a function, it receives the current `isIntersecting` boolean.
+
+## `Slacker`
+
+`Slacker` combines lazy loading with viewport observation. It waits until the observed region intersects, then runs `loader()` and renders `children(loadedData)`.
+
+It also supports:
+
+- `loadingFallback`
+- `errorFallback`
+- `maxRetries`
+- `retryDelay`
+- `onError`
+
+Internally, `Slacker` uses `null` as the "not loaded yet" sentinel.
+
+## `useIntersectionObserver`
+
+The hook exposes the low-level observer API used by `Observer`.
+
+```tsx
+const { ref, isIntersecting, entry } = useIntersectionObserver({
+  threshold: 0.5,
+  rootMargin: '50px',
+});
+```
+
+The returned shape is:
+
+- `ref`
+- `isIntersecting`
+- `entry`
+
+## Caveats
+
+- the hook is a no-op when `IntersectionObserver` is unavailable
+- `onChange` fires only on a false-to-true transition after the initial callback
+- `freezeOnceVisible` stops observation after the first visible state

@@ -1,0 +1,69 @@
+---
+title: Semantics & Behavior
+description: Replacement semantics, listener behavior, and caveats
+---
+
+# Store Semantics
+
+`@ilokesto/store` is intentionally small, which makes its semantics important. There are only a few rules, but they shape how the class behaves in real applications.
+
+## State mutability
+
+While the TypeScript types use `Readonly<T>` to discourage direct mutation, the store itself is **not** immutable at runtime.
+
+### Why `Readonly`?
+
+- **Compile-time safety**: it helps catch accidental direct mutations in TypeScript.
+- **Intent**: it tells consumers to treat state as an immutable snapshot.
+
+### Caveat
+
+- **Runtime mutability**: since `Readonly` is compile-time only, the store does not freeze returned objects.
+
+## State updates
+
+`setState()` always resolves to one next value and replaces the current state with it.
+
+```ts
+const store = new Store({ a: 1, b: 2 });
+store.setState({ b: 3 }); // next state is exactly { b: 3 }
+```
+
+If you want merge-like behavior, return the merged object yourself.
+
+### No-op strategy
+
+To optimize performance, `@ilokesto/store` checks if the next state is the same as the current state using `Object.is`.
+
+- **Subscribers**: if the reference is identical, no subscribers will be notified.
+- **Reference integrity**: always return a **new object reference** when updating nested state if you expect listeners to fire.
+
+```ts
+// ❌ WRONG: mutating existing state (subscribers won't fire)
+store.setState((prev) => {
+  prev.count += 1;
+  return prev;
+});
+
+// ✅ RIGHT: returning a new object
+store.setState((prev) => ({
+  ...prev,
+  count: prev.count + 1,
+}));
+```
+
+## Function-valued state
+
+`@ilokesto/store` is not designed to store functions as the state value itself. If you pass a function to `setState()`, the store interprets it as an updater.
+
+**Recommendation**: use objects, arrays, or primitive values only.
+
+## Subscription behavior
+
+Listeners are stored in a `Set`, so duplicate listener references are naturally deduplicated.
+
+Notification also iterates over `Array.from(this.listeners)`, which means the store walks a snapshot of the current listeners when dispatching updates. That keeps notification safe even if a listener unsubscribes during notification.
+
+## Action names
+
+The API may allow passing an optional string as a second argument to `setState`. However, this `actionName` is currently **unused**. It is reserved for future tooling but does not affect the store's runtime behavior.

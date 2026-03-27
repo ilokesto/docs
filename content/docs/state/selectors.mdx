@@ -1,0 +1,79 @@
+---
+title: Selectors & Performance
+description: Reading slices, writeOnly(), and readOnly()
+---
+
+# Selectors
+
+Selectors are how `@ilokesto/state` stays practical in React. Instead of subscribing a component to the whole store, you pass a function that picks the part you care about.
+
+```tsx
+const [count, setCounter] = useCounter((state) => state.count);
+```
+
+That tuple shape is the main pattern:
+
+- the first value is the selected slice
+- the second value is the writer (`setState` in state mode, `dispatch` in reducer mode)
+
+## Whole state vs selected state
+
+```tsx
+const [state, setState] = useCounter();
+const [count, setCounter] = useCounter((state) => state.count);
+```
+
+Calling the hook without a selector subscribes to the whole state. That is fine for tiny stores, but selectors are usually the better default.
+
+## Selecting a slice
+
+You can select primitives, objects, or derived values.
+
+```tsx
+const [name] = useUserStore((state) => state.user.name);
+const [doubleCount] = useCounter((state) => state.count * 2);
+```
+
+Internally, `@ilokesto/state` memoizes selector results with a deep comparison helper. That means object and array selections can still be useful when their contents stay the same.
+
+## `writeOnly()`
+
+`writeOnly()` returns only the writer function.
+
+```tsx
+const setCounter = useCounter.writeOnly();
+
+setCounter((prev) => ({ ...prev, count: prev.count + 1 }));
+```
+
+This is useful when a component should trigger updates but does not need to read state.
+
+## `readOnly()`
+
+`readOnly()` returns the current selected value.
+
+```tsx
+const currentCount = useCounter.readOnly((state) => state.count);
+```
+
+The current implementation reaches this through the same hook path used by normal selector reads. In practice, that means you should treat `readOnly()` as a React-side convenience, not as a replacement for `Store.getState()` from `@ilokesto/store`.
+
+## Recommended pattern
+
+Prefer small, explicit selectors over broad object selection when a component only needs one or two fields.
+
+```tsx
+function Counter() {
+  const [count, setCounter] = useCounter((state) => state.count);
+
+  return (
+    <button onClick={() => setCounter((prev) => ({ ...prev, count: prev.count + 1 }))}>
+      {count}
+    </button>
+  );
+}
+```
+
+## Caveat
+
+If you rely on `readOnly()` outside React, prefer the vanilla `Store` API instead. `@ilokesto/state` is optimized around React subscriptions, not around framework-agnostic direct reads.

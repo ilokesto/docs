@@ -1,0 +1,68 @@
+---
+title: Reducer Mode
+description: create(reducer, initialState) and dispatch(action)
+---
+
+# Reducer Mode
+
+While the default `setState(next)` flow is enough for many stores, some state transitions are easier to understand as named actions. `@ilokesto/state` supports that with the reducer overload of `create()`.
+
+## How it works
+
+Instead of passing plain initial state, pass a reducer function and an initial state (or existing `Store<T>`).
+
+```tsx
+import { create } from '@ilokesto/state';
+
+type State = { count: number };
+type Action = { type: 'increment' } | { type: 'decrement' };
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+};
+
+const useCounter = create<State, Action>(reducer, { count: 0 });
+```
+
+## Using the returned hook
+
+Reducer mode returns `[selectedValue, dispatch]`.
+
+```tsx
+function Counter() {
+  const [count, dispatch] = useCounter((state) => state.count);
+
+  return (
+    <>
+      <p>{count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>Increment</button>
+    </>
+  );
+}
+```
+
+`writeOnly()` also returns the reducer dispatcher when you want to fire actions without subscribing to state.
+
+```ts
+const dispatch = useCounter.writeOnly();
+dispatch({ type: 'increment' });
+```
+
+## Why choose reducer mode?
+
+- You want state transitions expressed as explicit action objects.
+- You want one dispatch entrypoint instead of exposing `setState` directly.
+- You are porting logic from `useReducer` or another reducer-based system.
+
+## Caveats
+
+- Your reducer must always return the next full state value.
+- The hook still follows the same selector model as state mode.
+- Middleware wraps the underlying store behavior, so reducer-driven updates still flow through middleware when you build the store that way.

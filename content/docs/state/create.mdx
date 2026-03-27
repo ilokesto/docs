@@ -1,0 +1,93 @@
+---
+title: create API
+description: Supported create() call forms and returned hook behavior
+---
+
+# `create`
+
+`create()` is the main public API of `@ilokesto/state`. It always returns a hook-like store accessor, but it supports two different modes:
+
+- **State mode**: update with `setState(next)`.
+- **Reducer mode**: update with `dispatch(action)`.
+
+It also accepts either plain state or an existing `Store<T>` instance from `@ilokesto/store`.
+
+## Supported call forms
+
+### 1. Plain state
+
+```ts
+import { create } from '@ilokesto/state';
+
+const useCounter = create({ count: 0 });
+```
+
+### 2. Existing Store instance
+
+```ts
+import { Store } from '@ilokesto/store';
+import { create } from '@ilokesto/state';
+
+const store = new Store({ count: 0 });
+const useCounter = create(store);
+```
+
+### 3. Reducer + plain state
+
+```ts
+type CounterState = { count: number };
+type CounterAction = { type: 'increment' } | { type: 'decrement' };
+
+const useCounter = create<CounterState, CounterAction>(
+  (state, action) => {
+    switch (action.type) {
+      case 'increment':
+        return { count: state.count + 1 };
+      case 'decrement':
+        return { count: state.count - 1 };
+      default:
+        return state;
+    }
+  },
+  { count: 0 },
+);
+```
+
+### 4. Reducer + existing Store instance
+
+The reducer overload also accepts a prebuilt `Store<T>` as its second argument.
+
+## What the returned value looks like
+
+In state mode:
+
+```ts
+const useCounter = create({ count: 0 });
+
+const [count, setCounter] = useCounter((state) => state.count);
+```
+
+- `count` is the selected value.
+- `setCounter` accepts either the next state value or an updater function, matching React's `SetStateAction<T>` shape.
+
+In reducer mode:
+
+```ts
+const [count, dispatch] = useCounter((state) => state.count);
+```
+
+- `count` is the selected value.
+- `dispatch` accepts your action object.
+
+## Extra helpers
+
+Every created store also exposes:
+
+- `writeOnly()` — returns the writer (`setState` or `dispatch`).
+- `readOnly()` — returns the current selected value.
+
+## Important limitation
+
+`create()` does **not** accept a Zustand-style initializer function such as `(set, get, store) => state`. The supported inputs are the ones shown above: plain state, existing `Store`, or reducer + initial state/store.
+
+If you need advanced composition, build a `Store` first with utilities like `pipe()` and then pass that store to `create()`.

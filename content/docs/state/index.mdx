@@ -1,0 +1,67 @@
+---
+title: Introduction
+description: React state hooks built on top of @ilokesto/store
+---
+
+# @ilokesto/state
+
+`@ilokesto/state` is the React-facing layer of the ilokesto state stack. It takes the minimal `@ilokesto/store` core and adds a `create()` API, selector-based subscriptions, reducer mode, and optional middleware utilities.
+
+Use it when you want a store-shaped state model in React without bringing in a larger framework. If you only need the vanilla data container, use `@ilokesto/store` directly. If you want React hooks, selectors, and middleware, start with `@ilokesto/state`.
+
+## Installation
+
+```bash
+pnpm add @ilokesto/state react
+```
+
+If you want to use `adaptor()`, install `immer` as well.
+
+```bash
+pnpm add immer
+```
+
+## What it gives you
+
+- A `create()` function that returns a React hook.
+- Selector-based subscriptions so components can read only the slice they need.
+- A reducer-style mode when you want `dispatch(action)` instead of `setState(next)`.
+- Middleware utilities such as `logger`, `debounce`, `devtools`, `validate`, and `persist`.
+- Small helpers like `pipe()` and `adaptor()` for store composition and immutable object updates.
+
+## Quick start
+
+The simplest form of `create()` accepts plain initial state.
+
+```tsx
+import { create } from '@ilokesto/state';
+
+type CounterState = {
+  count: number;
+};
+
+const useCounter = create<CounterState>({ count: 0 });
+
+function Counter() {
+  const [count, setCounter] = useCounter((state) => state.count);
+
+  return (
+    <button onClick={() => setCounter((prev) => ({ ...prev, count: prev.count + 1 }))}>
+      {count}
+    </button>
+  );
+}
+```
+
+## When to use it
+
+- You want a single store that multiple React components can read from.
+- You want a small API centered on `setState` or `dispatch`.
+- You want selector-based subscriptions without wiring `useSyncExternalStore` yourself.
+- You want opt-in middleware rather than a large built-in runtime.
+
+## Next steps
+
+- Go to [`create API`](/en/state/create) for the supported call signatures.
+- Go to [`Selectors & Performance`](/en/state/selectors) to see how subscriptions work.
+- Go to [`Middleware`](/en/state/middleware) to compose logging, persistence, and validation.

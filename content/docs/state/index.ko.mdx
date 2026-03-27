@@ -1,0 +1,32 @@
+---
+title: 개요 및 시작하기
+description: React를 위한 반응형 상태 관리
+---
+
+# @ilokesto/state
+
+`@ilokesto/state`는 `@ilokesto/store` 위에 얹는 React용 상태 관리 패키지입니다. `create()` API, 셀렉터 기반 구독, 리듀서 모드, 미들웨어 유틸리티를 통해 React 컴포넌트에서 store를 다루기 쉽게 만들어 줍니다.
+
+## 설치
+
+```bash
+pnpm add @ilokesto/state react
+```
+
+`adaptor()`를 사용할 예정이라면 `immer`도 함께 설치하세요.
+
+```bash
+pnpm add immer
+```
+
+## 문서 구성
+
+- [`create API`](/ko/state/create)
+- [`셀렉터와 상태 접근`](/ko/state/selectors)
+- [`리듀서 모드`](/ko/state/reducer)
+- [`미들웨어`](/ko/state/middleware)
+- [`유틸리티`](/ko/state/utils)
+
+## 한글 문서 상태
+
+상위 소개 페이지는 한글로 제공하고 있으며, 세부 페이지는 우선 영어 문서와 동일한 구조를 유지하면서 순차적으로 보강하고 있습니다. 깊은 API 설명이 아직 부족한 경우에는 영어 페이지를 함께 참고하는 것이 좋습니다.

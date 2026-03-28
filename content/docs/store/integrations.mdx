@@ -1,31 +1,254 @@
 ---
 title: Integrations
-description: A hub for libraries and adapters built on top of @ilokesto/store.
+description: How @ilokesto/store connects to framework adapters in React, Vue, and Svelte.
 ---
 
-`@ilokesto/store` is designed to act as a small core. This page is a hub for packages and adapter layers built on top of that core.
+`@ilokesto/store` stays intentionally small. It owns state storage, replacement, and subscriptions, but it does not own a UI runtime. That gap is where an adapter sits.
 
-### How to Read This Page
+If [Building on Store](./building-on-store) explains the stable contract, this page shows how that contract usually gets translated into real framework-facing APIs.
 
-This page is intentionally short. It does not try to teach every integration in place. Instead, it points you toward the layer that owns a particular use case.
+## The common adapter flow
 
-### Current Packages
+Most framework integrations follow the same four steps.
 
-#### `@ilokesto/state`
+1. **Read snapshot** — get the current value with `store.getState()`.
+2. **Subscribe** — listen for future changes with `store.subscribe(listener)`.
+3. **Write bridge** — expose `store.setState(next)` directly or wrap it in actions.
+4. **Cleanup** — call the unsubscribe function when the framework scope is destroyed.
 
-A higher-level state package built on top of `@ilokesto/store`.
+At a high level, an adapter usually looks like this:
 
-- Use it when you want a richer state API than the vanilla store.
-- Read its own docs for the React-facing `create()` flow, selectors, reducer mode, and middleware utilities.
+```ts
+import type { Store } from '@ilokesto/store';
 
-### Future Integrations
+function connectStore<T>(store: Store<T>) {
+  let current = store.getState();
 
-- **Form libraries** can use the store as a small state engine for values, errors, and submission lifecycle.
-- **Overlay or modal systems** can use it to coordinate open state and payloads.
-- **Framework adapters** can translate `getState`, `setState`, and `subscribe` into a framework-specific reactive API.
+  const unsubscribe = store.subscribe(() => {
+    current = store.getState();
+  });
 
-### If You Are Building Your Own
+  return {
+    getSnapshot: () => current,
+    setState: (nextState: T | ((prevState: Readonly<T>) => T)) =>
+      store.setState(nextState),
+    destroy: unsubscribe,
+  };
+}
+```
 
-If you are creating a new package on top of `@ilokesto/store`, start with [Building on Store](./building-on-store). That page explains the stable contract that adapters and higher-level libraries should rely on.
+The details change from framework to framework, but the shape is usually the same: read once, subscribe, expose writes, and clean up correctly.
 
-Use this integrations page as a directory, not as the canonical implementation guide for every consumer.
+## React
+
+React already has a built-in model for external stores: `useSyncExternalStore`. That means a React adapter usually centers on two pieces:
+
+- `subscribe` tells React when something changed.
+- `getSnapshot` tells React what value should be rendered right now.
+
+Minimal hook shape:
+
+```ts
+import { useSyncExternalStore } from 'react';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  return useSyncExternalStore(
+    store.subscribe.bind(store),
+    () => store.getState(),
+    () => store.getState(),
+  );
+}
+```
+
+What matters in React:
+
+- **Render sync**: React wants a stable snapshot reader during render.
+- **Subscription ownership**: cleanup is handled through the hook lifecycle.
+- **Selector layers**: a richer adapter often adds selectors on top of this minimal shape.
+
+In other words, React already has the external-store slot. The adapter's job is mostly to fit `Store` into that slot cleanly.
+
+## Vue
+
+Vue does not use `useSyncExternalStore`, but the integration idea is still familiar. You keep a Vue ref in sync with the store and clean it up when the component scope ends.
+
+Minimal composable shape:
+
+```ts
+import { onUnmounted, shallowRef } from 'vue';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  const state = shallowRef(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    state.value = store.getState();
+  });
+
+  onUnmounted(unsubscribe);
+
+  const setState = (nextState: T | ((prevState: Readonly<T>) => T)) => {
+    store.setState(nextState);
+  };
+
+  return { state, setState };
+}
+```
+
+What matters in Vue:
+
+- **Reactivity bridge**: the store snapshot needs to be mirrored into a Vue ref.
+- **Lifecycle cleanup**: unsubscribe when the component scope is destroyed.
+- **Computed layering**: selectors often become `computed()` values on top of the ref.
+
+Vue usually feels less like “subscribe into render” and more like “feed an external source into Vue's reactive graph.”
+
+## Svelte
+
+Svelte also needs a small bridge, but the destination shape is different again. Instead of a hook or a ref, Svelte prefers its own store contract with a `subscribe` method that pushes values to subscribers.
+
+Minimal wrapper shape:
+
+```ts
+import { readable } from 'svelte/store';
+import type { Store } from '@ilokesto/store';
+
+export function fromStore<T>(store: Store<T>) {
+  return readable(store.getState(), (set) => {
+    set(store.getState());
+
+    return store.subscribe(() => {
+      set(store.getState());
+    });
+  });
+}
+```
+
+What matters in Svelte:
+
+- **Store contract bridge**: you adapt `Store<T>` into something Svelte can subscribe to with `$` syntax.
+- **Automatic cleanup**: Svelte handles unsubscription through its store usage model.
+- **Write exposure**: writes are often kept as separate action helpers rather than put on the readable store itself.
+
+So the main difference is not the source store. It is the target contract that the framework expects.
+
+## Angular
+
+Angular's current reactive model centers on signals. That makes an Angular adapter feel less like a hook and more like a bridge from an external store snapshot into a `signal()` that Angular templates and computed values can read.
+
+Minimal shape:
+
+```ts
+import { computed, signal } from '@angular/core';
+import type { Store } from '@ilokesto/store';
+
+export function connectStore<T>(store: Store<T>) {
+  const state = signal(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    state.set(store.getState());
+  });
+
+  return {
+    state,
+    setState: (nextState: T | ((prevState: Readonly<T>) => T)) =>
+      store.setState(nextState),
+    destroy: unsubscribe,
+  };
+}
+```
+
+What matters in Angular:
+
+- **Signal bridge**: the store snapshot usually gets mirrored into a signal.
+- **Computed layering**: derived values often become `computed()` expressions above that signal.
+- **Lifecycle ownership**: cleanup needs to happen where the Angular scope that owns the adapter ends.
+
+Angular therefore resembles Vue in spirit, but the integration vocabulary is signals rather than refs.
+
+## Solid
+
+Solid already thinks in fine-grained reactivity, so an adapter usually mirrors the external store snapshot into a `createSignal()` pair and builds derived values with `createMemo()`.
+
+Minimal shape:
+
+```ts
+import { createMemo, createSignal, onCleanup } from 'solid-js';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  const [state, setState] = createSignal(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    setState(store.getState());
+  });
+
+  onCleanup(unsubscribe);
+
+  return {
+    state,
+    setState: (nextState: T | ((prevState: Readonly<T>) => T)) =>
+      store.setState(nextState),
+    selected: createMemo(() => state()),
+  };
+}
+```
+
+What matters in Solid:
+
+- **Fine-grained updates**: the bridge feeds a signal, and downstream reads stay granular.
+- **Memo layering**: selectors often become `createMemo()` values rather than separate subscription systems.
+- **Cleanup in reactive scope**: subscriptions should end with the owner scope.
+
+Solid often feels like the most direct fit after Vue: the adapter is small, and the reactive system does the rest.
+
+## Preact
+
+Preact can be integrated in two ways, but the most direct path is the same external-store model used in React. `useSyncExternalStore` in `preact/compat` lets an adapter reuse the same subscription-and-snapshot shape.
+
+Minimal hook shape:
+
+```ts
+import { useSyncExternalStore } from 'preact/compat';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  return useSyncExternalStore(
+    store.subscribe.bind(store),
+    () => store.getState(),
+    () => store.getState(),
+  );
+}
+```
+
+What matters in Preact:
+
+- **External-store compatibility**: the adapter shape is nearly identical to React.
+- **Small wrapper surface**: if you already understand the React case, the Preact case is mostly a runtime substitution.
+- **Alternative signal path**: if you are using Preact Signals, you may also choose a signal bridge instead of the hook model.
+
+That makes Preact less a brand new integration model and more a close sibling of the React one.
+
+## What actually differs across frameworks
+
+The common flow stays stable, but each framework pushes on a different part of the bridge.
+
+- **React** cares most about render-time snapshot reads and external-store synchronization.
+- **Vue** cares most about moving external state into refs and computed values.
+- **Svelte** cares most about matching its own store subscription contract.
+- **Angular** cares most about feeding external state into signals and computed values.
+- **Solid** cares most about preserving fine-grained reactive reads through signals and memos.
+- **Preact** cares most about fitting into the same external-store slot as React, unless you choose its signals model instead.
+
+That is why the core `Store` API can stay tiny while adapters still look meaningfully different.
+
+## Choosing an integration style
+
+If you are building on top of `@ilokesto/store`, a good rule is:
+
+- keep the vanilla store as the source of truth,
+- make the framework layer as thin as possible,
+- add selectors, actions, and ergonomic helpers one layer above the raw bridge.
+
+For the lower-level guarantees that these integrations rely on, read [Building on Store](./building-on-store), [Subscriptions](./subscriptions), and [Update Semantics](./updates).

@@ -1,31 +1,254 @@
 ---
 title: 통합
-description: "@ilokesto/store 위에 구축되는 라이브러리와 어댑터를 소개하는 허브입니다."
+description: "@ilokesto/store를 React, Vue, Svelte 같은 프레임워크 어댑터에 연결하는 방식입니다."
 ---
 
-`@ilokesto/store`는 작은 코어 역할을 하도록 설계되었습니다. 이 페이지는 그 코어 위에 놓이는 패키지와 어댑터 계층을 소개하는 허브입니다.
+`@ilokesto/store`는 의도적으로 작게 유지됩니다. 상태 저장, 상태 교체, 구독은 맡지만 UI 런타임 자체를 책임지지는 않습니다. 그 사이를 메우는 것이 어댑터입니다.
 
-### 이 페이지를 읽는 방법
+[스토어 기반 구축하기](./building-on-store)가 안정적인 계약을 설명하는 페이지라면, 이 페이지는 그 계약이 실제 프레임워크 API로 어떻게 번역되는지를 보여줍니다.
 
-이 페이지는 의도적으로 짧게 유지합니다. 각 통합을 여기서 모두 설명하지 않고, 해당 사용 사례를 실제로 책임지는 계층으로 안내하는 역할만 합니다.
+## 공통 어댑터 흐름
 
-### 현재 패키지
+대부분의 프레임워크 통합은 같은 네 단계를 따릅니다.
 
-#### `@ilokesto/state`
+1. **스냅샷 읽기** — `store.getState()`로 현재 값을 읽습니다.
+2. **구독** — `store.subscribe(listener)`로 이후 변경을 듣습니다.
+3. **쓰기 브리지** — `store.setState(next)`를 그대로 노출하거나 액션으로 감쌉니다.
+4. **정리** — 프레임워크 범위가 끝날 때 unsubscribe 함수를 호출합니다.
 
-`@ilokesto/store` 위에 구축된 상위 수준의 상태 패키지입니다.
+높은 수준에서 보면 어댑터는 보통 이런 모양입니다.
 
-- 바닐라 store보다 더 풍부한 상태 API가 필요할 때 사용합니다.
-- React용 `create()` 흐름, selector, reducer 모드, middleware 유틸리티는 해당 패키지 문서를 참고하십시오.
+```ts
+import type { Store } from '@ilokesto/store';
 
-### 향후 통합
+function connectStore<T>(store: Store<T>) {
+  let current = store.getState();
 
-- **폼 라이브러리**는 값을, 오류를, 제출 생명주기를 관리하는 작은 상태 엔진으로 스토어를 사용할 수 있습니다.
-- **오버레이나 모달 시스템**은 열림 상태와 payload를 조정하는 데 사용할 수 있습니다.
-- **프레임워크 어댑터**는 `getState`, `setState`, `subscribe`를 각 프레임워크의 반응형 API로 변환할 수 있습니다.
+  const unsubscribe = store.subscribe(() => {
+    current = store.getState();
+  });
 
-### 직접 무언가를 만들고 있다면
+  return {
+    getSnapshot: () => current,
+    setState: (nextState: T | ((prevState: Readonly<T>) => T)) =>
+      store.setState(nextState),
+    destroy: unsubscribe,
+  };
+}
+```
 
-새 패키지를 `@ilokesto/store` 위에 만들고 있다면 [스토어 기반 구축하기](./building-on-store)부터 읽는 것이 좋습니다. 이 페이지는 어댑터와 상위 라이브러리가 의존해야 하는 안정적인 계약을 설명합니다.
+프레임워크마다 세부 구현은 달라지지만, 큰 흐름은 대체로 같습니다. 한 번 읽고, 구독하고, 쓰기 경로를 노출하고, 정리를 정확히 하는 방식입니다.
 
-이 integrations 페이지는 디렉터리 역할을 하는 곳이지, 모든 소비자 패키지의 구현 가이드를 대신하는 곳은 아닙니다.
+## React
+
+React는 외부 스토어를 위한 내장 모델인 `useSyncExternalStore`를 이미 제공합니다. 그래서 React 어댑터는 보통 두 가지를 중심으로 구성됩니다.
+
+- `subscribe`는 언제 변경이 일어났는지 React에 알려줍니다.
+- `getSnapshot`은 지금 렌더링해야 할 값을 React에 제공합니다.
+
+최소 hook 형태:
+
+```ts
+import { useSyncExternalStore } from 'react';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  return useSyncExternalStore(
+    store.subscribe.bind(store),
+    () => store.getState(),
+    () => store.getState(),
+  );
+}
+```
+
+React에서 중요한 점은 다음과 같습니다.
+
+- **렌더 동기화**: 렌더 중 안정적인 snapshot reader가 필요합니다.
+- **구독 소유권**: 정리는 hook 생명주기 안에서 처리됩니다.
+- **selector 계층**: 더 풍부한 어댑터는 이 최소 구조 위에 selector를 얹는 경우가 많습니다.
+
+즉 React는 외부 스토어를 위한 자리가 이미 있고, 어댑터는 `Store`를 그 자리에 맞게 끼워 넣는 역할을 합니다.
+
+## Vue
+
+Vue는 `useSyncExternalStore`를 쓰지 않지만, 통합 아이디어 자체는 비슷합니다. 외부 스토어의 스냅샷을 Vue ref와 동기화하고, 컴포넌트 범위가 끝나면 정리합니다.
+
+최소 composable 형태:
+
+```ts
+import { onUnmounted, shallowRef } from 'vue';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  const state = shallowRef(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    state.value = store.getState();
+  });
+
+  onUnmounted(unsubscribe);
+
+  const setState = (nextState: T | ((prevState: Readonly<T>) => T)) => {
+    store.setState(nextState);
+  };
+
+  return { state, setState };
+}
+```
+
+Vue에서 중요한 점은 다음과 같습니다.
+
+- **반응성 브리지**: 스토어 스냅샷을 Vue ref로 옮겨야 합니다.
+- **생명주기 정리**: 컴포넌트 범위가 끝날 때 구독을 해제해야 합니다.
+- **computed 계층**: selector 역할은 ref 위에 `computed()`로 얹는 경우가 많습니다.
+
+Vue에서는 “렌더에 직접 구독한다”기보다, “외부 상태를 Vue 반응성 그래프 안으로 흘려 넣는다”는 감각이 더 강합니다.
+
+## Svelte
+
+Svelte 역시 작은 브리지가 필요하지만, 도착점의 모양이 다릅니다. hook이나 ref 대신, Svelte는 값 전달용 `subscribe` 메서드를 가진 자기만의 store contract를 선호합니다.
+
+최소 wrapper 형태:
+
+```ts
+import { readable } from 'svelte/store';
+import type { Store } from '@ilokesto/store';
+
+export function fromStore<T>(store: Store<T>) {
+  return readable(store.getState(), (set) => {
+    set(store.getState());
+
+    return store.subscribe(() => {
+      set(store.getState());
+    });
+  });
+}
+```
+
+Svelte에서 중요한 점은 다음과 같습니다.
+
+- **store contract 브리지**: `Store<T>`를 Svelte가 `$` 문법으로 구독할 수 있는 형태로 바꿔야 합니다.
+- **자동 정리**: Svelte는 자신의 store 사용 모델 안에서 구독 해제를 처리합니다.
+- **쓰기 노출 방식**: 쓰기 함수는 readable store 위에 직접 올리기보다 별도 액션 helper로 두는 경우가 많습니다.
+
+즉 가장 큰 차이는 소스 스토어가 아니라, 프레임워크가 기대하는 대상 계약이 무엇인가입니다.
+
+## Angular
+
+Angular의 현재 반응성 모델은 signals를 중심으로 움직입니다. 그래서 Angular 어댑터는 hook보다는, 외부 스토어의 스냅샷을 `signal()`로 옮겨 Angular 템플릿과 computed 값이 읽을 수 있게 하는 브리지에 가깝습니다.
+
+최소 형태:
+
+```ts
+import { computed, signal } from '@angular/core';
+import type { Store } from '@ilokesto/store';
+
+export function connectStore<T>(store: Store<T>) {
+  const state = signal(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    state.set(store.getState());
+  });
+
+  return {
+    state,
+    setState: (nextState: T | ((prevState: Readonly<T>) => T)) =>
+      store.setState(nextState),
+    destroy: unsubscribe,
+  };
+}
+```
+
+Angular에서 중요한 점은 다음과 같습니다.
+
+- **signal 브리지**: 스토어 스냅샷을 대개 signal로 옮기게 됩니다.
+- **computed 계층**: 파생 값은 그 signal 위에 `computed()`로 놓는 경우가 많습니다.
+- **생명주기 소유권**: 어댑터를 소유한 Angular 범위가 끝날 때 정리가 일어나야 합니다.
+
+즉 Angular는 감각상 Vue와 비슷하지만, 연결 어휘가 ref가 아니라 signal이라는 점이 다릅니다.
+
+## Solid
+
+Solid는 본래 세밀한 반응성을 전제로 하기 때문에, 어댑터도 외부 스토어의 스냅샷을 `createSignal()` 쌍으로 옮기고 `createMemo()`로 파생 값을 만드는 경우가 많습니다.
+
+최소 형태:
+
+```ts
+import { createMemo, createSignal, onCleanup } from 'solid-js';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  const [state, setState] = createSignal(store.getState());
+
+  const unsubscribe = store.subscribe(() => {
+    setState(store.getState());
+  });
+
+  onCleanup(unsubscribe);
+
+  return {
+    state,
+    setState: (nextState: T | ((prevState: Readonly<T>) => T)) =>
+      store.setState(nextState),
+    selected: createMemo(() => state()),
+  };
+}
+```
+
+Solid에서 중요한 점은 다음과 같습니다.
+
+- **세밀한 업데이트**: 브리지가 signal을 채우면 이후 읽기는 더 세밀하게 유지됩니다.
+- **memo 계층**: selector는 별도 구독 시스템보다 `createMemo()`가 되는 경우가 많습니다.
+- **반응 범위 정리**: 구독은 owner scope와 함께 끝나야 합니다.
+
+Solid는 Vue 다음으로 가장 직접적인 축에 가깝습니다. 어댑터는 얇고, 이후 작업은 반응성 시스템이 맡습니다.
+
+## Preact
+
+Preact는 두 가지 방향으로 연결할 수 있지만, 가장 직접적인 길은 React와 같은 external-store 모델을 쓰는 것입니다. `preact/compat`의 `useSyncExternalStore`를 쓰면 같은 subscription-and-snapshot 구조를 거의 그대로 재사용할 수 있습니다.
+
+최소 hook 형태:
+
+```ts
+import { useSyncExternalStore } from 'preact/compat';
+import type { Store } from '@ilokesto/store';
+
+export function useStore<T>(store: Store<T>) {
+  return useSyncExternalStore(
+    store.subscribe.bind(store),
+    () => store.getState(),
+    () => store.getState(),
+  );
+}
+```
+
+Preact에서 중요한 점은 다음과 같습니다.
+
+- **external-store 호환성**: 어댑터 모양이 React와 거의 같습니다.
+- **작은 wrapper 표면**: React 사례를 이해했다면, Preact는 런타임만 바뀐 가까운 변형에 가깝습니다.
+- **대안으로서의 signal 경로**: Preact Signals를 쓰고 있다면 hook 모델 대신 signal 브리지를 택할 수도 있습니다.
+
+즉 Preact는 완전히 새로운 통합 모델이라기보다, React와 매우 가까운 형제 모델에 가깝습니다.
+
+## 프레임워크마다 실제로 무엇이 다른가
+
+공통 흐름은 같지만, 각 프레임워크는 브리지의 다른 부분을 더 강하게 요구합니다.
+
+- **React**는 렌더 시점의 snapshot 읽기와 external-store 동기화를 가장 중요하게 봅니다.
+- **Vue**는 외부 상태를 ref와 computed 값으로 옮기는 과정을 가장 중요하게 봅니다.
+- **Svelte**는 자기 store subscription contract에 맞는 형태로 바꾸는 것을 가장 중요하게 봅니다.
+- **Angular**는 외부 상태를 signals와 computed 값으로 흘려 넣는 과정을 가장 중요하게 봅니다.
+- **Solid**는 signals와 memos를 통해 세밀한 반응형 읽기를 유지하는 것을 가장 중요하게 봅니다.
+- **Preact**는 React와 같은 external-store 자리에 맞추되, 필요하면 signals 모델을 선택할 수 있다는 점이 중요합니다.
+
+그래서 코어 `Store` API는 아주 작게 유지되더라도, 어댑터의 모양은 프레임워크마다 꽤 달라질 수 있습니다.
+
+## 어떤 방식으로 통합할지 고르기
+
+`@ilokesto/store` 위에 무언가를 만든다면 다음 기준이 유용합니다.
+
+- 바닐라 스토어를 source of truth로 유지하고,
+- 프레임워크 계층은 가능한 한 얇게 만들고,
+- selector, action, 사용성 helper는 raw bridge 바로 위 계층에 얹는 편이 좋습니다.
+
+이 통합들이 의존하는 더 낮은 수준의 보장은 [스토어 기반 구축하기](./building-on-store), [구독](./subscriptions), [업데이트 시맨틱](./updates)에서 설명합니다.

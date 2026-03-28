@@ -1,53 +1,57 @@
 ---
-title: Utilities
-description: pipe() and adaptor()
+title: Utils
+description: Essential utilities for store composition and state updates.
 ---
 
-# Utilities
+# Utils
 
-The `@ilokesto/state/utils` entrypoint currently exposes two helpers: `pipe()` and `adaptor()`.
+The `@ilokesto/state/utils` entry point provides two main helpers: `pipe` and `adaptor`. These are designed to make store setup and state management more ergonomic.
 
 ## `pipe`
 
-`pipe()` creates a new `Store<T>` from plain initial state and applies middleware from left to right.
+`pipe` is a utility for composing middleware around an initial state. It applies middleware from left to right (top to bottom) and returns a fully initialized `Store` instance.
 
 ```ts
+import { create } from '@ilokesto/state';
 import { pipe } from '@ilokesto/state/utils';
 import { logger, devtools } from '@ilokesto/state/middleware';
 
 const store = pipe(
   { count: 0 },
-  logger({ timestamp: true }),
-  devtools('counter'),
+  logger(),
+  devtools('MyStore')
 );
+
+const useStore = create(store);
 ```
 
-That returned store can then be passed into `create(store)`.
+Using `pipe` is the recommended way to set up complex stores with multiple middleware.
 
 ## `adaptor`
 
-`adaptor()` wraps Immer's `produce()` so you can write draft-style object updates and still return immutable state.
+`adaptor` is a thin wrapper around Immer's `produce`. It lets you write a draft-style state recipe and get back a pure updater function.
 
 ```ts
 import { adaptor } from '@ilokesto/state/utils';
 
-type CounterState = { count: number };
+type State = { user: { profile: { name: string } } };
 
-const increment = adaptor<CounterState>((draft) => {
-  draft.count += 1;
+const renameProfile = adaptor<State>((draft) => {
+  draft.user.profile.name = 'New Name';
 });
+
+useStore.writeOnly()(renameProfile);
 ```
 
-Because it depends on Immer, install `immer` before using it.
+### Installation
 
-## Caveats
+`adaptor` requires `immer` to be installed in your project.
 
-- `pipe()` starts from plain initial state; it is a store composition helper, not a higher-order React hook helper.
-- `adaptor()` is constrained to object state shapes.
-- `adaptor()` requires the optional `immer` peer dependency to be installed.
+```package-install
+immer
+```
 
-## Related entrypoints
+## Related APIs
 
-- `@ilokesto/state` — `create()`
-- `@ilokesto/state/middleware` — built-in middleware
-- `@ilokesto/state/utils` — `pipe()` and `adaptor()`
+- [`create`](./create): Main entry point for React integration.
+- [`middleware`](./middleware): Built-in middleware for common tasks.

@@ -1,0 +1,24 @@
+---
+title: Logger
+description: Console logger for state changes.
+---
+
+# Logger
+
+The `logger` middleware tracks every `setState` call and prints it to the browser console. It displays the previous state, the update (action or value), and the resulting next state.
+
+```ts
+import { logger } from '@ilokesto/state/middleware';
+
+const store = logger({ collapsed: true })({ count: 0 });
+```
+
+## Options
+
+- `collapsed`: (default: `false`) Collapses the log group by default.
+- `diff`: (default: `false`) Displays a deep diff of state changes.
+- `timestamp`: (default: `true`) Includes a timestamp in the log header.
+
+## Production Behavior
+
+In production mode, `logger` is automatically disabled to avoid performance overhead and leaking sensitive information in the console. It simply returns the original store without any logging logic.

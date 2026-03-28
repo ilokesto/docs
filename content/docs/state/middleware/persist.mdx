@@ -1,0 +1,36 @@
+---
+title: Persist
+description: Sync state with localStorage, sessionStorage, or cookies.
+---
+
+# Persist
+
+The `persist` middleware automatically saves and restores store state across browser sessions.
+
+```ts
+import { persist } from '@ilokesto/state/middleware';
+
+const store = persist({ local: 'counter-storage' })({ count: 0 });
+```
+
+## Options
+
+- `local`: (string) Key for `localStorage`.
+- `session`: (string) Key for `sessionStorage`.
+- `cookie`: (string) Key for cookie storage.
+- `migrate`: (function array) Optional migration chain. In the current type model, migrations are supported for `local` and `cookie`, not `session`.
+
+## Implementation Details
+
+- **Initialization**: Reads persisted state from the configured storage during store setup.
+- **Storage Shape**: Data is stored as an object `{ state, version }`.
+- **Write Optimization**: Duplicate writes are skipped through a memory-based write cache to minimize storage access.
+- **Migration**: Applies only to `local` and `cookie` storage paths in the current implementation.
+- **Update Cycle**: It writes back only when the store's state reference actually changes.
+- **Version Source**: The persisted `version` is derived from the migration chain length, not from a separate public `version` option.
+
+## Best Practices
+
+- Use `migrate` if you expect your store's state structure to change over time.
+- Prefer explicit naming for storage keys to avoid collisions with other applications.
+- **Persistence ordering**: Place `persist()` towards the end of your middleware chain to ensure it saves the final state processed by other middleware.

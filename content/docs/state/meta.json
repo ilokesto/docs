@@ -1,1 +1,25 @@
-{"title": "State", "root": true, "pages": ["index", "create", "selectors", "reducer", "middleware", "utils"]}
+{
+  "title": "State",
+  "root": true,
+  "pages": [
+    "index",
+    "---Introduction---",
+    "quick-start",
+    "mental-model",
+    "---Core API---",
+    "create",
+    "selectors",
+    "accessors",
+    "reducer",
+    "---Guides---",
+    "patterns",
+    "existing-store",
+    "---Middleware---",
+    "middleware",
+    "---Utils---",
+    "utils",
+    "---Advanced---",
+    "ssr-and-initial-state",
+    "implementation-notes"
+  ]
+}

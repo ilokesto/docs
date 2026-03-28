@@ -1,68 +1,70 @@
 ---
-title: Reducer Mode
-description: create(reducer, initialState) and dispatch(action)
+title: Reducer
+description: Using reducers for complex state transitions in @ilokesto/state.
 ---
 
-# Reducer Mode
+# Reducer
 
-While the default `setState(next)` flow is enough for many stores, some state transitions are easier to understand as named actions. `@ilokesto/state` supports that with the reducer overload of `create()`.
+For complex state transitions, `@ilokesto/state` supports a reducer-based mode similar to React's `useReducer` or Redux.
 
-## How it works
+## Defining a Reducer
 
-Instead of passing plain initial state, pass a reducer function and an initial state (or existing `Store<T>`).
+A reducer is a pure function that takes the current state and an action, and returns the next state.
 
-```tsx
+```ts
 import { create } from '@ilokesto/state';
 
 type State = { count: number };
-type Action = { type: 'increment' } | { type: 'decrement' };
+type Action = { type: 'increment' } | { type: 'decrement' } | { type: 'set'; value: number };
 
-const reducer = (state: State, action: Action): State => {
+const counterReducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case 'increment':
-      return { count: state.count + 1 };
-    case 'decrement':
-      return { count: state.count - 1 };
-    default:
-      return state;
+    case 'increment': return { count: state.count + 1 };
+    case 'decrement': return { count: state.count - 1 };
+    case 'set': return { count: action.value };
+    default: return state;
   }
 };
 
-const useCounter = create<State, Action>(reducer, { count: 0 });
+const useCounter = create(counterReducer, { count: 0 });
 ```
 
-## Using the returned hook
+## Dispatching Actions
 
-Reducer mode returns `[selectedValue, dispatch]`.
+In reducer mode, the hook returns a `dispatch` function instead of `setState`.
 
 ```tsx
 function Counter() {
-  const [count, dispatch] = useCounter((state) => state.count);
+  const [count, dispatch] = useCounter(state => state.count);
 
   return (
-    <>
-      <p>{count}</p>
+    <div>
+      <p>Count: {count}</p>
       <button onClick={() => dispatch({ type: 'increment' })}>Increment</button>
-    </>
+      <button onClick={() => dispatch({ type: 'decrement' })}>Decrement</button>
+    </div>
   );
 }
 ```
 
-`writeOnly()` also returns the reducer dispatcher when you want to fire actions without subscribing to state.
+## Global Dispatch
+
+You can also use the `writeOnly` accessor to get the `dispatch` function outside of React.
 
 ```ts
-const dispatch = useCounter.writeOnly();
-dispatch({ type: 'increment' });
+export const incrementCount = () => {
+  const dispatch = useCounter.writeOnly();
+  dispatch({ type: 'increment' });
+};
 ```
 
-## Why choose reducer mode?
+## Why Use Reducers?
 
-- You want state transitions expressed as explicit action objects.
-- You want one dispatch entrypoint instead of exposing `setState` directly.
-- You are porting logic from `useReducer` or another reducer-based system.
+- **Complex Logic**: When state transitions depend on multiple fields or require complex validation.
+- **Traceability**: Reducers provide a clear path for all state changes, which is especially useful when combined with the `logger` or `devtools` middleware.
+- **Interoperability**: Easier to migrate existing `useReducer` logic to a global store.
 
-## Caveats
+## Important Note
 
-- Your reducer must always return the next full state value.
-- The hook still follows the same selector model as state mode.
-- Middleware wraps the underlying store behavior, so reducer-driven updates still flow through middleware when you build the store that way.
+- **No Partial Updates**: Reducers must always return the **full** state object. Partial state updates are not supported in reducer mode.
+- **Middleware Integration**: Reducer-based stores fully support all `@ilokesto/state` middleware.

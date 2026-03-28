@@ -1,0 +1,56 @@
+---
+title: Quick Start
+description: Get up and running with @ilokesto/state in minutes.
+---
+
+# Quick Start
+
+Install the package using your preferred package manager:
+
+```package-install
+@ilokesto/state
+```
+
+## Basic Usage
+
+Creating a store and using it in a component is straightforward.
+
+```tsx
+import { create } from '@ilokesto/state';
+
+// 1. Create a store hook
+const useCounter = create({ count: 0 });
+
+function Counter() {
+  // 2. Use the hook with a selector
+  const [count, setState] = useCounter((state) => state.count);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setState((prev) => ({ ...prev, count: prev.count + 1 }))}>
+        Increment
+      </button>
+    </div>
+  );
+}
+```
+
+## Global Actions
+
+You can define actions outside of your components by using the `writeOnly` accessor.
+
+```ts
+const useCounter = create({ count: 0 });
+
+export const increment = () => {
+  const setState = useCounter.writeOnly();
+  setState(state => ({ count: state.count + 1 }));
+};
+```
+
+## What's Next?
+
+- Understand the [Mental Model](./mental-model) behind the library.
+- Learn more about the [Core API](./create).
+- Explore [Middleware](./middleware) for logging, persistence, and more.

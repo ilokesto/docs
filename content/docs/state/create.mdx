@@ -1,93 +1,68 @@
 ---
-title: create API
-description: Supported create() call forms and returned hook behavior
+title: create
+description: The primary API for building stores in @ilokesto/state.
 ---
 
 # `create`
 
-`create()` is the main public API of `@ilokesto/state`. It always returns a hook-like store accessor, but it supports two different modes:
+`create` is the main entry point for `@ilokesto/state`. It defines your state and returns a hook that components use to interact with that state.
 
-- **State mode**: update with `setState(next)`.
-- **Reducer mode**: update with `dispatch(action)`.
+## Call Signatures
 
-It also accepts either plain state or an existing `Store<T>` instance from `@ilokesto/store`.
+The `create` function is overloaded to support two primary modes of operation.
 
-## Supported call forms
+### State Mode
 
-### 1. Plain state
+In state mode, you provide the initial state directly. The returned hook provides a `setState` function similar to React's `useState`.
 
 ```ts
 import { create } from '@ilokesto/state';
 
+// 1. With initial state value
 const useCounter = create({ count: 0 });
-```
 
-### 2. Existing Store instance
-
-```ts
+// 2. With an existing Store instance
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
-
 const store = new Store({ count: 0 });
-const useCounter = create(store);
+const useCounterFromStore = create(store);
 ```
 
-### 3. Reducer + plain state
+### Reducer Mode
+
+In reducer mode, you provide a reducer function and an initial state (or store). The returned hook provides a `dispatch` function.
 
 ```ts
-type CounterState = { count: number };
-type CounterAction = { type: 'increment' } | { type: 'decrement' };
+type State = { count: number };
+type Action = { type: 'increment' } | { type: 'decrement' };
 
-const useCounter = create<CounterState, CounterAction>(
-  (state, action) => {
-    switch (action.type) {
-      case 'increment':
-        return { count: state.count + 1 };
-      case 'decrement':
-        return { count: state.count - 1 };
-      default:
-        return state;
-    }
-  },
-  { count: 0 },
-);
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'increment': return { count: state.count + 1 };
+    case 'decrement': return { count: state.count - 1 };
+    default: return state;
+  }
+};
+
+const useCounter = create(reducer, { count: 0 });
 ```
 
-### 4. Reducer + existing Store instance
+## Hook Behavior
 
-The reducer overload also accepts a prebuilt `Store<T>` as its second argument.
+The hook returned by `create` accepts a selector function.
 
-## What the returned value looks like
-
-In state mode:
-
-```ts
-const useCounter = create({ count: 0 });
-
-const [count, setCounter] = useCounter((state) => state.count);
+```tsx
+function Counter() {
+  // Returns [selectedState, updater]
+  const [count, setCountOrDispatch] = useCounter(state => state.count);
+  // ...
+}
 ```
 
-- `count` is the selected value.
-- `setCounter` accepts either the next state value or an updater function, matching React's `SetStateAction<T>` shape.
+- **In State Mode**: The second element is the store writer. Even if your selector returns only one field, the writer still accepts the next full state value or an updater over the full state: `setState((prev) => ({ ...prev, count: prev.count + 1 }))`.
+- **In Reducer Mode**: The second element is a `dispatch` function that accepts an action: `dispatch({ type: 'increment' })`.
 
-In reducer mode:
+## Important Notes
 
-```ts
-const [count, dispatch] = useCounter((state) => state.count);
-```
-
-- `count` is the selected value.
-- `dispatch` accepts your action object.
-
-## Extra helpers
-
-Every created store also exposes:
-
-- `writeOnly()` — returns the writer (`setState` or `dispatch`).
-- `readOnly()` — returns the current selected value.
-
-## Important limitation
-
-`create()` does **not** accept a Zustand-style initializer function such as `(set, get, store) => state`. The supported inputs are the ones shown above: plain state, existing `Store`, or reducer + initial state/store.
-
-If you need advanced composition, build a `Store` first with utilities like `pipe()` and then pass that store to `create()`.
+- **No Initializer Functions**: `create` does **not** support Zustand-style initializer functions like `(set, get) => ({ ... })`.
+- **Selector Subscriptions**: The hook internally uses `useSyncExternalStore` to subscribe to the store.
+- **SSR Support**: Supports SSR by using `store.getInitialState()` for the server snapshot.

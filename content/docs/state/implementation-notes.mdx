@@ -1,0 +1,36 @@
+---
+title: Implementation Notes
+description: Deep dive into the internal mechanics of @ilokesto/state.
+---
+
+# Implementation Notes
+
+This page documents the internal architecture and implementation choices of the library. This is intended for advanced users and potential contributors.
+
+## Hook Implementation
+
+The core of `@ilokesto/state` is the hook returned by `create`, which delegates to `createUseState` and wraps `useSyncExternalStore`.
+
+- **Selector Logic**: Each hook call establishes a subscription to the store.
+- **Server Snapshot**: `getServerSnapshot` is derived from `store.getInitialState()`, which is how SSR stays aligned with the original constructor value.
+
+## Comparison and Performance
+
+- **Store Layer**: The underlying `Store` still uses `Object.is` to decide whether an update should notify listeners at all.
+- **State Layer**: Inside `createUseState`, the previous store snapshot and the next store snapshot are compared with `deepCompare`. When they are deeply equal, the previous selected value is reused.
+- **No Custom Equality API**: There is no separate selector equality argument in the current public API.
+
+## Reducer Mode
+
+When you use `create(reducer, initialState)`, the library internally uses middleware injection within `getStore`.
+
+- **Action Dispatching**: The returned `dispatch` function sends an action through the middleware chain, where the reducer eventually processes it into a new state.
+- **Action Name Stamping**: During reducer dispatch, `getStore` temporarily attaches `store.actionName`, which is then consumed by logger and devtools middleware.
+- **Extensibility**: Because it uses the same middleware system, you can combine reducer-based stores with logging, persistence, and validation.
+
+## Write Cache (Persistence)
+
+To avoid excessive I/O, the `persist` middleware maintains a write cache.
+
+- **Deduplication**: It compares the new state with the last written state. If they are identical, the write operation is skipped.
+- **Debounced Writes**: You can combine `persist` with `debounce` to further reduce storage pressure.

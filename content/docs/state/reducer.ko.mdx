@@ -1,8 +1,70 @@
 ---
-title: 리듀서 모드
-description: 리듀서로 상태 관리
+title: 리듀서 (Reducer)
+description: "@ilokesto/state에서 복잡한 상태 전이를 위해 리듀서 사용하기."
 ---
 
-# 리듀서 모드
+# 리듀서 (Reducer)
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/state/reducer)을 참고해 주세요.
+복잡한 상태 전이가 필요한 경우, `@ilokesto/state`는 React의 `useReducer` 또는 Redux와 유사한 리듀서 기반 모드를 지원합니다.
+
+## 리듀서 정의
+
+리듀서는 현재 상태와 액션을 인자로 받아 다음 상태를 반환하는 순수 함수입니다.
+
+```ts
+import { create } from '@ilokesto/state';
+
+type State = { count: number };
+type Action = { type: 'increment' } | { type: 'decrement' } | { type: 'set'; value: number };
+
+const counterReducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'increment': return { count: state.count + 1 };
+    case 'decrement': return { count: state.count - 1 };
+    case 'set': return { count: action.value };
+    default: return state;
+  }
+};
+
+const useCounter = create(counterReducer, { count: 0 });
+```
+
+## 액션 디스패치 (Dispatching Actions)
+
+리듀서 모드에서 훅은 `setState` 대신 `dispatch` 함수를 반환합니다.
+
+```tsx
+function Counter() {
+  const [count, dispatch] = useCounter(state => state.count);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => dispatch({ type: 'increment' })}>Increment</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>Decrement</button>
+    </div>
+  );
+}
+```
+
+## 전역 디스패치
+
+`writeOnly` 접근자를 사용하여 React 외부에서도 `dispatch` 함수를 얻을 수 있습니다.
+
+```ts
+export const incrementCount = () => {
+  const dispatch = useCounter.writeOnly();
+  dispatch({ type: 'increment' });
+};
+```
+
+## 왜 리듀서를 사용하나요?
+
+- **복잡한 로직**: 상태 전이가 여러 필드에 의존하거나 복잡한 유효성 검사가 필요한 경우.
+- **추적 가능성**: 리듀서는 모든 상태 변경에 대한 명확한 경로를 제공하며, 이는 `logger`나 `devtools` 미들웨어와 결합할 때 특히 유용합니다.
+- **상호 운용성**: 기존의 `useReducer` 로직을 전역 스토어로 쉽게 마이그레이션할 수 있습니다.
+
+## 중요 참고 사항
+
+- **부분 업데이트 미지원**: 리듀서는 항상 **전체** 상태 객체를 반환해야 합니다. 리듀서 모드에서 부분 상태 업데이트는 지원되지 않습니다.
+- **미들웨어 통합**: 리듀서 기반 스토어는 모든 `@ilokesto/state` 미들웨어를 완벽하게 지원합니다.

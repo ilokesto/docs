@@ -1,67 +1,41 @@
 ---
 title: Introduction
-description: React state hooks built on top of @ilokesto/store
+description: Powerful, minimal, and scalable state management for React.
 ---
 
 # @ilokesto/state
 
-`@ilokesto/state` is the React-facing layer of the ilokesto state stack. It takes the minimal `@ilokesto/store` core and adds a `create()` API, selector-based subscriptions, reducer mode, and optional middleware utilities.
+`@ilokesto/state` is a focused state management library for React. It aims to provide the perfect balance between simplicity and scalability by focusing on **store-hook unity**.
 
-Use it when you want a store-shaped state model in React without bringing in a larger framework. If you only need the vanilla data container, use `@ilokesto/store` directly. If you want React hooks, selectors, and middleware, start with `@ilokesto/state`.
+## Core Philosophy
+
+- **No Providers**: No need to wrap your application in complex Context Providers.
+- **Predictable**: State is external but deeply integrated with React's rendering through `useSyncExternalStore`.
+- **Composable**: Built-in support for middleware like logging, persistence, and validation.
+- **Performant**: Optimized re-renders through a powerful selector system.
 
 ## Installation
 
-```bash
-pnpm add @ilokesto/state react
+```package-install
+@ilokesto/state
 ```
 
-If you want to use `adaptor()`, install `immer` as well.
-
-```bash
-pnpm add immer
-```
-
-## What it gives you
-
-- A `create()` function that returns a React hook.
-- Selector-based subscriptions so components can read only the slice they need.
-- A reducer-style mode when you want `dispatch(action)` instead of `setState(next)`.
-- Middleware utilities such as `logger`, `debounce`, `devtools`, `validate`, and `persist`.
-- Small helpers like `pipe()` and `adaptor()` for store composition and immutable object updates.
-
-## Quick start
-
-The simplest form of `create()` accepts plain initial state.
+## Quick Look
 
 ```tsx
 import { create } from '@ilokesto/state';
 
-type CounterState = {
-  count: number;
-};
-
-const useCounter = create<CounterState>({ count: 0 });
+const useCounter = create({ count: 0 });
 
 function Counter() {
-  const [count, setCounter] = useCounter((state) => state.count);
+  const [count, setState] = useCounter((state) => state.count);
 
   return (
-    <button onClick={() => setCounter((prev) => ({ ...prev, count: prev.count + 1 }))}>
+    <button onClick={() => setState((prev) => ({ ...prev, count: prev.count + 1 }))}>
       {count}
     </button>
   );
 }
 ```
 
-## When to use it
-
-- You want a single store that multiple React components can read from.
-- You want a small API centered on `setState` or `dispatch`.
-- You want selector-based subscriptions without wiring `useSyncExternalStore` yourself.
-- You want opt-in middleware rather than a large built-in runtime.
-
-## Next steps
-
-- Go to [`create API`](/en/state/create) for the supported call signatures.
-- Go to [`Selectors & Performance`](/en/state/selectors) to see how subscriptions work.
-- Go to [`Middleware`](/en/state/middleware) to compose logging, persistence, and validation.
+Ready to dive in? Start with the [Quick Start](./quick-start) guide.

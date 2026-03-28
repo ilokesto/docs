@@ -1,0 +1,11 @@
+{
+  "title": "Middleware",
+  "pages": [
+    "index",
+    "logger",
+    "devtools",
+    "debounce",
+    "persist",
+    "validate"
+  ]
+}

@@ -1,0 +1,26 @@
+---
+title: DevTools
+description: Redux DevTools extension support.
+---
+
+# DevTools
+
+The `devtools` middleware connects your `@ilokesto/state` store to the Redux DevTools extension for advanced debugging.
+
+```ts
+import { devtools } from '@ilokesto/state/middleware';
+
+const store = devtools('CounterStore')({ count: 0 });
+```
+
+## Features
+
+- **State Inspection**: View the full state tree from the Redux DevTools extension.
+- **Action Labels**: Updates are sent with the `${name}:${actionName}` pattern when action names are available.
+- **Message Handling**: Supports `RESET`, `COMMIT`, and `ROLLBACK` commands from the extension.
+
+## Constraints
+
+- **Browser Only**: Depends on the extension being present in `window.__REDUX_DEVTOOLS_EXTENSION__`.
+- **Disabled in Production**: Like `logger`, it is automatically disabled in production environments.
+- **Action Name Pattern**: Updates are sent to DevTools in the format `${name}:${actionName}` or `${name}:anonymous`.

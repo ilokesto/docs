@@ -3,13 +3,9 @@
   "root": true,
   "pages": [
     "index",
-    "api",
-    "updates",
-    "subscriptions",
-    "patterns",
-    "building-on-store",
-    "integrations",
-    "semantics",
-    "implementation-notes"
+    "(core-reference)",
+    "(guides)",
+    "(integrations)",
+    "(internals)"
   ]
 }

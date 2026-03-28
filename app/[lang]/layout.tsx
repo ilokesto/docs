@@ -13,7 +13,7 @@ export default async function Layout({
     <RootProvider
       search={{
         options: {
-          type: 'static',
+          type: 'fetch',
           api: '/api/search',
         },
       }}

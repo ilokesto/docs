@@ -1,0 +1,50 @@
+---
+title: Building on Store
+description: Guidelines for adapter and library authors.
+---
+
+`@ilokesto/store` is intended to be the foundation for higher-level abstractions. If you are building a framework adapter, a form library, an overlay controller, or another state-oriented package, this page outlines the stable contract you can build on.
+
+### The Minimal Contract
+
+The `Store<T>` class provides the minimum surface needed for external tools to interact with state:
+
+- `getState()` for reading.
+- `setState(next)` for writing.
+- `subscribe(listener)` for observing changes.
+
+### Higher-layer Responsibilities
+
+When building on top of `Store`, higher layers usually add responsibilities that the core package intentionally does not own:
+
+1. **Map state into another runtime model**: for example, a framework reactivity system or a domain-specific controller.
+2. **Own lifecycle cleanup**: remove listeners when the consumer is disposed.
+3. **Add higher-level ergonomics**: selectors, actions, reducers, validation, persistence, or tooling.
+
+### Adapter Lifecycle
+
+Most adapters follow the same shape:
+
+1. Read the current snapshot with `getState()`.
+2. Subscribe to future changes with `subscribe(listener)`.
+3. Forward writes through `setState(next)` or wrapper actions.
+4. Clean up the subscription when the consumer goes away.
+
+### Public Contract Boundaries
+
+When exposing a higher-level library based on `Store`, you should decide whether to:
+
+- **Expose the Store instance directly**: Good for power users who want to use the vanilla API.
+- **Wrap the Store**: Provide a more restricted or specialized API (e.g., hide `setState` and only expose specific actions).
+
+### Stable Boundaries First
+
+Build against the stable surface first: `getState()`, `setState(next)`, and `subscribe(listener)`.
+
+If you choose to rely on deeper implementation details, treat them as opt-in internals rather than as a long-term compatibility guarantee.
+
+### Avoid Deep Coupling
+
+- **Don't depend on internal fields**: Only use the public methods.
+- **Keep it generic**: Try not to restrict the state shape unless necessary for your library's purpose.
+- **Support multiple instances**: Ensure your library works correctly when multiple stores are present in the same application.

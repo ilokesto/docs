@@ -1,0 +1,52 @@
+---
+title: Subscriptions
+description: Managing the observer lifecycle and notification guarantees.
+---
+
+The subscription system in `@ilokesto/store` is designed to be lean and reliable.
+
+### Subscribe/Unsubscribe Lifecycle
+
+`store.subscribe` registers a listener and returns an unsubscription function. Always ensure you call this function when the consumer (e.g., a component or a service) is destroyed to avoid memory leaks.
+
+```typescript
+const unsubscribe = store.subscribe(() => {
+  // Respond to state changes
+});
+
+// Clean up when done
+unsubscribe();
+```
+
+### Synchronous Notification
+
+Notifications are synchronous. When `store.setState` is called and passes the reference check, the internal state is updated, and then all listeners are notified immediately.
+
+- Notifications happen within the `setState` call stack.
+- Listeners see the state that was just applied.
+
+### Duplicate Listener Registration
+
+Register the same listener reference only once. Subscription behavior is designed for stable listener registration and predictable cleanup, not for stacking identical callbacks repeatedly.
+
+### Safe Notification Iteration
+
+Notification is safe even when a listener unsubscribes itself or removes another listener during the notification phase. Consumers can rely on that behavior without depending on the internal iteration strategy.
+
+```typescript
+const unsubscribeSelf = store.subscribe(() => {
+  // This is safe and won't crash the loop
+  unsubscribeSelf();
+});
+```
+
+### Common Usage Patterns
+
+- **Logging**: A store-wide logger that records every transition.
+- **Persistence**: A listener that saves the state to `localStorage` on every change.
+- **Framework Adapters**: Glue code that triggers a re-render in React or Vue whenever the store notifies.
+
+### Best Practices
+
+- **Keep it lightweight**: Listeners should be fast and avoid heavy computation. If you need complex processing, consider debouncing or scheduling the work outside the notification cycle.
+- **Avoid side effects inside listeners**: Ideally, a listener should only trigger a downstream update or record the change. Avoid calling `store.setState` inside a listener, as it can lead to infinite update loops.

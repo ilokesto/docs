@@ -1,0 +1,88 @@
+---
+title: Common Patterns
+description: Practical recipes for real-world usage.
+---
+
+Explore effective patterns for managing state with `@ilokesto/store`.
+
+### Module-scope Store
+
+For shared global state, you can create a store at the module level and export it.
+
+```typescript
+// store.ts
+export const authStore = new Store({ user: null, isAuthenticated: false });
+```
+
+### Action-like Wrappers
+
+Instead of calling `setState` directly everywhere, wrap updates in semantic functions (actions).
+
+```typescript
+export const login = (user: User) => {
+  authStore.setState({ user, isAuthenticated: true });
+};
+
+export const logout = () => {
+  authStore.setState({ user: null, isAuthenticated: false });
+};
+```
+
+### Read/Write Separation
+
+You can export different parts of the store to control access.
+
+```typescript
+// Only export the read-only view and actions
+export const getAuthState = () => authStore.getState();
+export const subscribeToAuth = (listener: () => void) =>
+  authStore.subscribe(listener);
+```
+
+### Reset Pattern
+
+Easily reset the store to its initial state using `getInitialState()`.
+
+```typescript
+const resetStore = () => {
+  store.setState(store.getInitialState());
+};
+```
+
+### Derived Values
+
+Since `Store` only manages the raw atom, you can compute derived state on-demand.
+
+```typescript
+const getFullName = () => {
+  const { firstName, lastName } = userStore.getState();
+  return `${firstName} ${lastName}`;
+};
+```
+
+### Splitting Stores
+
+Don't feel forced to put everything in one giant store. Separate concerns into multiple stores.
+
+```typescript
+const themeStore = new Store("light");
+const userStore = new Store({ id: 1, name: "Alice" });
+```
+
+### Testing Patterns
+
+Testing store logic is straightforward because it has no framework dependencies.
+
+```typescript
+test("increments count", () => {
+  const store = new Store({ count: 0 });
+  store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+  expect(store.getState().count).toBe(1);
+});
+```
+
+### Anti-patterns
+
+- **Deep mutation**: Modifying state properties directly instead of returning new objects.
+- **Sync loops**: Subscribing to a store and calling `setState` on the same store within the listener.
+- **Putting everything in one store**: While a single atom is powerful, over-centralizing unrelated state can lead to unnecessary notifications for consumers.

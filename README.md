@@ -29,3 +29,7 @@ pnpm build
 - Next.js 16
 - Fumadocs
 - MDX content in `content/docs`
+
+## Maintainer Guide
+
+- `DOCS_ARCHITECTURE.md` — the single source of truth for official docs structure

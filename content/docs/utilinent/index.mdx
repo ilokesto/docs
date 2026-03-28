@@ -16,6 +16,13 @@ The package is easiest to understand if you do **not** think of it as a state li
 - **Composition helpers** like `Slot` and `Slottable`
 - **Extension machinery** like `createProxy`, `PluginManager`, and exported helper types
 
+## What it is not
+
+- It is not a state-management library.
+- It is not a styling system.
+- It is not a data-fetching abstraction.
+- It does not replace ordinary React components when plain JSX is already clear enough.
+
 ## Root import model
 
 The package exports everything from the root entrypoint. There are no subpath exports in `package.json`, so the default learning path should start from root imports.
@@ -26,6 +33,22 @@ The package exports everything from the root entrypoint. There are no subpath ex
 
 ```tsx
 import { For, Show, Slot } from '@ilokesto/utilinent';
+```
+
+## Quick Look
+
+```tsx
+import { For, Show } from '@ilokesto/utilinent';
+
+function Panel({ user, items }) {
+  return (
+    <Show when={user} fallback={<p>Please log in</p>}>
+      <For each={items} fallback={<p>No items</p>}>
+        {(item) => <div key={item.id}>{item.label}</div>}
+      </For>
+    </Show>
+  );
+}
 ```
 
 ## Why these helpers exist

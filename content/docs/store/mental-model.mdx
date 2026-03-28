@@ -1,0 +1,55 @@
+---
+title: Mental Model
+description: The conceptual frame behind the Store class.
+---
+
+# Mental Model
+
+`@ilokesto/store` is easiest to understand if you think of it as a single synchronous value container.
+
+It does three things:
+
+- hold a value,
+- replace that value,
+- notify listeners when the value changes.
+
+Everything else is intentionally outside its scope.
+
+## One atom, not a framework layer
+
+`Store` does not know about React, Vue, reducers, persistence, or selectors. Those belong in higher layers.
+
+That is why the API is so small:
+
+- `getState()`
+- `getInitialState()`
+- `setState()`
+- `subscribe()`
+
+## Reads are simple
+
+There is no derived read system here. A read means “give me the current value.”
+
+If you want narrower reads, that belongs in a higher-level binding or in your own adapter layer.
+
+## Writes replace values
+
+The most important mental model is that a store write replaces the state value. It does not merge objects for you.
+
+That is why object updates are written like this:
+
+```ts
+store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+```
+
+## Subscriptions are synchronous
+
+`Store` does not queue updates into a framework scheduler. A successful write updates the state immediately and then notifies listeners.
+
+That makes the package a good foundation for other layers, but it also means the package expects you to be deliberate about mutation and listener work.
+
+## Why this package stays small
+
+The point of `@ilokesto/store` is not to be the whole state-management story. The point is to be a stable base layer that other packages can build on.
+
+If you want exact behavior rules next, read [Semantics](./semantics). If you want practical patterns, go to [Patterns](./patterns).

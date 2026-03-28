@@ -50,4 +50,9 @@ Utilinent는 **렌더링 로직 계층**으로 생각하면 가장 이해하기 
 - viewport나 promise 해석이 출력을 결정하면 **비동기/가시성 프리미티브**
 - 래퍼 요소가 API를 망치기 시작하면 **컴포지션 헬퍼**
 
-여기서부터는 대부분 [조건부 렌더링](./conditional)이나 [비동기 및 가시성](./async)으로 이어서 읽으면 자연스럽습니다.
+여기서부터는 문제의 모양에 따라 다음 페이지를 고르면 됩니다.
+
+- 분기가 핵심이면 [조건부 렌더링](./conditional)
+- 반복과 fallback이 핵심이면 [컬렉션 헬퍼](./collection)
+- 타이밍이나 viewport 진입이 출력을 결정하면 [비동기 및 가시성](./async)
+- wrapperless composition이 문제라면 [컴포지션](./composition)

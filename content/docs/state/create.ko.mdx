@@ -11,7 +11,7 @@ description: "@ilokesto/state에서 스토어를 구축하기 위한 기본 API.
 
 `create` 함수는 두 가지 주요 운영 모드를 지원하도록 오버로드되어 있습니다.
 
-### 상태 모드 (State Mode)
+### 상태 모드
 
 상태 모드에서는 초기 상태를 직접 제공합니다. 반환된 훅은 React의 `useState`와 유사한 `setState` 함수를 제공합니다.
 
@@ -27,7 +27,9 @@ const store = new Store({ count: 0 });
 const useCounterFromStore = create(store);
 ```
 
-### 리듀서 모드 (Reducer Mode)
+두 번째 형태가 실제 사용 사례라면 이어서 [기존 스토어 사용](./existing-store)을 읽는 것이 좋습니다. 그 페이지에서 `create(store)`가 어떤 경계에 어울리는지, 그리고 기존 스토어를 React에 연결해도 무엇은 바뀌지 않는지를 설명합니다.
+
+### 리듀서 모드
 
 리듀서 모드에서는 리듀서 함수와 초기 상태(또는 스토어)를 제공합니다. 반환된 훅은 `dispatch` 함수를 제공합니다.
 
@@ -66,3 +68,9 @@ function Counter() {
 - **초기화 함수 미지원**: `create`는 Zustand 스타일의 초기화 함수(예: `(set, get) => ({ ... })`)를 지원하지 **않습니다**.
 - **셀렉터 구독**: 훅은 내부적으로 `useSyncExternalStore`를 사용하여 스토어를 구독합니다.
 - **SSR 지원**: 서버 스냅샷을 위해 `store.getInitialState()`를 사용하여 SSR을 지원합니다.
+
+## 다음으로 읽을 페이지
+
+- 구독과 메모이제이션 모델을 자세히 보고 싶다면 [셀렉터](./selectors)
+- 액션을 컴포넌트 밖으로 빼려면 [접근자](./accessors)
+- 이미 vanilla `Store`를 갖고 있다면 [기존 스토어 사용](./existing-store)

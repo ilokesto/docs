@@ -11,6 +11,12 @@ export default async function Layout({
   
   return (
     <RootProvider
+      search={{
+        options: {
+          type: 'static',
+          api: '/api/search',
+        },
+      }}
       i18n={{
         locale: resolvedParams.lang,
         locales: [

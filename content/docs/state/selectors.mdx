@@ -5,7 +5,9 @@ description: Efficiently subscribing to state slices in @ilokesto/state.
 
 # Selectors
 
-Selectors are the primary mechanism for reading state in `@ilokesto/state`. They allow components to subscribe only to the specific data they need, which is crucial for maintaining performance in larger applications.
+Selectors are the primary mechanism for reading state in `@ilokesto/state`. They allow components to subscribe to specific data slices, narrowing the surface of re-renders.
+
+It is important to understand that **selectors narrow reads, not writes.** Even if you select a single primitive field, the "writer" (the second element in the returned tuple) still expects and operates on the full store state.
 
 ## Basic Usage
 
@@ -13,47 +15,57 @@ The hook returned by `create` accepts a selector function as its first argument.
 
 ```tsx
 const [count, setCount] = useCounter(state => state.count);
+
+// Even though we only read 'count', setCount still receives full state
+const increment = () => setCount(prev => ({ ...prev, count: prev.count + 1 }));
 ```
 
-The hook returns a tuple where:
-1. The first element is the **selected value**.
-2. The second element is the **writer** (`setState` or `dispatch`). In state mode it still writes the full store state, even if the selector returned only one slice.
-
-## Subscription Logic
-
-When you use a selector, the component only re-renders when the **result** of that selector changes.
-
-```tsx
-// This component only re-renders when state.user.name changes.
-const [name] = useUserStore(state => state.user.name);
-```
-
-If you call the hook without a selector, the component subscribes to the **entire store** and re-renders on every state change.
-
-```tsx
-// Subscribes to EVERYTHING. Use with caution.
-const [state, setState] = useStore();
-```
+The hook returns a tuple:
+1. **Selected value**: The result of your selector function.
+2. **Writer**: The `setState` or `dispatch` function for the entire store.
 
 ## Memoization and Comparison
 
-`@ilokesto/state` memoizes through the store snapshot path rather than through a custom selector equality API.
+`@ilokesto/state` uses a "runtime-first" memoization model tied to the store's internal snapshot cycle. It does not provide a public equality API (like `shallow` or `isEqual` parameters) because it relies on the underlying store's structural sharing.
 
-- **Primitives** still behave as you would expect.
-- **Objects and arrays** can reuse previous selected values when the underlying store snapshots remain deeply equal.
+- **The comparison logic**: When the store updates, the hook compares the **previous store snapshot** with the **next store snapshot** using a deep equality check (`deepCompare`).
+- **Reuse behavior**: If the internal snapshots are deeply equal, the previous selected value is reused exactly. This ensures that even if you return an object or array from a selector, it won't trigger a re-render unless the data inside actually changed.
+
+## The "No-Selector" Path
+
+If you call the hook without a selector, you are opting into a **whole-store subscription**.
+
+```tsx
+// Subscribes to EVERYTHING. The component re-renders on every single store update.
+const [state, setState] = useStore();
+```
+
+While convenient for small stores or top-level providers, this should be avoided in performance-critical components.
+
+## Selector Identity and Resets
+
+The hook tracks the identity of your selector function. If the selector function itself changes (e.g., it's an inline function that captures different props), the hook may reset its internal subscription state.
+
+To ensure the best performance:
+- Keep selectors stable (define them outside the component if they don't depend on props).
+- If a selector must depend on props, ensure those props are stable or accept that the selector will be re-evaluated.
+
+## SSR and Initial State
+
+When using Server-Side Rendering (SSR), selectors interact with `getInitialState()`. The hook uses the initial state provided during store creation (or injected via SSR hydration) to generate the first snapshot. This ensures that the first render on the client matches the server output even before the first client-side effect runs.
 
 ## Derived State
 
-You can use selectors to compute derived state directly.
+You can compute derived values directly within a selector.
 
 ```tsx
-const [isEven] = useCounter(state => state.count % 2 === 0);
+const [isOverLimit] = useCounter(state => state.count > 100);
 ```
 
-This is efficient because the calculation only happens during the store update cycle, and the component only re-renders if the boolean result changes.
+Since the hook only triggers a re-render if the **result** of the selector changes, `isOverLimit` will only cause a re-render when the count crosses the threshold, not for every count increment.
 
-## Best Practices
+## Common Mistakes
 
-- **Keep Selectors Simple**: Selectors should be pure functions. Avoid complex logic inside them.
-- **Granular Subscriptions**: Prefer selecting specific fields instead of large objects to minimize re-renders.
-- **Stable References**: If you define selectors outside of your components, you can ensure they have stable references.
+1. **Expecting narrow writes**: Thinking `setCount(5)` will work if you selected `state.count`. Writers always deal with the full store shape defined in `create`.
+2. **Expensive logic in selectors**: The selector path is optimized, but it is not free. When store snapshots differ, the selector is evaluated again. Keep selectors cheap and predictable.
+3. **Circular dependencies**: Defining a selector that depends on a value it also writes to in a way that triggers infinite loops.

@@ -5,96 +5,112 @@ description: Mount, Observer, Slacker, and useIntersectionObserver.
 
 # Async & Visibility
 
-This part of Utilinent is about output that should depend on timing or visibility.
+The async and visibility utilities in Utilinent are designed to handle data loading and rendering based on timing or viewport intersection. They form a dependency chain that starts from a low-level hook and scales up to opinionated layout components.
 
-- `Mount` treats async children as a rendering concern.
-- `Observer` turns intersection state into rendering.
-- `Slacker` delays expensive loading until a region becomes visible.
-- `useIntersectionObserver` is the low-level hook behind that behavior.
+## Dependency Chain
+
+Understanding how these components relate helps you choose the right level of abstraction:
+- **`useIntersectionObserver`**: The low-level hook that tracks visibility.
+- **`Observer`**: A component wrapper around the hook for "render-when-visible" behavior.
+- **`Slacker`**: A higher-level component that uses `Observer` to gate async loading until a region is visible.
+- **`Mount`**: A separate branch that handles async children regardless of visibility.
 
 ## `Mount`
 
-`Mount` accepts either regular children or a function that returns a node or a promise.
+`Mount` treats async operations as a first-class rendering concern. It accepts regular nodes, functions that return nodes, or functions that return Promises.
 
 ```tsx
 import { Mount } from '@ilokesto/utilinent';
 
 function AsyncProfile() {
   return (
-    <Mount fallback={<p>Loading...</p>}>
-      {async () => <section>Loaded profile</section>}
+    <Mount fallback={<p>Loading profile...</p>}>
+      {async () => {
+        const data = await fetchProfile();
+        return <section>{data.name}</section>;
+      }}
     </Mount>
   );
 }
 ```
 
-The implementation behavior matters here:
-
-- if `children` is already a node, it renders immediately
-- if `children` is a function, `fallback` stays visible until the result resolves
-- if the function throws or rejects, `fallback` remains and `onError` is called
+### Runtime Behavior
+- **Node path**: If `children` is already a React node, `Mount` resolves immediately to that node.
+- **Function path**: If `children` is a function, it is executed inside an effect-driven path. The fallback stays visible until the result is resolved.
+- **Error path**: If the function throws or the promise rejects, the `fallback` remains and `onError` is triggered.
+- **Stale-call guard**: If the component re-renders while a previous promise is still pending, `Mount` ignores the outdated result via its internal call-id guard.
 
 ## `Observer`
 
-`Observer` is the higher-level “render when visible” component.
+`Observer` is the declarative way to render content only when it enters the viewport.
 
 ```tsx
 import { Observer } from '@ilokesto/utilinent';
 
-function LazyImage() {
+function LazyContent() {
   return (
-    <Observer triggerOnce fallback={<div>Waiting for viewport…</div>}>
-      <img src="/hero.png" alt="hero" />
+    <Observer triggerOnce fallback={<div style={{ height: 400 }} />}>
+      <ExpensiveComponent />
     </Observer>
   );
 }
 ```
 
-It uses `useIntersectionObserver()` internally and applies default `minHeight`, `minWidth`, and `display: block` so the observed element can actually intersect.
+### Key Features
+- **Default Sizing**: To ensure the intersection is actually detectable, `Observer` defaults to `display: block` and injects `minHeight` / `minWidth` when those values are absent.
+- **Forwarded Ref**: It correctly merges the internal observer ref with any ref you provide.
+- **Show-backed Rendering**: Internally it renders through `Show.div`, so intersection state becomes the `when` condition for rendering.
 
 ## `Slacker`
 
-`Slacker` combines visibility observation with loader execution.
+`Slacker` is the most specialized component in this family. It combines visibility observation with an async loader.
 
 ```tsx
 import { Slacker } from '@ilokesto/utilinent';
 
-function LazyPanel() {
+function DeferredData() {
   return (
     <Slacker
-      loader={async () => ({ title: 'Loaded' })}
-      loadingFallback={<p>Loading…</p>}
+      loader={fetchData}
+      loadingFallback={<p>Loading...</p>}
       errorFallback={({ retry }) => <button onClick={retry}>Retry</button>}
     >
-      {(data) => <section>{data.title}</section>}
+      {(data) => <DataView data={data} />}
     </Slacker>
   );
 }
 ```
 
-It keeps `null` as the “not loaded yet” sentinel and supports retry behavior through `maxRetries` and `retryDelay`.
+### Internals
+- **Null Sentinel**: It uses `null` as the internal state sentinel for "not yet visible/loaded".
+- **Visibility-Gated**: The `loader` is only triggered once the component enters the viewport (via `Observer`).
+- **Retry Logic**: It supports `maxRetries` and `retryDelay` to handle transient network failures gracefully.
 
 ## `useIntersectionObserver`
 
-Use the hook directly when you want intersection state without the opinionated rendering wrappers.
+The underlying hook for visibility detection.
 
-```tsx
-import { useIntersectionObserver } from '@ilokesto/utilinent';
-
-function Sentinel() {
-  const { ref, isIntersecting, entry } = useIntersectionObserver({
-    threshold: 0.5,
-    rootMargin: '50px',
-  });
-
-  return <div ref={ref}>{isIntersecting ? 'Visible' : 'Hidden'}</div>;
-}
+```ts
+const { ref, isIntersecting, entry } = useIntersectionObserver({
+  threshold: 0.1,
+  rootMargin: '100px',
+  freezeOnceVisible: true,
+});
 ```
 
-Notable behaviors:
+### Notable Behaviors
+- **First-callback skip**: The initial observer fire (which often happens on mount) is skipped to avoid false positives.
+- **`freezeOnceVisible`**: Mapping to `triggerOnce` in higher components, this stops the browser observer after the first successful intersection.
+- **Node Reset**: If the observed DOM node is removed or cleared, the internal state resets appropriately.
 
-- the first callback is skipped
-- `freezeOnceVisible` stops future observation after the first visible state
-- state resets when the observed node is cleared
+## Decision Guidance
 
-If the next problem is not visibility but prop/ref composition, continue to [Composition](./composition).
+- **Use `Mount` when**: You have a standalone async operation that should start as soon as the component is mounted.
+- **Use `Observer` when**: You want to delay rendering of large DOM trees to improve initial page load performance.
+- **Use `Slacker` when**: You want to combine visibility-gated rendering with actual data fetching.
+
+## Common Mistakes
+
+1. **Missing dimensions on fallback**: If your `fallback` has zero height, it might never "intersect" because it's technically outside the viewport or invisible. Always provide a placeholder height.
+2. **Ignoring the `triggerOnce` trade-off**: If you don't use `triggerOnce`, the component will unmount every time it leaves the viewport, which might lead to repeated loading and lost state.
+3. **Circular visibility**: An element that renders, becomes visible, expands its size, then pushes itself out of the viewport, creating a flicker loop.

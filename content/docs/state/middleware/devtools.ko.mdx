@@ -5,7 +5,11 @@ description: Redux DevTools 확장 프로그램을 지원합니다.
 
 # DevTools
 
-`devtools` 미들웨어는 `@ilokesto/state` 스토어를 Redux DevTools 확장 프로그램에 연결하여 고급 디버깅을 제공합니다.
+`devtools` 미들웨어는 `@ilokesto/state` 스토어를 Redux DevTools 확장 프로그램에 연결합니다. 이를 통해 상태 변경을 확인하고, 타임 트래블(time-travel) 디버깅을 수행하며, Redux 생태계에서 쓰이는 도구로 애플리케이션 로직을 디버깅할 수 있습니다.
+
+## 사용법
+
+`devtools`는 스토어에 직접 적용하거나 미들웨어 팩토리의 일부로 사용할 수 있습니다.
 
 ```ts
 import { devtools } from '@ilokesto/state/middleware';
@@ -13,14 +17,51 @@ import { devtools } from '@ilokesto/state/middleware';
 const store = devtools('CounterStore')({ count: 0 });
 ```
 
-## 주요 기능
+## 연결/초기화 흐름 (Connect/Init Flow)
 
-- **상태 검사**: Redux DevTools 확장 프로그램에서 전체 상태 트리를 확인할 수 있습니다.
-- **액션 라벨**: 액션 이름을 알 수 있을 때 업데이트는 `${name}:${actionName}` 형식으로 전송됩니다.
-- **메시지 처리**: 확장 프로그램에서 보내는 `RESET`, `COMMIT`, `ROLLBACK` 명령을 처리합니다.
+`devtools`가 시작되면 다음 과정을 거칩니다.
+1. **확장 프로그램 확인**: `window.__REDUX_DEVTOOLS_EXTENSION__`을 사용할 수 있는지 확인합니다.
+2. **연결 (Connect)**: 제공된 이름으로 연결을 수립합니다.
+3. **초기화 (Init)**: 스토어의 현재 상태를 초기 스냅샷으로 전송합니다.
+4. **운영 환경 가드**: 대부분의 디버깅 도구와 마찬가지로 운영(production) 환경에서는 자동으로 비활성화됩니다.
 
-## 제약 사항
+## 액션 라벨 및 명명규칙 (Action Labels and Naming)
 
-- **브라우저 전용**: `window.__REDUX_DEVTOOLS_EXTENSION__`에 등록된 확장 프로그램에 의존합니다.
-- **운영 환경 비활성화**: `logger`와 마찬가지로 운영(production) 환경에서는 자동으로 비활성화됩니다.
-- **액션 명명 패턴**: 업데이트 정보는 `${name}:${actionName}` 또는 `${name}:anonymous action` 형식으로 DevTools에 전송됩니다.
+DevTools 업데이트는 `${storeName}:${actionName}` 패턴의 설명 라벨과 함께 전송됩니다.
+
+### 1. 일반 상태 업데이트 (Plain State Updates)
+일반적인 `setState` 호출을 사용하면 미들웨어는 기본적으로 "anonymous action" 라벨을 부여합니다.
+
+```ts
+// 라벨: CounterStore:anonymous action
+setState({ count: 10 });
+```
+
+### 2. 리듀서 디스패치 (Reducer Dispatch)
+스토어가 리듀서를 사용하는 경우, 미들웨어는 액션 타입을 캡처하여 이를 라벨로 사용합니다.
+
+```ts
+// 라벨: CounterStore:increment
+dispatch({ type: 'increment' });
+```
+
+### 3. 내부 스탬핑 (Internal Stamping)
+리듀서 모드에서는 dispatch 중에 `store.actionName`이 잠시 기록되고, DevTools는 그 값을 라벨로 사용합니다. 반대로 plain state mode에는 이런 이름 붙이기 경로가 없으므로 기본적으로 anonymous action으로 보입니다.
+
+## 인바운드 명령 처리 (Time-Travel)
+
+미들웨어는 DevTools 확장 프로그램으로부터 다음과 같은 여러 인바운드 명령을 처리합니다.
+
+- **`RESET`**: 스토어를 원래의 초기 상태로 되돌립니다.
+- **`COMMIT`**: 현재 상태를 새로운 초기 베이스로 만듭니다.
+- **`ROLLBACK`**: 마지막 커밋 이후의 모든 액션을 버리고 해당 상태로 돌아갑니다.
+
+## 리듀서와의 상호작용 (Reducer Interplay)
+
+리듀서 기반 스토어와 함께 `devtools`를 쓰면 라벨이 훨씬 유용해집니다. 미들웨어가 reducer action type을 outgoing message에 붙여 주기 때문입니다.
+
+## 디버깅 가이드
+
+- **스토어 이름 지정**: `devtools()`에 항상 고유한 이름을 제공하십시오. 여러 개의 스토어가 있는 경우 `AuthStore`나 `CartStore` 같은 이름을 주면 DevTools 히스토리가 훨씬 읽기 편해집니다.
+- **운영 환경 정리**: 운영 환경을 위해 `devtools()`를 수동으로 제거할 필요가 없습니다. 미들웨어가 환경을 감지하고 자동으로 아무 동작도 하지 않는(no-op) 래퍼를 반환합니다.
+- **액션의 세분화**: "anonymous action" 라벨이 너무 많이 보인다면, 더 많은 로직을 명명된 액션(named actions)으로 옮기거나 더 나은 가시성을 위해 리듀서 패턴을 사용하는 것을 고려해 보십시오.

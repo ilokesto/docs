@@ -5,7 +5,11 @@ description: Redux DevTools extension support.
 
 # DevTools
 
-The `devtools` middleware connects your `@ilokesto/state` store to the Redux DevTools extension for advanced debugging.
+The `devtools` middleware connects your `@ilokesto/state` store to the Redux DevTools extension. This allows you to inspect state changes, time-travel, and debug your application's logic with the same tools used by the Redux ecosystem.
+
+## Usage
+
+You can use `devtools` either directly on a store or as part of a middleware factory.
 
 ```ts
 import { devtools } from '@ilokesto/state/middleware';
@@ -13,14 +17,51 @@ import { devtools } from '@ilokesto/state/middleware';
 const store = devtools('CounterStore')({ count: 0 });
 ```
 
-## Features
+## The Connect/Init Flow
 
-- **State Inspection**: View the full state tree from the Redux DevTools extension.
-- **Action Labels**: Updates are sent with the `${name}:${actionName}` pattern when action names are available.
-- **Message Handling**: Supports `RESET`, `COMMIT`, and `ROLLBACK` commands from the extension.
+When `devtools` starts:
+1. **Extension Check**: It verifies if `window.__REDUX_DEVTOOLS_EXTENSION__` is available.
+2. **Connect**: It establishes a connection with the provided name.
+3. **Init**: It sends the store's current state as the initial snapshot.
+4. **Prod Guards**: Like most debugging tools, it is automatically disabled in production environments.
 
-## Constraints
+## Action Labels and Naming
 
-- **Browser Only**: Depends on the extension being present in `window.__REDUX_DEVTOOLS_EXTENSION__`.
-- **Disabled in Production**: Like `logger`, it is automatically disabled in production environments.
-- **Action Name Pattern**: Updates are sent to DevTools in the format `${name}:${actionName}` or `${name}:anonymous action`.
+DevTools updates are sent with descriptive labels following the `${storeName}:${actionName}` pattern.
+
+### 1. Plain State Updates
+If you use a plain `setState` call, the middleware defaults to an "anonymous action" label.
+
+```ts
+// Label: CounterStore:anonymous action
+setState({ count: 10 });
+```
+
+### 2. Reducer Dispatch
+If your store uses a reducer, the middleware captures the action type and uses it as the label.
+
+```ts
+// Label: CounterStore:increment
+dispatch({ type: 'increment' });
+```
+
+### 3. Internal Stamping
+For reducer mode, the label comes from temporary `store.actionName` stamping during dispatch. In plain state mode there is no equivalent naming path, so updates stay anonymous unless you build your own labeling layer.
+
+## Inbound Commands (Time-Travel)
+
+The middleware handles several inbound commands from the DevTools extension:
+
+- **`RESET`**: Reverts the store to its original initial state.
+- **`COMMIT`**: Takes the current state and makes it the new initial base.
+- **`ROLLBACK`**: Discards all actions after the last commit and returns to that state.
+
+## Reducer Interplay
+
+When using `devtools` with a reducer-based store, labels become much more informative because the middleware can attach the reducer action type to the outgoing message.
+
+## Debugging Guidance
+
+- **Naming your stores**: Always provide a unique name to `devtools()`. If you have multiple stores, giving them clear names like `AuthStore` or `CartStore` makes the DevTools history much more readable.
+- **Production cleanup**: You don't need to manually remove `devtools()` for production; the middleware detects the environment and returns a no-op wrapper.
+- **Action Granularity**: If you see too many "anonymous action" labels, consider moving more logic into named actions or using the reducer pattern for better visibility.

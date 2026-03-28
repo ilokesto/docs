@@ -1,15 +1,25 @@
 ---
-title: Utils
-description: Essential utilities for store composition and state updates.
+title: Utilities
+description: Overview of @ilokesto/state utility helpers.
 ---
 
-# Utils
+# Utilities
 
-The `@ilokesto/state/utils` entry point provides two main helpers: `pipe` and `adaptor`. These are designed to make store setup and state management more ergonomic.
+The `@ilokesto/state/utils` entry point currently exposes two helpers: `pipe` and `adaptor`.
 
-## `pipe`
+These helpers do different jobs:
 
-`pipe` is a utility for composing middleware around an initial state. It applies middleware from left to right (top to bottom) and returns a fully initialized `Store` instance.
+- [`pipe`](./pipe) composes middleware around plain initial state and returns a `Store`.
+- [`adaptor`](./adaptor) wraps Immer's `produce()` so you can write draft-style object updates.
+
+## When to reach for utilities
+
+Use `utils` when you want to improve store setup ergonomics or object update ergonomics without changing the public `create()` API.
+
+## Related APIs
+
+- [`create`](../create): Main entry point for React integration.
+- [`middleware`](../middleware): Built-in middleware for common tasks.
 
 ```ts
 import { create } from '@ilokesto/state';

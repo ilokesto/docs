@@ -1,0 +1,39 @@
+---
+title: pipe
+description: Compose middleware around plain initial state.
+---
+
+# `pipe`
+
+`pipe` composes middleware around plain initial state and returns a fully initialized `Store` instance.
+
+```ts
+import { create } from '@ilokesto/state';
+import { pipe } from '@ilokesto/state/utils';
+import { logger, devtools } from '@ilokesto/state/middleware';
+
+const store = pipe(
+  { count: 0 },
+  logger(),
+  devtools('MyStore')
+);
+
+const useStore = create(store);
+```
+
+## How it works
+
+- It starts from plain initial state.
+- It creates a vanilla `Store`.
+- It applies middleware from left to right.
+- It returns the resulting `Store` so you can pass it to `create(store)`.
+
+## When to use it
+
+Use `pipe` when you want a readable way to compose multiple middleware without manually nesting calls.
+
+## Related APIs
+
+- [`Utilities`](./): Utilities overview.
+- [`Middleware`](../middleware): Built-in middleware.
+- [`create`](../create): React binding for the composed store.

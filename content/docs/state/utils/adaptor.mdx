@@ -1,0 +1,36 @@
+---
+title: adaptor
+description: Create Immer-powered object updaters.
+---
+
+# `adaptor`
+
+`adaptor` is a thin wrapper around Immer's `produce()`. It lets you write a draft-style object update and get back a pure updater function.
+
+```ts
+import { adaptor } from '@ilokesto/state/utils';
+
+type State = { user: { profile: { name: string } } };
+
+const renameProfile = adaptor<State>((draft) => {
+  draft.user.profile.name = 'New Name';
+});
+
+useStore.writeOnly()(renameProfile);
+```
+
+## Constraints
+
+- `adaptor` is constrained to object state shapes.
+- It depends on `immer`, which is an optional peer dependency.
+
+## Installation
+
+```package-install
+immer
+```
+
+## Related APIs
+
+- [`Utilities`](./): Utilities overview.
+- [`Accessors`](../accessors): `writeOnly()` is a natural place to use the returned updater.

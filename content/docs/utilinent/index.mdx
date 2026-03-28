@@ -1,34 +1,46 @@
 ---
 title: Introduction
-description: Declarative rendering and composition helpers for React
+description: Declarative rendering primitives and composition helpers for React.
 ---
 
 # @ilokesto/utilinent
 
-`@ilokesto/utilinent` is a React utility library for declarative rendering patterns. Instead of repeating ternaries, map callbacks, viewport wiring, and composition boilerplate in every component, it gives those patterns names.
+`@ilokesto/utilinent` is a React utility library for rendering logic that keeps showing up in ordinary components: conditional branches, collection rendering, async mounting, visibility-based loading, slot composition, and proxy-backed variants.
 
-The package is built around a few families of exports:
+The package is easiest to understand if you do **not** think of it as a state library or a styling library. It is a rendering-logic library. Its job is to give repeated JSX control-flow patterns names.
 
-- conditional rendering helpers like `Show`, `Switch`, and `Match`
-- collection helpers like `For` and `Repeat`
-- async and visibility helpers like `Mount`, `Observer`, `Slacker`, and `useIntersectionObserver`
-- composition and extensibility helpers like `Slot`, `Slottable`, `createProxy`, and `PluginManager`
+## What the package contains
 
-## Installation
+- **Rendering primitives** like `Show`, `Switch`, `Match`, `For`, `Repeat`, `Mount`, and `OptionalWrapper`
+- **Visibility helpers** like `Observer`, `Slacker`, and `useIntersectionObserver`
+- **Composition helpers** like `Slot` and `Slottable`
+- **Extension machinery** like `createProxy`, `PluginManager`, and exported helper types
 
-```bash
-pnpm add @ilokesto/utilinent
+## Root import model
+
+The package exports everything from the root entrypoint. There are no subpath exports in `package.json`, so the default learning path should start from root imports.
+
+```package-install
+@ilokesto/utilinent
 ```
 
-## Mental model
+```tsx
+import { For, Show, Slot } from '@ilokesto/utilinent';
+```
 
-- **Declarative over ad hoc JSX logic**: move conditional and collection rules into named primitives.
-- **Composition over wrapper nesting**: use `Slot` and `Slottable` when a component should pass behavior down to a child.
-- **Extensibility over one-off helpers**: use proxy and plugin helpers when you want new tagged variants instead of duplicating component definitions.
+## Why these helpers exist
 
-## Start with these pages
+The common thread is not “utility components” in the abstract. It is that JSX often becomes noisy when rendering rules are more complex than one happy path.
 
-- [`Conditional Rendering`](/en/utilinent/conditional)
-- [`Iterative Rendering`](/en/utilinent/collection)
-- [`Async & Visibility`](/en/utilinent/async)
-- [`Composition`](/en/utilinent/composition)
+- Ternaries and `&&` chains hide intent.
+- `map()` plus empty-state handling gets repeated everywhere.
+- Visibility and lazy loading are easy to wire badly.
+- as-child composition is awkward without a slot primitive.
+
+Utilinent does not change React's rendering model. It just makes these patterns explicit.
+
+## Start here
+
+- Read [Quick Start](./quick-start) to see the main primitives in one page.
+- Read [Mental Model](./mental-model) if you want to understand how the package is organized.
+- Go to [Conditional Rendering](./conditional) first if your main use case is JSX branching.

@@ -1,8 +1,85 @@
 ---
 title: 조건부 렌더링
-description: Show, Switch, Match
+description: Show, Switch, Match, OptionalWrapper.
 ---
 
 # 조건부 렌더링
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/utilinent/conditional)을 참고해 주세요.
+여기서 다루는 것은 JSX 안에서 분기 규칙 자체가 눈에 보이게 하고 싶은 경우입니다. 새로운 렌더링 의미를 만드는 것이 아니라, 삼항 연산자, `&&`, 래퍼 중복으로 쓰이던 패턴을 더 명시적으로 바꾸는 쪽에 가깝습니다.
+
+## `Show`
+
+`Show`는 “이 값이 truthy일 때만 렌더한다”는 규칙의 직접적인 대체물입니다.
+
+```tsx
+import { Show } from '@ilokesto/utilinent';
+
+function Welcome({ user }: { user: { name: string } | null }) {
+  return (
+    <Show when={user} fallback={<p>로그인이 필요합니다</p>}>
+      {(currentUser) => <h1>환영합니다, {currentUser.name}님</h1>}
+    </Show>
+  );
+}
+```
+
+중요한 구현 포인트는 `when`에 배열을 넘기면 shared `resolveWhen()` 헬퍼가 “모든 값이 truthy여야 한다”고 처리한다는 점입니다.
+
+```tsx
+<Show when={[isLoggedIn, isAdmin]}>
+  <button>관리자 콘솔</button>
+</Show>
+```
+
+## `Switch`와 `Match`
+
+여러 개의 배타적 분기가 있고, 그중 첫 번째로 맞는 것만 렌더하고 싶다면 `Switch`를 쓰면 됩니다.
+
+```tsx
+import { Match, Switch } from '@ilokesto/utilinent';
+
+function Status({ status }: { status: 'loading' | 'done' | 'error' }) {
+  return (
+    <Switch fallback={<p>알 수 없는 상태</p>}>
+      <Match when={status === 'loading'}><p>로딩 중...</p></Match>
+      <Match when={status === 'done'}><p>완료</p></Match>
+      <Match when={status === 'error'}><p>실패</p></Match>
+    </Switch>
+  );
+}
+```
+
+구현상 `Switch`는 fragment를 평탄화하고, `Match`가 아닌 자식은 무시한 뒤, truthy로 해석되는 첫 번째 분기만 반환합니다.
+
+## `OptionalWrapper`
+
+`OptionalWrapper`는 자식을 렌더할지 말지가 아니라, **자식을 감쌀지 말지**가 조건인 경우를 위한 도구입니다.
+
+```tsx
+import { OptionalWrapper } from '@ilokesto/utilinent';
+
+function ProfileLink({ href, children }: { href?: string; children: React.ReactNode }) {
+  return (
+    <OptionalWrapper
+      when={href}
+      wrapper={(content) => <a href={href}>{content}</a>}
+    >
+      {children}
+    </OptionalWrapper>
+  );
+}
+```
+
+이 컴포넌트는 내부적으로 `Show` 위에서 동작하고, 선택적인 `fallback`은 non-wrapped 경로를 변형하는 데 사용됩니다.
+
+## 태그 변형
+
+`Show`와 `Switch`는 proxy-backed export이기 때문에 `Show.div`, `Switch.section` 같은 형태도 사용할 수 있습니다.
+
+## 어떤 프리미티브를 고르면 좋은가
+
+- 분기가 하나이고 fallback도 하나면 `Show`
+- 여러 배타적 분기라면 `Switch` / `Match`
+- 자식을 감쌀지 여부만 바꾸고 싶다면 `OptionalWrapper`
+
+문제가 분기보다 반복에 가깝다면 다음으로 [컬렉션 헬퍼](./collection)를 읽는 것이 자연스럽습니다.

@@ -1,1 +1,19 @@
-{"title": "Utilinent", "root": true, "pages": ["index", "conditional", "collection", "async", "composition", "extensibility"]}
+{
+  "title": "Utilinent",
+  "root": true,
+  "pages": [
+    "index",
+    "---Introduction---",
+    "quick-start",
+    "mental-model",
+    "---Rendering Primitives---",
+    "conditional",
+    "collection",
+    "---Async & Visibility---",
+    "async",
+    "---Composition---",
+    "composition",
+    "---Extensibility---",
+    "extensibility"
+  ]
+}

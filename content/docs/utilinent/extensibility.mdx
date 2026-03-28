@@ -1,33 +1,48 @@
 ---
 title: Extensibility
-description: createProxy(), PluginManager, and exported type helpers
+description: createProxy, PluginManager, and the exported helper types.
 ---
 
 # Extensibility
 
-`@ilokesto/utilinent` is not limited to the built-in components. The package also exposes the machinery used to build proxy-based variants and plugin-backed extensions.
+This page is for the part of Utilinent that regular consumers may never touch directly: the machinery behind proxy-backed variants and plugin-based extension.
 
 ## `createProxy`
 
-`createProxy(base, renderForTag, category)` builds a proxy object that combines:
+`createProxy(base, renderForTag, category)` is the function that turns a base primitive into a proxy-backed export such as `Show` or `For`.
 
-- the base component
-- generated HTML-tag variants from `htmlTags`
-- plugin-backed variants for the given category
+It builds a target from:
 
-Resolution order matters. The current implementation checks:
+- the base component,
+- generated HTML-tag variants,
+- plugin-backed variants resolved at access time.
+
+The resolution order is important:
 
 1. existing properties on the target
-2. category-specific plugins
-3. `base` plugins
+2. plugins registered for the current category
+3. plugins registered for `base`
 
 That means built-ins win before plugin lookups happen.
 
 ## `PluginManager`
 
-A singleton registry for plugin-backed components.
+`PluginManager` is the singleton registry behind plugin-backed variants.
 
-Available static methods include:
+```ts
+import { PluginManager } from '@ilokesto/utilinent';
+
+PluginManager.register({
+  show: {
+    FancyCard,
+  },
+  base: {
+    MotionButton,
+  },
+});
+```
+
+Public static methods include:
 
 - `register()`
 - `get()`
@@ -35,44 +50,22 @@ Available static methods include:
 - `has()`
 - `unregister()`
 
-You register components by category name.
-
-```ts
-import { PluginManager } from '@ilokesto/utilinent';
-
-PluginManager.register({
-  show: {
-    FancyCard: FancyCard,
-  },
-});
-```
-
-## `useIntersectionObserver`
-
-This hook is also part of the public extensibility surface because higher-level visibility components build on it.
-
-```tsx
-import { useIntersectionObserver } from '@ilokesto/utilinent';
-
-function MyComponent() {
-  const { ref, isIntersecting } = useIntersectionObserver({ threshold: 0.5 });
-
-  return <div ref={ref}>{isIntersecting ? "I'm visible!" : 'Keep scrolling...'}</div>;
-}
-```
+Because it is singleton global state, registrations affect later proxy lookups across the app.
 
 ## Exported types
 
-The root package also exports:
+The root package also exports type helpers for extension work:
 
 - `UtilinentRegister`
 - `BaseTypeHelperFn`
 - `ProxyType`
 
-These are intended for type-safe extension patterns such as module augmentation and proxy typing.
+These are relevant when you want typed module augmentation or your own proxy-aware APIs.
 
-## Caveats
+## Where `useIntersectionObserver` fits
 
-- plugin-backed variants do not override existing built-in properties
-- `createProxy()` only looks through the configured category and then the `base` category
-- `PluginManager` is global singleton state, so registrations affect later lookups from proxy-backed components
+The hook is user-facing, but it also belongs to the extension story because `Observer` and `Slacker` build on top of it rather than duplicating observer logic.
+
+## When to read this page
+
+Read this page if you want to extend Utilinent itself. If you only want to consume the existing primitives, the earlier sections are the better starting point.

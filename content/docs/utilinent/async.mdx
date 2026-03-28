@@ -1,71 +1,100 @@
 ---
 title: Async & Visibility
-description: Mount, Observer, Slacker, and useIntersectionObserver
+description: Mount, Observer, Slacker, and useIntersectionObserver.
 ---
 
 # Async & Visibility
+
+This part of Utilinent is about output that should depend on timing or visibility.
+
+- `Mount` treats async children as a rendering concern.
+- `Observer` turns intersection state into rendering.
+- `Slacker` delays expensive loading until a region becomes visible.
+- `useIntersectionObserver` is the low-level hook behind that behavior.
 
 ## `Mount`
 
 `Mount` accepts either regular children or a function that returns a node or a promise.
 
-- if `children` is already a node, it renders immediately
-- if `children` is a function, `fallback` is shown until the function resolves
-- if the function throws or rejects, `fallback` stays visible and `onError` is called
-
 ```tsx
-<Mount fallback={<p>Loading...</p>}>
-  {async () => <HeavyPanel />}
-</Mount>
+import { Mount } from '@ilokesto/utilinent';
+
+function AsyncProfile() {
+  return (
+    <Mount fallback={<p>Loading...</p>}>
+      {async () => <section>Loaded profile</section>}
+    </Mount>
+  );
+}
 ```
+
+The implementation behavior matters here:
+
+- if `children` is already a node, it renders immediately
+- if `children` is a function, `fallback` stays visible until the result resolves
+- if the function throws or rejects, `fallback` remains and `onError` is called
 
 ## `Observer`
 
-`Observer` turns intersection state into rendering. It uses the public `useIntersectionObserver()` hook internally and renders through `Show.div`.
+`Observer` is the higher-level “render when visible” component.
 
-Supported props include:
+```tsx
+import { Observer } from '@ilokesto/utilinent';
 
-- `threshold`
-- `rootMargin`
-- `triggerOnce`
-- `onIntersect`
-- `fallback`
+function LazyImage() {
+  return (
+    <Observer triggerOnce fallback={<div>Waiting for viewport…</div>}>
+      <img src="/hero.png" alt="hero" />
+    </Observer>
+  );
+}
+```
 
-If `children` is a function, it receives the current `isIntersecting` boolean.
+It uses `useIntersectionObserver()` internally and applies default `minHeight`, `minWidth`, and `display: block` so the observed element can actually intersect.
 
 ## `Slacker`
 
-`Slacker` combines lazy loading with viewport observation. It waits until the observed region intersects, then runs `loader()` and renders `children(loadedData)`.
+`Slacker` combines visibility observation with loader execution.
 
-It also supports:
+```tsx
+import { Slacker } from '@ilokesto/utilinent';
 
-- `loadingFallback`
-- `errorFallback`
-- `maxRetries`
-- `retryDelay`
-- `onError`
+function LazyPanel() {
+  return (
+    <Slacker
+      loader={async () => ({ title: 'Loaded' })}
+      loadingFallback={<p>Loading…</p>}
+      errorFallback={({ retry }) => <button onClick={retry}>Retry</button>}
+    >
+      {(data) => <section>{data.title}</section>}
+    </Slacker>
+  );
+}
+```
 
-Internally, `Slacker` uses `null` as the "not loaded yet" sentinel.
+It keeps `null` as the “not loaded yet” sentinel and supports retry behavior through `maxRetries` and `retryDelay`.
 
 ## `useIntersectionObserver`
 
-The hook exposes the low-level observer API used by `Observer`.
+Use the hook directly when you want intersection state without the opinionated rendering wrappers.
 
 ```tsx
-const { ref, isIntersecting, entry } = useIntersectionObserver({
-  threshold: 0.5,
-  rootMargin: '50px',
-});
+import { useIntersectionObserver } from '@ilokesto/utilinent';
+
+function Sentinel() {
+  const { ref, isIntersecting, entry } = useIntersectionObserver({
+    threshold: 0.5,
+    rootMargin: '50px',
+  });
+
+  return <div ref={ref}>{isIntersecting ? 'Visible' : 'Hidden'}</div>;
+}
 ```
 
-The returned shape is:
+Notable behaviors:
 
-- `ref`
-- `isIntersecting`
-- `entry`
+- the first callback is skipped
+- `freezeOnceVisible` stops future observation after the first visible state
+- state resets when the observed node is cleared
 
-## Caveats
-
-- the hook is a no-op when `IntersectionObserver` is unavailable
-- `onChange` fires only on a false-to-true transition after the initial callback
-- `freezeOnceVisible` stops observation after the first visible state
+If the next problem is not visibility but prop/ref composition, continue to [Composition](./composition).

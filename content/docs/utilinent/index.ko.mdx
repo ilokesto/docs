@@ -1,26 +1,46 @@
 ---
-title: 개요 및 시작하기
-description: React를 위한 선언적 유틸리티
+title: 소개
+description: React를 위한 선언적 렌더링 프리미티브와 컴포지션 헬퍼.
 ---
 
 # @ilokesto/utilinent
 
-`@ilokesto/utilinent`는 React에서 반복적으로 등장하는 렌더링 패턴을 더 선언적으로 표현하기 위한 유틸리티 모음입니다. 조건부 렌더링, 컬렉션 렌더링, viewport 기반 렌더링, 컴포지션, 확장성 도구를 하나의 패키지로 제공합니다.
+`@ilokesto/utilinent`는 React에서 반복해서 나타나는 렌더링 로직을 다루기 위한 유틸리티 라이브러리입니다. 조건 분기, 컬렉션 렌더링, 비동기 마운팅, 가시성 기반 로딩, 슬롯 컴포지션, 프록시 기반 변형처럼 JSX에서 자주 지저분해지는 패턴에 이름을 붙여 줍니다.
 
-## 설치
+이 패키지를 이해할 때 중요한 점은 이것이 state 라이브러리도 아니고 styling 라이브러리도 아니라는 점입니다. 핵심은 **렌더링 로직**입니다. 자주 반복되는 JSX 제어 흐름을 더 명시적인 형태로 바꾸는 역할을 합니다.
 
-```bash
-pnpm add @ilokesto/utilinent
+## 이 패키지에 들어 있는 것
+
+- `Show`, `Switch`, `Match`, `For`, `Repeat`, `Mount`, `OptionalWrapper` 같은 **렌더링 프리미티브**
+- `Observer`, `Slacker`, `useIntersectionObserver` 같은 **가시성 헬퍼**
+- `Slot`, `Slottable` 같은 **컴포지션 헬퍼**
+- `createProxy`, `PluginManager`, helper type exports 같은 **확장 메커니즘**
+
+## 루트 import 모델
+
+`package.json` 기준으로 이 패키지는 루트 엔트리포인트 하나만 export합니다. 그래서 학습도 root import부터 시작하는 것이 가장 자연스럽습니다.
+
+```package-install
+@ilokesto/utilinent
 ```
 
-## 문서 구성
+```tsx
+import { For, Show, Slot } from '@ilokesto/utilinent';
+```
 
-- [`조건부 렌더링`](/ko/utilinent/conditional)
-- [`반복 렌더링`](/ko/utilinent/collection)
-- [`비동기 · 가시성`](/ko/utilinent/async)
-- [`컴포지션`](/ko/utilinent/composition)
-- [`확장성`](/ko/utilinent/extensibility)
+## 왜 이런 헬퍼가 필요한가
 
-## 한글 문서 상태
+핵심은 추상적인 “유틸리티 컴포넌트”가 아니라, JSX가 복잡한 렌더링 규칙을 만나면 빠르게 소음이 커진다는 데 있습니다.
 
-현재 한글 페이지는 구조와 개요를 먼저 제공하고, 세부 API 페이지는 단계적으로 보강하고 있습니다. 깊은 설명이 필요한 경우에는 영어 문서를 함께 참고해 주세요.
+- 삼항 연산자와 `&&` 체인은 의도를 흐리고,
+- `map()`과 빈 상태 처리는 곳곳에 반복되며,
+- 가시성/지연 로딩은 쉽게 잘못 연결되고,
+- as-child 컴포지션은 slot primitive 없이는 자주 어색해집니다.
+
+Utilinent는 React의 렌더링 모델 자체를 바꾸지 않습니다. 다만 이런 패턴을 더 명시적인 형태로 드러내 줍니다.
+
+## 어디서 시작하면 좋은가
+
+- 핵심 프리미티브를 한 번에 보고 싶다면 [퀵 스타트](./quick-start)
+- 패키지 전체를 어떤 틀로 이해하면 좋은지 알고 싶다면 [멘탈 모델](./mental-model)
+- JSX 분기 문제가 가장 큰 경우라면 [조건부 렌더링](./conditional)부터 읽으면 됩니다.

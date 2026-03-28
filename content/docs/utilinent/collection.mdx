@@ -1,53 +1,62 @@
 ---
-title: Iterative Rendering
-description: For and Repeat
+title: Collection Helpers
+description: For and Repeat for array and count-based rendering.
 ---
 
-# Iterative Rendering
+# Collection Helpers
 
-These components replace repetitive `map()` and array-from boilerplate with names that describe intent.
+Utilinent has two primitives for repeated rendering, but they solve different problems.
+
+- `For` is for existing collections.
+- `Repeat` is for a fixed positive count.
 
 ## `For`
 
-`For` is a declarative alternative to `Array.prototype.map`.
-
-### Example
+`For` is the “map with a fallback” primitive.
 
 ```tsx
 import { For } from '@ilokesto/utilinent';
 
-function UserList({ users }: { users: Array<{ id: string; name: string }> }) {
+function ProductList({ products }: { products: Array<{ id: string; name: string }> | null }) {
   return (
-    <For.ul each={users} fallback={<li>No users found</li>}>
-      {(user, index) => <li key={user.id}>{index}: {user.name}</li>}
-    </For.ul>
+    <For each={products} fallback={<li>No products found</li>}>
+      {(item) => <li key={item.id}>{item.name}</li>}
+    </For>
   );
 }
 ```
 
+Important behavior:
+
 - `each` accepts an array, `null`, or `undefined`.
-- `fallback` is rendered when `each` is empty or missing.
+- `fallback` renders when the collection is empty or missing.
 - `children` receives `(item, index)`.
+
+`For` does not invent key management for you. You still own stable keys inside the rendered child.
 
 ## `Repeat`
 
-`Repeat` renders `children(index)` for each integer from `0` to `times - 1`.
-
-### Example
+`Repeat` is for count-based rendering.
 
 ```tsx
 import { Repeat } from '@ilokesto/utilinent';
 
-function SkeletonLoader() {
-  return <Repeat times={3}>{(i) => <div key={i}>Loading row...</div>}</Repeat>;
+function SkeletonRows() {
+  return (
+    <Repeat times={3} fallback={<p>Nothing to show</p>}>
+      {(index) => <div key={index}>Loading row {index + 1}</div>}
+    </Repeat>
+  );
 }
 ```
 
-If `times` is not a positive integer, `Repeat` renders `fallback` instead.
+Implementation detail that matters: `Repeat` only renders when `times` is a positive integer. Otherwise it falls back.
 
-Like `For`, `Repeat` is also proxy-backed, so tagged variants such as `Repeat.ul` are available.
+Like `For`, it is proxy-backed, so forms like `Repeat.ul` are available.
 
-## Performance tips
+## Choosing between them
 
-- provide stable `key` props inside the rendered children
-- treat these as readability helpers, not as a replacement for React's reconciliation rules
+- Use `For` when the source is already a collection.
+- Use `Repeat` when the source is just a count.
+
+If repetition is not the problem and visibility or lazy loading is, continue with [Async & Visibility](./async).

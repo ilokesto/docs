@@ -1,13 +1,13 @@
 ---
 title: Existing Store
-description: Using @ilokesto/state with an already initialized @ilokesto/store instance.
+description: Bind an existing @ilokesto/store instance to the React hook layer.
 ---
 
 # Existing Store
 
-`@ilokesto/state` is built on top of the generic `@ilokesto/store` library. In some cases, you might already have a store instance and want to use it with the React hook functionality.
+`@ilokesto/state` does not require you to start from plain initial state. If you already have a vanilla `Store` instance, you can attach the React hook layer to that existing store instead of rebuilding it.
 
-## Wrapping a Store
+## The basic shape
 
 The `create` function accepts either an initial state or an existing `Store` instance.
 
@@ -15,19 +15,26 @@ The `create` function accepts either an initial state or an existing `Store` ins
 import { Store } from '@ilokesto/store';
 import { create } from '@ilokesto/state';
 
-// 1. Create a generic store
+// 1. Create a vanilla store
 const myStore = new Store({ count: 0 });
 
-// 2. Wrap it with the state hook
+// 2. Bind it to the React hook layer
 const useCounter = create(myStore);
 ```
 
-## Why Wrap?
+## When this is the right choice
 
-- **Interoperability**: You might be using the same store in non-React parts of your application (e.g., in an edge function or a node background task).
-- **External Configuration**: If your store requires complex setup or custom middleware that is managed independently.
-- **Shared State**: You want multiple different components or hooks to interact with the exact same store instance.
+- **You already own the store elsewhere**: maybe another runtime layer created it first.
+- **You want one source of truth** across React and non-React code.
+- **You want to configure middleware before React enters the picture**.
+- **You want `@ilokesto/state` to stay a thin binding**, not the place where the store is born.
 
-## Limitations
+## What does not change
 
-When you pass an existing `Store`, `create` will use it as is. Any middleware already attached to that store will continue to function.
+Passing an existing `Store` does not create a second copy. `create(store)` uses that instance as-is.
+
+- Existing middleware still runs.
+- Existing state is preserved.
+- `getInitialState()` still matters for SSR snapshots.
+
+The tradeoff is that lifecycle and ownership now live with the original store creator, not with the React layer.

@@ -1,22 +1,28 @@
 ---
 title: 유틸리티
-description: "@ilokesto/state 유틸리티 헬퍼 개요."
+description: "스토어 조합과 객체 업데이트를 돕는 유틸리티 헬퍼."
 ---
 
 # 유틸리티
 
-`@ilokesto/state/utils` 엔트리포인트는 현재 `pipe`와 `adaptor` 두 가지 헬퍼를 제공합니다.
+`@ilokesto/state/utils`는 메인 `create()` API를 바꾸지 않으면서 사용성을 개선하는 작은 헬퍼를 두는 곳입니다.
 
-이 둘은 서로 다른 문제를 해결합니다.
+현재는 두 종류의 도움이 들어 있습니다.
 
 - [`pipe`](./pipe)는 plain initial state를 기준으로 여러 미들웨어를 조합해 `Store`를 만듭니다.
 - [`adaptor`](./adaptor)는 Immer의 `produce()`를 감싸서 draft 스타일 객체 업데이트를 쉽게 만듭니다.
 
 ## 언제 유틸리티를 쓰면 좋은가
 
-유틸리티는 `create()`의 공개 API를 바꾸지 않으면서, 스토어 설정이나 객체 업데이트의 사용성을 개선하고 싶을 때 쓰는 것이 좋습니다.
+유틸리티는 구조를 바꾸기보다 사용성을 다듬고 싶을 때 쓰는 편이 좋습니다.
+
+- store 설정이 너무 중첩되기 시작하면 `pipe`
+- 객체 업데이트 문법이 너무 장황해지면 `adaptor`
+- 기본 `create()` API만으로 충분히 읽히면 굳이 추가하지 않는 편이 낫습니다.
 
 ## 관련 API
 
 - [`create`](../create): React 통합을 위한 메인 진입점.
 - [`미들웨어`](../middleware): 일반적인 작업을 위한 내장 미들웨어.
+
+store 설정이 문제라면 [`pipe`](./pipe)를, 객체 업데이트 문법이 문제라면 [`adaptor`](./adaptor)를 이어서 읽으면 됩니다.

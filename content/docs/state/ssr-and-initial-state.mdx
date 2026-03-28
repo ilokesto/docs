@@ -1,15 +1,22 @@
 ---
 title: SSR and Initial State
-description: Handling state on the server and synchronizing with the client.
+description: How server snapshots work and why initial state matters.
 ---
 
 # SSR and Initial State
 
-`@ilokesto/state` is compatible with Server-Side Rendering (SSR) through its use of `useSyncExternalStore`.
+SSR support in `@ilokesto/state` is not bolted on afterward. It comes from the fact that the hook ultimately uses `useSyncExternalStore`, which asks for a server snapshot as well as a client snapshot.
 
-## Hydration
+## The important distinction: current state vs initial state
 
-To properly hydrate your state, you need to ensure the client-side store is initialized with the data sent from the server.
+At the store layer, those are not the same thing.
+
+- `getState()` is the current live value.
+- `getInitialState()` is the constructor-time value.
+
+`@ilokesto/state` uses the second one for the server snapshot path.
+
+## Hydration shape
 
 ```ts
 // server-side
@@ -21,10 +28,13 @@ const useCounter = create(initialData);
 
 ## `getServerSnapshot`
 
-Under the hood, `@ilokesto/state` uses `store.getInitialState()` to satisfy the `getServerSnapshot` requirement of React's `useSyncExternalStore`. This ensures that the server-rendered HTML matches the initial client-side state, preventing hydration mismatches.
+Under the hood, the hook gives React `store.getInitialState()` as `getServerSnapshot`. That is what keeps the server-rendered tree aligned with the original store value during hydration.
+
+This is also why mutating the store before React binds to it can change the feel of hydration in ways that are easy to miss.
 
 ## Best Practices
 
-1. **Avoid Global State on Server**: When running on the server, ensure each request gets its own store instance to prevent data leakage between users.
-2. **Synchronize Versions**: If your application uses persistence, make sure the server's version of the state doesn't conflict with what the client expects.
-3. **Lazy Initialization**: In some cases, you may want to initialize state from a data-attribute or a global `window.__INITIAL_STATE__` variable.
+1. **Create stores per request on the server** so one user's state never leaks into another request.
+2. **Hydrate from explicit initial data** rather than depending on incidental client-side mutations.
+3. **Be careful with persistence**: persisted client state and server-provided initial state can disagree, and your app needs a clear precedence rule.
+4. **Prefer explicit bootstrap points** such as serialized data or a known initial store factory.

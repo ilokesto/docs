@@ -1,13 +1,13 @@
 ---
 title: Middleware
-description: Extend store behavior with logger, devtools, persist, and more.
+description: Store-level extensions for logging, persistence, validation, and debugging.
 ---
 
 # Middleware
 
-`@ilokesto/state` provides a set of built-in middleware to extend the behavior of your stores. These are available from the `@ilokesto/state/middleware` entry point.
+`@ilokesto/state` middleware does not wrap React components. It wraps the underlying store. That is an important distinction, because these extensions change how updates flow through the store itself before React sees the result.
 
-Middleware in `@ilokesto/state` are functions that take a store (or a configuration object) and return a new store with enhanced capabilities. They are designed to be composable using the `pipe` utility.
+All built-in middleware are available from the `@ilokesto/state/middleware` entry point, and they are designed to compose cleanly with `pipe()`.
 
 ```ts
 import { create } from '@ilokesto/state';
@@ -29,11 +29,11 @@ Most middleware support two calling styles:
 1. **Direct**: `middleware(store, options)`
 2. **Curried**: `middleware(options)(store)`
 
-The curried form is preferred when using `pipe()` for a clean, readable setup.
+The curried form is usually the best choice when you are composing a store declaratively.
 
 ## Built-in Middleware
 
-The following middleware are included in the package:
+Each middleware does a different job at the store layer:
 
 - [**Logger**](./logger): Logs state changes to the console.
 - [**DevTools**](./devtools): Connects your store to Redux DevTools.
@@ -43,4 +43,8 @@ The following middleware are included in the package:
 
 ## Execution Order
 
-When using `pipe()`, middleware are applied from top to bottom (left to right). This order can affect how updates flow through your store. For example, placing `logger()` before `debounce()` will log every attempt to update, while placing it after will only log the final debounced update.
+When using `pipe()`, middleware are applied from top to bottom (left to right). That order is not cosmetic. It changes the update path.
+
+For example, placing `logger()` before `debounce()` logs every attempted update, while placing it after logs only the delayed flush result.
+
+If you only need one middleware, jump directly to its page. If you are composing several, think about ordering first and features second.

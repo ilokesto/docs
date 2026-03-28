@@ -1,15 +1,15 @@
 ---
 title: Patterns
-description: Common recipes and architecture for @ilokesto/state.
+description: Practical ways to organize stores, actions, and derived reads.
 ---
 
 # Patterns
 
-`@ilokesto/state` is flexible and allows for several different architectural patterns. Choose the one that best fits your application's needs.
+The API is small, but the way you organize it matters a lot. Most real projects do not struggle with `create()` itself. They struggle with where actions live, how many stores to create, and when to keep logic inside components versus next to the store.
 
-## Separate Actions
+## Keep store definition and actions close, but not identical
 
-Keep your state definition and your update logic separate to improve testability and keep store setup simple.
+A common pattern is to keep the hook in one module and export actions from a sibling module. That keeps `create()` small while still letting you build a real state API.
 
 ```ts
 // stores/counter.ts
@@ -23,9 +23,11 @@ export const increment = () => {
 };
 ```
 
-## Derived State (Memoization)
+This pattern works especially well when several components need to trigger the same write path.
 
-Use simple selectors for derived state. For expensive calculations, memoize them outside of React.
+## Use selectors for cheap derived reads
+
+The first choice for derived state should usually be a selector, not another store field.
 
 ```ts
 const useStore = create({ items: [] });
@@ -33,16 +35,18 @@ const useStore = create({ items: [] });
 // Simple derived state
 const useTotalItems = () => useStore(state => state.items.length);
 
-// Expensive calculation (memoized)
+// Expensive calculation kept behind one selector
 const selectExpensiveData = (state) => {
   // calculate something heavy...
 };
 const useExpensiveData = () => useStore(selectExpensiveData);
 ```
 
-## Modular Stores
+If a calculation is genuinely expensive, make the selector reusable and keep the component unaware of the implementation detail.
 
-Instead of one giant store, use several smaller, focused stores. This keeps your application modular and makes it easier to manage state transitions.
+## Prefer several focused stores over one giant store
+
+`@ilokesto/state` does not force a single global state tree. In many apps, smaller focused stores are easier to evolve than one oversized store with unrelated concerns.
 
 ```ts
 // auth.ts
@@ -52,9 +56,11 @@ export const useAuth = create({ user: null });
 export const useProducts = create({ list: [] });
 ```
 
-## Combining with Effects
+The split becomes worth it when domains change at different rates or belong to different screens.
 
-You can trigger side effects directly from your actions or from within components using `useEffect`.
+## Let effects sit around actions, not inside the store shape
+
+Because `writeOnly()` is available outside components, you can keep effectful workflows near the action that causes them instead of mixing effect state into the store definition itself.
 
 ```ts
 // Action with side effect
@@ -63,3 +69,12 @@ export const fetchUser = async (id: string) => {
   useAuth.writeOnly()({ user });
 };
 ```
+
+That usually produces cleaner boundaries than storing “loading logic” directly in the store factory.
+
+## A simple rule of thumb
+
+- Use one store when the state truly changes together.
+- Split stores when domains are independent.
+- Use selectors before adding more derived fields.
+- Move writes behind actions when the same update appears in more than one component.

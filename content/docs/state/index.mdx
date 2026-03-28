@@ -1,18 +1,28 @@
 ---
 title: Introduction
-description: Powerful, minimal, and scalable state management for React.
+description: React state hooks backed by an external store.
 ---
 
 # @ilokesto/state
 
-`@ilokesto/state` is a focused state management library for React. It aims to provide the perfect balance between simplicity and scalability by focusing on **store-hook unity**.
+`@ilokesto/state` is the React-facing layer on top of `@ilokesto/store`. It does not invent a new state container. Instead, it takes an external store model and gives you a hook API that fits naturally into React through `useSyncExternalStore`.
 
-## Core Philosophy
+That framing matters because it explains most of the package in one sentence: the store stays outside React, while reads and subscriptions are expressed as hooks.
 
-- **No Providers**: No need to wrap your application in complex Context Providers.
-- **Predictable**: State is external but deeply integrated with React's rendering through `useSyncExternalStore`.
-- **Composable**: Built-in support for middleware like logging, persistence, and validation.
-- **Performant**: Optimized re-renders through a powerful selector system.
+## What this package gives you
+
+- **A single `create()` entry point** for turning state or a vanilla store into a React hook.
+- **Two usage modes**: plain state mode and reducer mode.
+- **Selector-based subscriptions** that keep reads narrow.
+- **Imperative accessors** like `writeOnly()` for actions outside components.
+- **Composable store-level middleware** for logging, persistence, validation, and debugging.
+
+## What it intentionally does not give you
+
+- No provider-first architecture.
+- No Zustand-style initializer function.
+- No separate custom equality API for selectors.
+- No attempt to hide that there is a real store under the hook.
 
 ## Installation
 
@@ -38,4 +48,10 @@ function Counter() {
 }
 ```
 
-Ready to dive in? Start with the [Quick Start](./quick-start) guide.
+This small example already shows the core shape:
+
+- `create()` builds a hook from external state,
+- the selector decides what the component reads,
+- the writer still updates the full store state.
+
+If you are new to the package, start with [Quick Start](./quick-start). If you want to understand why the API looks this way, read [Mental Model](./mental-model) next.

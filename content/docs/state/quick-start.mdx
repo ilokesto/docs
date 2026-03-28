@@ -1,9 +1,11 @@
 ---
 title: Quick Start
-description: Get up and running with @ilokesto/state in minutes.
+description: The shortest path from installation to a useful store hook.
 ---
 
 # Quick Start
+
+This page is the shortest path to something real. The goal is not to show every feature. It is to get one store hook on the screen, update it correctly, and point you to the next concept before the API starts to look magical.
 
 Install the package using your preferred package manager:
 
@@ -11,18 +13,22 @@ Install the package using your preferred package manager:
 @ilokesto/state
 ```
 
-## Basic Usage
+## 1. Create a store hook
 
-Creating a store and using it in a component is straightforward.
+The smallest useful `@ilokesto/state` store starts from plain initial state.
 
 ```tsx
 import { create } from '@ilokesto/state';
 
-// 1. Create a store hook
 const useCounter = create({ count: 0 });
+```
 
+## 2. Read a slice, write the full state
+
+Selectors decide what your component reads. The returned writer still updates the full store state.
+
+```tsx
 function Counter() {
-  // 2. Use the hook with a selector
   const [count, setState] = useCounter((state) => state.count);
 
   return (
@@ -36,9 +42,11 @@ function Counter() {
 }
 ```
 
-## Global Actions
+That distinction is easy to miss at first. Even though the selector returns only `count`, the writer still receives the previous full state.
 
-You can define actions outside of your components by using the `writeOnly` accessor.
+## 3. Move writes out of components when they stop being local
+
+Once update logic starts to feel like an action rather than a button handler, move it behind `writeOnly()`.
 
 ```ts
 const useCounter = create({ count: 0 });
@@ -49,8 +57,11 @@ export const increment = () => {
 };
 ```
 
+This keeps components small and makes store behavior easier to reuse and test.
+
 ## What's Next?
 
-- Understand the [Mental Model](./mental-model) behind the library.
-- Learn more about the [Core API](./create).
-- Explore [Middleware](./middleware) for logging, persistence, and more.
+- Read [Mental Model](./mental-model) if you want to understand why the store lives outside React.
+- Read [`create`](./create) if you want the exact call signatures, including reducer mode.
+- Read [Accessors](./accessors) if you plan to define actions outside components.
+- Read [Middleware](./middleware) if the store needs logging, persistence, validation, or DevTools support.

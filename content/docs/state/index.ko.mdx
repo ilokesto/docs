@@ -1,18 +1,28 @@
 ---
 title: 소개
-description: React를 위한 강력하고 미니멀하며 확장 가능한 상태 관리 라이브러리.
+description: 외부 스토어를 React 훅으로 연결하는 상태 계층.
 ---
 
 # @ilokesto/state
 
-`@ilokesto/state`는 React를 위한 집중적인 상태 관리 라이브러리입니다. **스토어-훅의 통합**에 집중하여 단순함과 확장성 사이의 완벽한 균형을 제공하는 것을 목표로 합니다.
+`@ilokesto/state`는 `@ilokesto/store` 위에 놓이는 React 계층입니다. 새로운 상태 컨테이너를 하나 더 만드는 대신, 외부 스토어 모델을 `useSyncExternalStore` 기반의 React 훅 API로 연결하는 역할을 합니다.
 
-## 핵심 철학
+이 관점을 먼저 잡아두면 패키지의 나머지 설계도 자연스럽게 이해할 수 있습니다. 스토어는 React 바깥에 남고, 읽기와 구독만 훅으로 표현됩니다.
 
-- **Provider 없음**: 애플리케이션을 복잡한 Context Provider로 감쌀 필요가 없습니다.
-- **예측 가능성**: 상태는 외부에 존재하지만 `useSyncExternalStore`를 통해 React의 렌더링과 깊게 통합됩니다.
-- **조합 가능성**: 로깅, 영속화, 검증과 같은 미들웨어를 기본적으로 지원합니다.
-- **성능**: 강력한 셀렉터 시스템을 통해 최적화된 리렌더링을 제공합니다.
+## 이 패키지가 제공하는 것
+
+- 상태나 vanilla store를 React 훅으로 바꾸는 `create()` 진입점
+- plain state mode와 reducer mode
+- 읽기 범위를 좁혀 주는 selector 기반 구독
+- 컴포넌트 밖 액션을 위한 `writeOnly()` 같은 접근자
+- 로깅, 영속화, 검증, 디버깅을 위한 store-level 미들웨어
+
+## 의도적으로 제공하지 않는 것
+
+- Provider 중심 구조
+- Zustand 스타일 initializer function
+- selector용 별도 custom equality API
+- 훅 아래에 실제 store가 있다는 사실을 감추는 추상화
 
 ## 설치
 
@@ -38,4 +48,10 @@ function Counter() {
 }
 ```
 
-이제 시작해 볼까요? [빠른 시작](./quick-start) 가이드부터 확인해 보세요.
+이 짧은 예제 안에도 패키지의 핵심 모양이 다 들어 있습니다.
+
+- `create()`가 외부 상태를 훅으로 바꾸고,
+- selector가 컴포넌트가 읽을 범위를 정하고,
+- writer는 여전히 전체 store state를 갱신합니다.
+
+처음부터 순서대로 보고 싶다면 [빠른 시작](./quick-start)부터, 왜 이런 API 모양이 나왔는지 이해하고 싶다면 [정신 모델](./mental-model)부터 읽는 것이 좋습니다.

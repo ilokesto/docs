@@ -5,7 +5,7 @@ description: Accumulate and delay state updates.
 
 # Debounce
 
-The `debounce` middleware queues rapid updates and flushes them after a configured wait time. This is useful for handling high-frequency events like text input or resize triggers.
+The `debounce` middleware queues rapid updates and flushes them after a configured wait time. In the current implementation, the wait window starts on the first update and additional updates are batched into that same window.
 
 ```ts
 import { debounce } from '@ilokesto/state/middleware';
@@ -17,7 +17,7 @@ const store = debounce(200)({ text: '' });
 
 1. **Queueing**: Updates are collected during the wait period.
 2. **Replaying**: Function updaters are replayed in the exact order they were received against the current accumulated state.
-3. **Flushing**: After the wait time expires with no new updates, the final state is committed to the store.
+3. **Flushing**: When the current wait window expires, the final accumulated state is committed to the store.
 
 ## Call Shape
 
@@ -28,5 +28,6 @@ If you omit the wait value, the current implementation falls back to `300`ms.
 
 ## Considerations
 
+- **Windowed Batching**: This is not a classic “wait until inactivity” debounce. The timer is not reset on every update.
 - **Latency**: `debounce` delays writes by design. Avoid using it where immediate synchronous state access is required (e.g., controlled inputs that need instant feedback).
 - **Sequentiality**: Replays function updaters to ensure consistent state transitions even when debounced.

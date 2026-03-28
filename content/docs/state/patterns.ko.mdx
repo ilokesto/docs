@@ -1,9 +1,9 @@
 ---
-title: 패턴 (Patterns)
+title: 패턴
 description: "@ilokesto/state의 일반적인 아키텍처 및 기법."
 ---
 
-# 패턴 (Patterns)
+# 패턴
 
 `@ilokesto/state`는 유연한 아키텍처 패턴을 지원합니다. 여러분의 애플리케이션의 필요에 맞는 패턴을 선택해 보세요.
 
@@ -23,7 +23,7 @@ export const increment = () => {
 };
 ```
 
-## 파생 상태 (Memoization)
+## 파생 상태
 
 파생된 상태를 위해 간단한 셀렉터를 사용하십시오. 비용이 많이 드는 계산은 React 외부에서 메모이제이션(memoize) 하세요.
 
@@ -52,7 +52,7 @@ export const useAuth = create({ user: null });
 export const useProducts = create({ list: [] });
 ```
 
-## 효과(Effects)와 결합
+## 효과와 결합
 
 액션에서 직접 사이드 이펙트를 발생시키거나 `useEffect`를 사용하여 컴포넌트 내에서 처리할 수 있습니다.
 

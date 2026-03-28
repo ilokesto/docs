@@ -1,8 +1,68 @@
 ---
-title: create API
-description: 핵심 팩토리 함수
+title: create
+description: "@ilokesto/state에서 스토어를 구축하기 위한 기본 API."
 ---
 
 # `create`
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/state/create)을 참고해 주세요.
+`create`는 `@ilokesto/state`의 핵심 진입점입니다. 이 함수는 상태를 정의하고 컴포넌트에서 해당 상태와 상호작용하는 데 사용하는 훅을 반환합니다.
+
+## 호출 시그니처 (Call Signatures)
+
+`create` 함수는 두 가지 주요 운영 모드를 지원하도록 오버로드되어 있습니다.
+
+### 상태 모드 (State Mode)
+
+상태 모드에서는 초기 상태를 직접 제공합니다. 반환된 훅은 React의 `useState`와 유사한 `setState` 함수를 제공합니다.
+
+```ts
+import { create } from '@ilokesto/state';
+
+// 1. 초기 상태 값을 사용
+const useCounter = create({ count: 0 });
+
+// 2. 기존 Store 인스턴스를 사용
+import { Store } from '@ilokesto/store';
+const store = new Store({ count: 0 });
+const useCounterFromStore = create(store);
+```
+
+### 리듀서 모드 (Reducer Mode)
+
+리듀서 모드에서는 리듀서 함수와 초기 상태(또는 스토어)를 제공합니다. 반환된 훅은 `dispatch` 함수를 제공합니다.
+
+```ts
+type State = { count: number };
+type Action = { type: 'increment' } | { type: 'decrement' };
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'increment': return { count: state.count + 1 };
+    case 'decrement': return { count: state.count - 1 };
+    default: return state;
+  }
+};
+
+const useCounter = create(reducer, { count: 0 });
+```
+
+## 훅 동작 방식
+
+`create`에 의해 반환된 훅은 셀렉터 함수를 인자로 받습니다.
+
+```tsx
+function Counter() {
+  // [선택된상태, 업데이트함수]를 반환합니다.
+  const [count, setCountOrDispatch] = useCounter(state => state.count);
+  // ...
+}
+```
+
+- **상태 모드**: 두 번째 요소는 스토어 전체를 갱신하는 writer입니다. 셀렉터가 한 필드만 반환하더라도 writer는 전체 다음 상태 또는 전체 상태를 만드는 updater를 받습니다: `setState((prev) => ({ ...prev, count: prev.count + 1 }))`.
+- **리듀서 모드**: 두 번째 요소는 액션을 받는 `dispatch` 함수입니다: `dispatch({ type: 'increment' })`.
+
+## 중요 참고 사항
+
+- **초기화 함수 미지원**: `create`는 Zustand 스타일의 초기화 함수(예: `(set, get) => ({ ... })`)를 지원하지 **않습니다**.
+- **셀렉터 구독**: 훅은 내부적으로 `useSyncExternalStore`를 사용하여 스토어를 구독합니다.
+- **SSR 지원**: 서버 스냅샷을 위해 `store.getInitialState()`를 사용하여 SSR을 지원합니다.

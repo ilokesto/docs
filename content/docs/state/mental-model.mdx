@@ -1,0 +1,32 @@
+---
+title: Mental Model
+description: How @ilokesto/state manages state and why it's different.
+---
+
+# Mental Model
+
+`@ilokesto/state` is built on a simple but powerful principle: state should be external, but its subscription should be deeply integrated with React's rendering lifecycle.
+
+## Store-Hook Unity
+
+Unlike many state management libraries that require a `Provider` to wrap your application, `@ilokesto/state` uses a **store-hook unity**.
+
+1. **The Store**: A simple container for your data that exists outside of React. It supports listeners and synchronous updates.
+2. **The Hook**: A specialized React hook (returned by `create`) that connects a specific part of that store to your component.
+
+## Selectors are Key
+
+To ensure optimal performance, `@ilokesto/state` encourages the use of **selectors**. Instead of subscribing to the entire store, you subscribe to a specific slice.
+
+- **Selective Rendering**: Components only re-render when the specific data they select changes.
+- **Deep Comparison**: By default, the library uses strict equality (`===`) for selections. For more complex objects, it performs deep comparison.
+
+## Data Flow
+
+- **Reads**: Components read state through the hook using selectors. This creates a subscription using `useSyncExternalStore`.
+- **Writes**: State is updated using a function-based `setState` (similar to React's `useState`). Writes can happen inside or outside components.
+- **Middleware**: Intercepts the data flow at the store level to add side effects like logging or persistence.
+
+## No Boilerplate
+
+There are no complex concepts like "Reducers" (unless you want them), "Actions", or "Dispatchers" by default. You simply define your state and update it. This makes it ideal for small to medium-sized applications that need robust state management without the overhead of larger frameworks.

@@ -1,0 +1,30 @@
+---
+title: SSR and Initial State
+description: Handling state on the server and synchronizing with the client.
+---
+
+# SSR and Initial State
+
+`@ilokesto/state` is compatible with Server-Side Rendering (SSR) through its use of `useSyncExternalStore`.
+
+## Hydration
+
+To properly hydrate your state, you need to ensure the client-side store is initialized with the data sent from the server.
+
+```ts
+// server-side
+const initialData = { count: 42 };
+
+// client-side
+const useCounter = create(initialData);
+```
+
+## `getServerSnapshot`
+
+Under the hood, `@ilokesto/state` uses `store.getInitialState()` to satisfy the `getServerSnapshot` requirement of React's `useSyncExternalStore`. This ensures that the server-rendered HTML matches the initial client-side state, preventing hydration mismatches.
+
+## Best Practices
+
+1. **Avoid Global State on Server**: When running on the server, ensure each request gets its own store instance to prevent data leakage between users.
+2. **Synchronize Versions**: If your application uses persistence, make sure the server's version of the state doesn't conflict with what the client expects.
+3. **Lazy Initialization**: In some cases, you may want to initialize state from a data-attribute or a global `window.__INITIAL_STATE__` variable.

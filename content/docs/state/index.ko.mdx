@@ -1,32 +1,41 @@
 ---
-title: 개요 및 시작하기
-description: React를 위한 반응형 상태 관리
+title: 소개 (Introduction)
+description: React를 위한 강력하고 미니멀하며 확장 가능한 상태 관리 라이브러리.
 ---
 
 # @ilokesto/state
 
-`@ilokesto/state`는 `@ilokesto/store` 위에 얹는 React용 상태 관리 패키지입니다. `create()` API, 셀렉터 기반 구독, 리듀서 모드, 미들웨어 유틸리티를 통해 React 컴포넌트에서 store를 다루기 쉽게 만들어 줍니다.
+`@ilokesto/state`는 React를 위한 집중적인 상태 관리 라이브러리입니다. **스토어-훅의 통합**에 집중하여 단순함과 확장성 사이의 완벽한 균형을 제공하는 것을 목표로 합니다.
+
+## 핵심 철학
+
+- **Provider 없음**: 애플리케이션을 복잡한 Context Provider로 감쌀 필요가 없습니다.
+- **예측 가능성**: 상태는 외부에 존재하지만 `useSyncExternalStore`를 통해 React의 렌더링과 깊게 통합됩니다.
+- **조합 가능성**: 로깅, 영속화, 검증과 같은 미들웨어를 기본적으로 지원합니다.
+- **성능**: 강력한 셀렉터 시스템을 통해 최적화된 리렌더링을 제공합니다.
 
 ## 설치
 
-```bash
-pnpm add @ilokesto/state react
+```package-install
+@ilokesto/state
 ```
 
-`adaptor()`를 사용할 예정이라면 `immer`도 함께 설치하세요.
+## 훑어보기
 
-```bash
-pnpm add immer
+```tsx
+import { create } from '@ilokesto/state';
+
+const useCounter = create({ count: 0 });
+
+function Counter() {
+  const [count, setState] = useCounter((state) => state.count);
+
+  return (
+    <button onClick={() => setState((prev) => ({ ...prev, count: prev.count + 1 }))}>
+      {count}
+    </button>
+  );
+}
 ```
 
-## 문서 구성
-
-- [`create API`](/ko/state/create)
-- [`셀렉터와 상태 접근`](/ko/state/selectors)
-- [`리듀서 모드`](/ko/state/reducer)
-- [`미들웨어`](/ko/state/middleware)
-- [`유틸리티`](/ko/state/utils)
-
-## 한글 문서 상태
-
-상위 소개 페이지는 한글로 제공하고 있으며, 세부 페이지는 우선 영어 문서와 동일한 구조를 유지하면서 순차적으로 보강하고 있습니다. 깊은 API 설명이 아직 부족한 경우에는 영어 페이지를 함께 참고하는 것이 좋습니다.
+이제 시작해 볼까요? [빠른 시작](./quick-start) 가이드부터 확인해 보세요.

@@ -1,0 +1,33 @@
+---
+title: Existing Store
+description: Using @ilokesto/state with an already initialized @ilokesto/store instance.
+---
+
+# Existing Store
+
+`@ilokesto/state` is built on top of the generic `@ilokesto/store` library. In some cases, you might already have a store instance and want to use it with the React hook functionality.
+
+## Wrapping a Store
+
+The `create` function accepts either an initial state or an existing `Store` instance.
+
+```ts
+import { Store } from '@ilokesto/store';
+import { create } from '@ilokesto/state';
+
+// 1. Create a generic store
+const myStore = new Store({ count: 0 });
+
+// 2. Wrap it with the state hook
+const useCounter = create(myStore);
+```
+
+## Why Wrap?
+
+- **Interoperability**: You might be using the same store in non-React parts of your application (e.g., in an edge function or a node background task).
+- **External Configuration**: If your store requires complex setup or custom middleware that is managed independently.
+- **Shared State**: You want multiple different components or hooks to interact with the exact same store instance.
+
+## Limitations
+
+When you pass an existing `Store`, `create` will use it as is. Any middleware already attached to that store will continue to function.

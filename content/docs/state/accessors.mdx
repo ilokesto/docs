@@ -1,0 +1,51 @@
+---
+title: Accessors
+description: writeOnly() and the current caveats of readOnly().
+---
+
+# Accessors
+
+Accessors are methods attached to the hook returned by `create`. They are not symmetric: `writeOnly()` is a stable imperative writer, but `readOnly()` currently goes through the same hook path used by selector reads.
+
+## `writeOnly()`
+
+`writeOnly()` returns the store's `setState` function. It is the preferred way to define actions and side effects that live outside of React.
+
+```ts
+const useCounter = create({ count: 0 });
+
+// Define an action outside React
+export const increment = () => {
+  const setState = useCounter.writeOnly();
+  setState(state => ({ count: state.count + 1 }));
+};
+```
+
+## `readOnly()`
+
+`readOnly()` exists on the returned hook, but the current implementation reaches through the same selector hook path used by normal reads.
+
+That means you should treat it as a React-side convenience, not as a general-purpose imperative getter for arbitrary code.
+
+```tsx
+function CounterSummary() {
+  const count = useCounter.readOnly((state) => state.count);
+
+  return <span>{count}</span>;
+}
+```
+
+If you need an imperative read outside React, prefer the vanilla `Store` API from `@ilokesto/store` and pass that store into `create(store)`.
+
+## Usage in Actions
+
+Accessors are most useful for standalone action files through `writeOnly()`:
+
+```ts
+// actions/counter.ts
+import { useCounter } from '../stores/counter';
+
+export const reset = () => {
+  useCounter.writeOnly()({ count: 0 });
+};
+```

@@ -1,0 +1,33 @@
+---
+title: 기존 스토어 사용 (Existing Store)
+description: 이미 초기화된 @ilokesto/store 인스턴스와 함께 @ilokesto/state 사용하기.
+---
+
+# 기존 스토어 사용 (Existing Store)
+
+`@ilokesto/state`는 범용적인 `@ilokesto/store` 라이브러리를 기반으로 구축되었습니다. 경우에 따라 이미 스토어 인스턴스가 있고 이를 React 훅 기능과 함께 사용하고 싶을 수도 있습니다.
+
+## 스토어 래핑 (Wrapping a Store)
+
+`create` 함수는 초기 상태 또는 기존 `Store` 인스턴스를 모두 인자로 받을 수 있습니다.
+
+```ts
+import { Store } from '@ilokesto/store';
+import { create } from '@ilokesto/state';
+
+// 1. 범용 스토어 생성
+const myStore = new Store({ count: 0 });
+
+// 2. 상태 훅으로 래핑
+const useCounter = create(myStore);
+```
+
+## 왜 래핑하나요?
+
+- **상호 운용성**: 애플리케이션의 비-React 부분(예: Edge Function이나 Node 백그라운드 태스크)에서 동일한 스토어를 사용하고 있을 수 있습니다.
+- **외부 설정**: 스토어에 복잡한 설정이나 독립적으로 관리되는 커스텀 미들웨어가 필요한 경우 유용합니다.
+- **공유 상태**: 여러 다른 컴포넌트나 훅이 정확히 동일한 스토어 인스턴스와 상호작용하도록 하고 싶은 경우 사용합니다.
+
+## 제약 사항
+
+기존 `Store`를 전달하면 `create`는 이를 그대로 사용합니다. 해당 스토어에 이미 연결된 모든 미들웨어는 계속해서 정상적으로 작동합니다.

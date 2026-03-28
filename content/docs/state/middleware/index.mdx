@@ -1,0 +1,46 @@
+---
+title: Middleware
+description: Extend store behavior with logger, devtools, persist, and more.
+---
+
+# Middleware
+
+`@ilokesto/state` provides a set of built-in middleware to extend the behavior of your stores. These are available from the `@ilokesto/state/middleware` entry point.
+
+Middleware in `@ilokesto/state` are functions that take a store (or a configuration object) and return a new store with enhanced capabilities. They are designed to be composable using the `pipe` utility.
+
+```ts
+import { create } from '@ilokesto/state';
+import { logger, persist } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
+
+const useStore = create(
+  pipe(
+    { count: 0 },
+    logger(),
+    persist({ local: 'my-app-storage' })
+  )
+);
+```
+
+## Composition Pattern
+
+Most middleware support two calling styles:
+1. **Direct**: `middleware(store, options)`
+2. **Curried**: `middleware(options)(store)`
+
+The curried form is preferred when using `pipe()` for a clean, readable setup.
+
+## Built-in Middleware
+
+The following middleware are included in the package:
+
+- [**Logger**](./logger): Logs state changes to the console.
+- [**DevTools**](./devtools): Connects your store to Redux DevTools.
+- [**Persist**](./persist): Synchronizes state with `localStorage`, `sessionStorage`, or cookies.
+- [**Debounce**](./debounce): Delays state updates until a period of inactivity.
+- [**Validate**](./validate): Validates state updates using Standard Schema v1.
+
+## Execution Order
+
+When using `pipe()`, middleware are applied from top to bottom (left to right). This order can affect how updates flow through your store. For example, placing `logger()` before `debounce()` will log every attempt to update, while placing it after will only log the final debounced update.

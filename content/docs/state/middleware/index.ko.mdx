@@ -1,0 +1,46 @@
+---
+title: 미들웨어
+description: 로거, DevTools, 영속화(Persist) 등 스토어의 기능을 확장합니다.
+---
+
+# 미들웨어
+
+`@ilokesto/state`는 스토어의 동작을 확장하기 위한 다양한 내장 미들웨어를 제공합니다. 미들웨어는 `@ilokesto/state/middleware` 엔트리포인트를 통해 사용할 수 있습니다.
+
+미들웨어는 스토어(또는 설정 객체)를 받아 향상된 기능을 가진 새로운 스토어를 반환하는 함수입니다. `pipe` 유틸리티를 사용하여 여러 미들웨어를 쉽게 조합할 수 있도록 설계되었습니다.
+
+```ts
+import { create } from '@ilokesto/state';
+import { logger, persist } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
+
+const useStore = create(
+  pipe(
+    { count: 0 },
+    logger(),
+    persist({ local: 'my-app-storage' })
+  )
+);
+```
+
+## 조합 패턴
+
+대부분의 미들웨어는 두 가지 호출 스타일을 지원합니다:
+1. **직접 호출**: `middleware(store, options)`
+2. **커링된 호출**: `middleware(options)(store)`
+
+`pipe()`를 사용할 때는 설정을 선언적으로 관리할 수 있는 커링된 형태를 권장합니다.
+
+## 내장 미들웨어
+
+패키지에 포함된 주요 미들웨어는 다음과 같습니다:
+
+- [**Logger**](./logger): 콘솔에 상태 변경 내용을 기록합니다.
+- [**DevTools**](./devtools): 스토어를 Redux DevTools에 연결합니다.
+- [**Persist**](./persist): `localStorage`, `sessionStorage` 또는 쿠키에 상태를 동기화합니다.
+- [**Debounce**](./debounce): 일정 시간 동안 입력이 없을 때만 상태를 업데이트합니다.
+- [**Validate**](./validate): Standard Schema v1을 사용하여 상태 업데이트를 검증합니다.
+
+## 실행 순서
+
+`pipe()`를 사용할 때 미들웨어는 위에서 아래로(왼쪽에서 오른쪽으로) 적용됩니다. 이 순서는 상태 업데이트가 스토어를 통과하는 방식에 영향을 줄 수 있습니다. 예를 들어, `logger()`를 `debounce()` 앞에 두면 모든 업데이트 시도를 기록하지만, 뒤에 두면 최종적으로 디바운싱된 업데이트만 기록합니다.

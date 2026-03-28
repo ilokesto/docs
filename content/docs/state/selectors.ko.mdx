@@ -1,8 +1,59 @@
 ---
-title: 셀렉터 및 상태 접근
-description: 상태 접근 및 구독
+title: 셀렉터 (Selectors)
+description: "@ilokesto/state에서 상태 조각을 효율적으로 구독하는 방법."
 ---
 
-# 셀렉터
+# 셀렉터 (Selectors)
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/state/selectors)을 참고해 주세요.
+셀렉터는 `@ilokesto/state`에서 상태를 읽기 위한 주된 메커니즘입니다. 컴포넌트가 자신에게 필요한 특정 데이터만 구독할 수 있게 하며, 이는 대규모 애플리케이션에서 성능을 유지하는 데 매우 중요합니다.
+
+## 기본 사용법
+
+`create`에 의해 반환된 훅은 셀렉터 함수를 첫 번째 인자로 받습니다.
+
+```tsx
+const [count, setCount] = useCounter(state => state.count);
+```
+
+훅은 다음 두 가지 요소를 포함하는 튜플을 반환합니다:
+1. 첫 번째 요소는 **선택된 값**입니다.
+2. 두 번째 요소는 **writer**(`setState` 또는 `dispatch`)입니다. 상태 모드에서는 셀렉터가 일부 값만 반환하더라도 전체 스토어 상태를 갱신하는 writer가 그대로 반환됩니다.
+
+## 구독 로직 (Subscription Logic)
+
+셀렉터를 사용하면 컴포넌트는 해당 셀렉터의 **결과**가 변경될 때만 리렌더링됩니다.
+
+```tsx
+// 이 컴포넌트는 state.user.name이 변경될 때만 리렌더링됩니다.
+const [name] = useUserStore(state => state.user.name);
+```
+
+셀렉터 없이 훅을 호출하면 컴포넌트는 **전체 스토어**를 구독하게 되며, 상태가 변경될 때마다 리렌더링됩니다.
+
+```tsx
+// 모든 상태 변화를 구독합니다. 주의해서 사용하십시오.
+const [state, setState] = useStore();
+```
+
+## 메모이제이션 및 비교 (Memoization and Comparison)
+
+`@ilokesto/state`는 별도의 selector equality API 대신, 스토어 스냅샷 경로를 메모이즈하는 방식으로 동작합니다.
+
+- **원시 값 (Primitive Values)**은 일반적으로 기대한 대로 동작합니다.
+- **객체 및 배열 (Objects and Arrays)**은 내부 스냅샷이 깊게 같다고 판단되면 이전 선택 값이 재사용될 수 있습니다.
+
+## 파생 상태 (Derived State)
+
+셀렉터를 사용하여 파생 상태를 직접 계산할 수 있습니다.
+
+```tsx
+const [isEven] = useCounter(state => state.count % 2 === 0);
+```
+
+이 방식은 스토어 업데이트 주기에 맞춰 계산이 발생하고, 불리언 결과값이 변경될 때만 컴포넌트가 리렌더링되므로 매우 효율적입니다.
+
+## 권장 사항
+
+- **간결한 셀렉터 유지**: 셀렉터는 순수 함수여야 합니다. 셀렉터 내부에 복잡한 로직을 넣는 것을 지양하십시오.
+- **세분화된 구독**: 리렌더링을 최소화하려면 거대한 객체 대신 구체적인 필드를 선택하는 것이 좋습니다.
+- **안정적인 참조**: 셀렉터를 컴포넌트 외부에서 정의하면 셀렉터 함수 자체의 참조가 안정적으로 유지되도록 할 수 있습니다.

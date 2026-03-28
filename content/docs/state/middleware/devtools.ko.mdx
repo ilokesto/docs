@@ -23,4 +23,4 @@ const store = devtools('CounterStore')({ count: 0 });
 
 - **브라우저 전용**: `window.__REDUX_DEVTOOLS_EXTENSION__`에 등록된 확장 프로그램에 의존합니다.
 - **운영 환경 비활성화**: `logger`와 마찬가지로 운영(production) 환경에서는 자동으로 비활성화됩니다.
-- **액션 명명 패턴**: 업데이트 정보는 `${name}:${actionName}` 또는 `${name}:anonymous` 형식으로 DevTools에 전송됩니다.
+- **액션 명명 패턴**: 업데이트 정보는 `${name}:${actionName}` 또는 `${name}:anonymous action` 형식으로 DevTools에 전송됩니다.

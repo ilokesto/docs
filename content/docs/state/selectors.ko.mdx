@@ -1,9 +1,9 @@
 ---
-title: 셀렉터 (Selectors)
+title: 셀렉터
 description: "@ilokesto/state에서 상태 조각을 효율적으로 구독하는 방법."
 ---
 
-# 셀렉터 (Selectors)
+# 셀렉터
 
 셀렉터는 `@ilokesto/state`에서 상태를 읽기 위한 주된 메커니즘입니다. 컴포넌트가 자신에게 필요한 특정 데이터만 구독할 수 있게 하며, 이는 대규모 애플리케이션에서 성능을 유지하는 데 매우 중요합니다.
 
@@ -19,7 +19,7 @@ const [count, setCount] = useCounter(state => state.count);
 1. 첫 번째 요소는 **선택된 값**입니다.
 2. 두 번째 요소는 **writer**(`setState` 또는 `dispatch`)입니다. 상태 모드에서는 셀렉터가 일부 값만 반환하더라도 전체 스토어 상태를 갱신하는 writer가 그대로 반환됩니다.
 
-## 구독 로직 (Subscription Logic)
+## 구독 로직
 
 셀렉터를 사용하면 컴포넌트는 해당 셀렉터의 **결과**가 변경될 때만 리렌더링됩니다.
 
@@ -35,14 +35,14 @@ const [name] = useUserStore(state => state.user.name);
 const [state, setState] = useStore();
 ```
 
-## 메모이제이션 및 비교 (Memoization and Comparison)
+## 메모이제이션 및 비교
 
 `@ilokesto/state`는 별도의 selector equality API 대신, 스토어 스냅샷 경로를 메모이즈하는 방식으로 동작합니다.
 
 - **원시 값 (Primitive Values)**은 일반적으로 기대한 대로 동작합니다.
 - **객체 및 배열 (Objects and Arrays)**은 내부 스냅샷이 깊게 같다고 판단되면 이전 선택 값이 재사용될 수 있습니다.
 
-## 파생 상태 (Derived State)
+## 파생 상태
 
 셀렉터를 사용하여 파생 상태를 직접 계산할 수 있습니다.
 

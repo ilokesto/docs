@@ -5,7 +5,7 @@ description: Console logger for state changes.
 
 # Logger
 
-The `logger` middleware tracks every `setState` call and prints it to the browser console. It displays the previous state, the update (action or value), and the resulting next state.
+The `logger` middleware tracks every state update and prints it to the browser console. It shows the previous state, the resulting next state, and an action name in the log title when one is available.
 
 ```ts
 import { logger } from '@ilokesto/state/middleware';

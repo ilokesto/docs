@@ -1,11 +1,11 @@
 ---
-title: 로거 (Logger)
+title: 로거
 description: 상태 변경 내용을 콘솔에 기록합니다.
 ---
 
-# 로거 (Logger)
+# 로거
 
-`logger` 미들웨어는 모든 `setState` 호출을 추적하여 브라우저 콘솔에 출력합니다. 이전 상태, 업데이트(액션 또는 값), 그리고 결과물인 다음 상태를 한눈에 볼 수 있습니다.
+`logger` 미들웨어는 모든 상태 업데이트를 추적하여 브라우저 콘솔에 출력합니다. 이전 상태와 다음 상태를 보여주고, 가능하다면 로그 제목에 액션 이름도 함께 남깁니다.
 
 ```ts
 import { logger } from '@ilokesto/state/middleware';

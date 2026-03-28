@@ -19,7 +19,7 @@ Unlike many state management libraries that require a `Provider` to wrap your ap
 To ensure optimal performance, `@ilokesto/state` encourages the use of **selectors**. Instead of subscribing to the entire store, you subscribe to a specific slice.
 
 - **Selective Rendering**: Components only re-render when the specific data they select changes.
-- **Deep Comparison**: By default, the library uses strict equality (`===`) for selections. For more complex objects, it performs deep comparison.
+- **Snapshot Reuse**: Internally, the hook memoizes across store snapshots and can reuse the previous selected value when those snapshots are deeply equal.
 
 ## Data Flow
 

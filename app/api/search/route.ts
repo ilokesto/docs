@@ -1,9 +1,8 @@
 import { source } from '@/lib/source';
-import { createFromSource } from 'fumadocs-core/search/server';
+import { flexsearchFromSource } from 'fumadocs-core/search/flexsearch';
 
-export const { staticGET: GET } = createFromSource(source, {
+export const { staticGET: GET } = flexsearchFromSource(source, {
   localeMap: {
-    ko: 'english',
-    en: 'english'
-  }
+    ko: 'cjk',
+  },
 });

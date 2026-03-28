@@ -39,6 +39,8 @@ function connectStore<T>(store: Store<T>) {
 
 프레임워크마다 세부 구현은 달라지지만, 큰 흐름은 대체로 같습니다. 한 번 읽고, 구독하고, 쓰기 경로를 노출하고, 정리를 정확히 하는 방식입니다.
 
+어댑터가 현재 살아 있는 스냅샷이 아니라 생성자에 전달했던 원래 값을 다시 써야 하는 경우에는 `Store`의 `getInitialState()`를 사용할 수도 있습니다. 다만 일반적인 렌더링과 동기화 경로는 여전히 `getState()`를 기준으로 두는 편이 맞고, `getInitialState()`는 reset이나 재부트스트랩 흐름에 더 가깝습니다.
+
 ## React
 
 React는 외부 스토어를 위한 내장 모델인 `useSyncExternalStore`를 이미 제공합니다. 그래서 React 어댑터는 보통 두 가지를 중심으로 구성됩니다.
@@ -251,4 +253,4 @@ Preact에서 중요한 점은 다음과 같습니다.
 - 프레임워크 계층은 가능한 한 얇게 만들고,
 - selector, action, 사용성 helper는 raw bridge 바로 위 계층에 얹는 편이 좋습니다.
 
-이 통합들이 의존하는 더 낮은 수준의 보장은 [스토어 기반 구축하기](./building-on-store), [구독](./subscriptions), [업데이트 시맨틱](./updates)에서 설명합니다.
+이 통합들이 의존하는 더 낮은 수준의 보장은 [스토어 기반 구축하기](./building-on-store), [API 레퍼런스](./api), [구독](./subscriptions), [업데이트 시맨틱](./updates)에서 설명합니다.

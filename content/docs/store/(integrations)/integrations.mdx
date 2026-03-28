@@ -39,6 +39,8 @@ function connectStore<T>(store: Store<T>) {
 
 The details change from framework to framework, but the shape is usually the same: read once, subscribe, expose writes, and clean up correctly.
 
+If an adapter needs to restore the original constructor value rather than the current live snapshot, `Store` also exposes `getInitialState()`. Normal rendering and synchronization should still read from `getState()`, but reset or re-bootstrap flows may prefer the original value.
+
 ## React
 
 React already has a built-in model for external stores: `useSyncExternalStore`. That means a React adapter usually centers on two pieces:
@@ -251,4 +253,4 @@ If you are building on top of `@ilokesto/store`, a good rule is:
 - make the framework layer as thin as possible,
 - add selectors, actions, and ergonomic helpers one layer above the raw bridge.
 
-For the lower-level guarantees that these integrations rely on, read [Building on Store](./building-on-store), [Subscriptions](./subscriptions), and [Update Semantics](./updates).
+For the lower-level guarantees that these integrations rely on, read [Building on Store](./building-on-store), [API Reference](./api), [Subscriptions](./subscriptions), and [Update Semantics](./updates).

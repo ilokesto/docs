@@ -1,0 +1,372 @@
+---
+title: createProxy
+description: Build proxy-backed component families like Show.div or your own custom variants.
+---
+
+# `createProxy`
+
+`createProxy` is the function behind proxy-backed exports like `Show.div`, `For.ul`, or `Mount.section`. If you want to build that same shape for your own component family, this is the page to read.
+
+The difficult part of `createProxy` is that it mixes **runtime behavior** and **type-level behavior**:
+
+- at runtime, it is a `Proxy` that resolves properties like `.div` or `.Link`
+- at type time, it uses `ProxyType` and `UtilinentRegister` so those properties can stay typed
+
+The easiest way to understand it is to learn the runtime shape first and the type helpers second.
+
+## What `createProxy` does
+
+The real signature is:
+
+```ts
+createProxy(base, renderForTag, category)
+```
+
+It combines three things into one export:
+
+1. the **base component** itself
+2. **intrinsic tag variants** like `.div`, `.button`, `.section`
+3. **plugin-backed variants** resolved from `PluginManager`
+
+That is why a single export can behave like both a component and a property bag.
+
+## The three inputs
+
+### `base`
+
+This is the default component you want people to use when they call the proxy directly.
+
+For example, with `Show`, the base form is:
+
+```tsx
+<Show when={user}>...</Show>
+```
+
+### `renderForTag`
+
+This is the factory that answers the question: “If the user asks for `.div` or `.button`, how should that variant render?”
+
+It usually returns a `forwardRef` wrapper that renders the requested tag with your custom behavior applied.
+
+### `category`
+
+This is the plugin lookup bucket. It tells `createProxy` which `PluginManager` category to search first when someone accesses an unknown property.
+
+Built-in categories in the package include `show`, `for`, `repeat`, `mount`, `switch`, and `base`, but the runtime also accepts custom string categories.
+
+## Resolution order
+
+When you access a property like `Clickable.div` or `Clickable.Link`, the proxy resolves it in this order:
+
+1. existing property on the target
+2. plugin registered for the current `category`
+3. plugin registered for `base`
+4. `undefined`
+
+That first rule matters more than it looks.
+
+- all built-in HTML tag variants are already present as existing properties
+- once a plugin variant is resolved once, it gets cached onto the target and also becomes an existing property later
+
+So the effective rule is: **built-ins win first, then category plugins, then base plugins, and successful plugin lookups are cached.**
+
+## Smallest working mental model
+
+Before worrying about advanced types, this is the runtime shape you are building:
+
+```tsx
+import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
+import { createProxy } from '@ilokesto/utilinent';
+
+type ClickableProps = {
+  active?: boolean;
+  children?: React.ReactNode;
+};
+
+function BaseClickable({ children }: ClickableProps) {
+  return <>{children}</>;
+}
+
+const renderForTag =
+  (tag: any) =>
+  forwardRef(function Render(
+    { active = false, children, ...props }: ClickableProps & ComponentPropsWithRef<any>,
+    ref: any,
+  ) {
+    return createElement(tag, {
+      ...props,
+      ref,
+      'data-active': active,
+    }, children);
+  });
+
+const Clickable = createProxy(BaseClickable, renderForTag, 'clickable');
+```
+
+At this point, the runtime idea is already in place:
+
+- `Clickable` is the base form
+- `Clickable.div` and `Clickable.button` are generated from HTML tags
+- `Clickable.SomePlugin` can be resolved later through `PluginManager`
+
+## End-to-end example: building `Clickable`
+
+If you want the shortest complete tutorial, this is the one to follow. The idea is to build a component family that:
+
+- has one base form, `Clickable`
+- has intrinsic variants like `Clickable.button`
+- can later gain plugin-backed variants like `Clickable.Link`
+
+### Step 1: define the props and base behavior
+
+Start with the behavior you want every variant to share.
+
+```tsx
+type ClickableProps = {
+  active?: boolean;
+  children?: React.ReactNode;
+};
+
+function BaseClickable({ children }: ClickableProps) {
+  return <>{children}</>;
+}
+```
+
+In this example, the base form does almost nothing by itself. That is normal. The interesting part is usually how each tag variant gets rendered.
+
+### Step 2: teach tag variants how to render
+
+`renderForTag` is where family-wide behavior gets attached to each intrinsic element.
+
+```tsx
+import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
+
+const renderForTag =
+  (tag: any) =>
+  forwardRef(function Render(
+    { active = false, children, ...props }: ClickableProps & ComponentPropsWithRef<any>,
+    ref: any,
+  ) {
+    return createElement(tag, {
+      ...props,
+      ref,
+      'data-active': active,
+    }, children);
+  });
+```
+
+This is the piece that makes `Clickable.button` and `Clickable.a` feel like one family instead of unrelated components.
+
+### Step 3: create the proxy
+
+```tsx
+const Clickable = createProxy(BaseClickable, renderForTag, 'clickable');
+```
+
+At runtime, that one line gives you:
+
+```tsx
+<Clickable>Plain base form</Clickable>
+<Clickable.button active>Save</Clickable.button>
+<Clickable.a href="/docs">Read docs</Clickable.a>
+```
+
+### Step 4: add the type layer
+
+If you stop at runtime behavior, the proxy works but TypeScript cannot describe the full surface well. This is where `BaseTypeHelperFn` and `ProxyType` come in.
+
+```tsx
+import { BaseTypeHelperFn, ProxyType } from '@ilokesto/utilinent';
+
+type BaseClickableType<X = object> = {
+  (props: X & ClickableProps): React.ReactNode;
+};
+
+interface BaseClickableTypeFn extends BaseTypeHelperFn {
+  type: BaseClickableType<this['props']>;
+}
+
+type ClickableType = ProxyType<BaseClickableTypeFn, 'clickable'>;
+
+export const Clickable: ClickableType = createProxy(BaseClickable, renderForTag, 'clickable');
+```
+
+### Step 5: add plugin-backed variants later
+
+Once the family exists, plugin registration becomes a separate concern.
+
+```tsx
+import Link from 'next/link';
+import { PluginManager } from '@ilokesto/utilinent';
+
+PluginManager.register({
+  clickable: {
+    Link,
+  },
+});
+```
+
+Now `Clickable.Link` can be resolved by name.
+
+That separation is worth remembering:
+
+- `renderForTag` defines how intrinsic-tag variants behave
+- `PluginManager` decides which extra named variants exist
+
+### Step 6: make plugin variants visible to TypeScript
+
+```ts
+declare module '@ilokesto/utilinent' {
+  interface UtilinentRegister {
+    clickable: {
+      Link: typeof Link;
+    };
+  }
+}
+```
+
+Without this step, runtime may work while TypeScript still complains.
+
+## Making it type-safe
+
+The runtime proxy above works, but TypeScript will not know the shape you want unless you describe it.
+
+This is what the package's own components do.
+
+```tsx
+import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
+import { BaseTypeHelperFn, ProxyType, createProxy } from '@ilokesto/utilinent';
+
+type ClickableProps = {
+  active?: boolean;
+  children?: React.ReactNode;
+};
+
+function BaseClickable({ children }: ClickableProps) {
+  return <>{children}</>;
+}
+
+const renderForTag =
+  (tag: any) =>
+  forwardRef(function Render(
+    { active = false, children, ...props }: ClickableProps & ComponentPropsWithRef<any>,
+    ref: any,
+  ) {
+    return createElement(tag, {
+      ...props,
+      ref,
+      'data-active': active,
+    }, children);
+  });
+
+type BaseClickableType<X = object> = {
+  (props: X & ClickableProps): React.ReactNode;
+};
+
+interface BaseClickableTypeFn extends BaseTypeHelperFn {
+  type: BaseClickableType<this['props']>;
+}
+
+type ClickableType = ProxyType<BaseClickableTypeFn, 'clickable'>;
+
+export const Clickable: ClickableType = createProxy(BaseClickable, renderForTag, 'clickable');
+```
+
+The important part is not memorizing every helper name. It is understanding what they mean:
+
+- `BaseTypeHelperFn` is the contract for “given some props, what callable component type should exist?”
+- `ProxyType<F, Category>` says “take that callable type and add HTML tags plus registered plugin keys”
+- the category string must match the plugin bucket you want to read from later
+
+## Registering custom variants
+
+Once your proxy exists, you can teach it new property names through `PluginManager`.
+
+This is a different step from intrinsic tag generation. HTML tags are eagerly generated through `renderForTag`, but plugin-backed variants are resolved later by name from `PluginManager`.
+
+```tsx
+import Link from 'next/link';
+import { PluginManager } from '@ilokesto/utilinent';
+
+PluginManager.register({
+  clickable: {
+    Link,
+  },
+});
+```
+
+Now the runtime can resolve a plugin-backed property lookup such as:
+
+```tsx
+<Clickable.Link href="/login">
+  Login
+</Clickable.Link>
+```
+
+Whether family-specific props like `active` make sense on a plugin-backed variant depends on how your `renderForTag` logic and registered component interact. Do not assume every plugin-backed variant behaves exactly like an intrinsic tag variant unless you designed it that way.
+
+## Registering types for custom variants
+
+Runtime registration alone is not enough if you want TypeScript to know that `Clickable.Link` exists.
+
+For that you augment `UtilinentRegister`.
+
+```ts
+import Link from 'next/link';
+
+declare module '@ilokesto/utilinent' {
+  interface UtilinentRegister {
+    clickable: {
+      Link: typeof Link;
+    };
+  }
+}
+```
+
+Now the `ProxyType<..., 'clickable'>` line can see the registered key and type it correctly.
+
+## When to use `base`
+
+If you register under `base`, the plugin becomes available as a fallback for **all** proxy families that do not already resolve that property in their own category.
+
+That is powerful, but it is also broad. Use `base` when the variant is truly cross-cutting.
+
+Use a custom category when the variant belongs only to one proxy family.
+
+## Common mistakes
+
+### 1. Starting from the types before the runtime idea
+
+If `ProxyType<this['props']>`-style syntax feels opaque, stop there and go back to the runtime flow:
+
+`base -> renderForTag -> createProxy -> property access -> plugin lookup`
+
+That is the real model.
+
+### 2. Forgetting that built-ins win first
+
+If a property already exists on the target, plugin lookup will not override it.
+
+### 3. Registering the runtime plugin but not the type
+
+Without `UtilinentRegister` augmentation, your code may work at runtime but still feel broken in TypeScript.
+
+### 4. Using `base` too broadly
+
+`base` is convenient, but it affects every proxy family that falls back to it.
+
+## When `createProxy` is the right tool
+
+Use it when:
+
+- you want one base primitive plus many tag variants
+- you want category-specific plugin extension
+- you want your API to look like `Thing.div` or `Thing.Link`
+
+Avoid it when a plain component is already enough. `createProxy` is for component families, not just for “one more wrapper.”
+
+## Related pages
+
+- [Extensibility](./extensibility) for the broader extension story
+- [Composition](./composition) for `Slot` and `Slottable`
+- [Conditional Rendering](./conditional) for real built-in examples of proxy-backed primitives

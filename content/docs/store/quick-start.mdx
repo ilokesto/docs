@@ -1,0 +1,52 @@
+---
+title: Quick Start
+description: The shortest path to a useful vanilla store.
+---
+
+# Quick Start
+
+This page is the shortest path from installation to a useful `Store` instance. The goal is not to cover every behavior. It is to get one store working, update it correctly, and point you to the next concept before the API looks more abstract than it really is.
+
+```package-install
+@ilokesto/store
+```
+
+## 1. Create a store
+
+```ts
+import { Store } from '@ilokesto/store';
+
+const counterStore = new Store({ count: 0 });
+```
+
+## 2. Read the current value
+
+```ts
+const current = counterStore.getState();
+```
+
+`Store` is synchronous. There is no async snapshot layer here.
+
+## 3. Update the whole state value
+
+```ts
+counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+```
+
+Even when your state is an object, `Store` replaces the full value. If you want to preserve other fields, you preserve them yourself.
+
+## 4. Subscribe to changes
+
+```ts
+const unsubscribe = counterStore.subscribe(() => {
+  console.log(counterStore.getState());
+});
+
+unsubscribe();
+```
+
+## What to read next
+
+- Read [Mental Model](./mental-model) if you want to understand why this package stays so small.
+- Read [Update Semantics](./updates) if replacement semantics or bailouts still feel unclear.
+- Read [Subscriptions](./subscriptions) if listener behavior matters to your integration.

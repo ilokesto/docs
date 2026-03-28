@@ -1,0 +1,52 @@
+---
+title: 빠른 시작
+description: 가장 짧은 경로로 유용한 vanilla store를 만듭니다.
+---
+
+# 빠른 시작
+
+이 페이지의 목표는 `Store` 인스턴스 하나를 빠르게 만들고, 올바르게 갱신하고, 다음에 무엇을 읽어야 하는지 연결하는 것입니다. 모든 동작을 다 설명하기보다는 가장 짧은 성공 경로를 보여주는 데 집중합니다.
+
+```package-install
+@ilokesto/store
+```
+
+## 1. 스토어 만들기
+
+```ts
+import { Store } from '@ilokesto/store';
+
+const counterStore = new Store({ count: 0 });
+```
+
+## 2. 현재 값 읽기
+
+```ts
+const current = counterStore.getState();
+```
+
+`Store`는 동기적으로 동작합니다. 별도의 비동기 스냅샷 계층은 없습니다.
+
+## 3. 전체 상태 값을 갱신하기
+
+```ts
+counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+```
+
+상태가 객체여도 `Store`는 전체 값을 교체합니다. 다른 필드를 유지하려면 직접 유지해야 합니다.
+
+## 4. 변경 구독하기
+
+```ts
+const unsubscribe = counterStore.subscribe(() => {
+  console.log(counterStore.getState());
+});
+
+unsubscribe();
+```
+
+## 다음으로 읽을 페이지
+
+- 왜 이 패키지가 이렇게 작게 유지되는지 이해하고 싶다면 [멘탈 모델](./mental-model)
+- 교체 semantics와 bailout 규칙이 아직 낯설다면 [업데이트 시맨틱](./updates)
+- 리스너 동작이 중요하다면 [구독](./subscriptions)

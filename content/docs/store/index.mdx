@@ -26,10 +26,6 @@ While other packages in the ecosystem provide framework bindings or complex stat
 - **A Data Fetching Library**: It does not manage server cache or loading states.
 - **A Multi-store Orchestrator**: It manages a single state atom.
 
-### Mental Model
-
-Think of a `Store` as a safe box for a single value. You can look at the value at any time, replace it with a new one, and register listeners to be notified whenever the value changes. It doesn't care what is inside the box, as long as you follow immutable update patterns.
-
 ### Quick Example
 
 ```typescript
@@ -55,9 +51,14 @@ unsubscribe();
 - When you need a simple, reliable state container for vanilla JavaScript or TypeScript projects.
 - As a base for building higher-level libraries, adapters, or domain-specific state layers.
 
-### Documentation Map
+### Start Here
 
-- [API Reference](./api): The public surface of the `Store` class.
+- [Quick Start](./quick-start): The shortest path from install to a useful store.
+- [Mental Model](./mental-model): Why the package stays small and synchronous.
+- [API Reference](./api): The exact public surface of the `Store` class.
+
+### Go Deeper
+
 - [Update Semantics](./updates): How state updates work and the bailout rules.
 - [Subscriptions](./subscriptions): Managing the observer lifecycle.
 - [Common Patterns](./patterns): Practical recipes for real-world usage.

@@ -3,7 +3,10 @@
   "root": true,
   "pages": [
     "index",
-    "---Core Reference---",
+    "---Introduction---",
+    "quick-start",
+    "mental-model",
+    "---Reference---",
     "api",
     "updates",
     "subscriptions",
@@ -11,9 +14,8 @@
     "---Guides---",
     "patterns",
     "building-on-store",
-    "---Framework Integrations---",
     "integrations",
-    "---Internals---",
+    "---Advanced---",
     "implementation-notes"
   ]
 }

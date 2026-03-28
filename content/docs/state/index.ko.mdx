@@ -12,17 +12,17 @@ description: 외부 스토어를 React 훅으로 연결하는 상태 계층.
 ## 이 패키지가 제공하는 것
 
 - 상태나 vanilla store를 React 훅으로 바꾸는 `create()` 진입점
-- plain state mode와 reducer mode
-- 읽기 범위를 좁혀 주는 selector 기반 구독
+- 상태 모드와 리듀서 모드
+- 읽기 범위를 좁혀 주는 셀렉터 기반 구독
 - 컴포넌트 밖 액션을 위한 `writeOnly()` 같은 접근자
-- 로깅, 영속화, 검증, 디버깅을 위한 store-level 미들웨어
+- 로깅, 영속화, 검증, 디버깅을 위한 스토어 계층 미들웨어
 
 ## 의도적으로 제공하지 않는 것
 
 - Provider 중심 구조
 - Zustand 스타일 initializer function
-- selector용 별도 custom equality API
-- 훅 아래에 실제 store가 있다는 사실을 감추는 추상화
+- 셀렉터용 별도 equality API
+- 훅 아래에 실제 스토어가 있다는 사실을 감추는 추상화
 
 ## 설치
 
@@ -54,4 +54,8 @@ function Counter() {
 - selector가 컴포넌트가 읽을 범위를 정하고,
 - writer는 여전히 전체 store state를 갱신합니다.
 
-처음부터 순서대로 보고 싶다면 [빠른 시작](./quick-start)부터, 왜 이런 API 모양이 나왔는지 이해하고 싶다면 [정신 모델](./mental-model)부터 읽는 것이 좋습니다.
+처음부터 순서대로 보고 싶다면 [빠른 시작](./quick-start)부터 읽는 것이 좋습니다.
+
+- 왜 store가 React 바깥에 남는지 이해하고 싶다면 [멘탈 모델](./mental-model)
+- selector와 writer의 역할 분리가 아직 낯설다면 [셀렉터](./selectors)
+- 이미 vanilla `Store`를 갖고 있고 React binding만 얹고 싶다면 [기존 스토어 사용](./existing-store)

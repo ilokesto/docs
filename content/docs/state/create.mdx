@@ -27,6 +27,8 @@ const store = new Store({ count: 0 });
 const useCounterFromStore = create(store);
 ```
 
+If the second form is your real use case, read [Existing Store](./existing-store) next. That page explains when `create(store)` is the right boundary and what does not change when you bind React onto an already-owned store.
+
 ### Reducer Mode
 
 In reducer mode, you provide a reducer function and an initial state (or store). The returned hook provides a `dispatch` function.
@@ -66,3 +68,9 @@ function Counter() {
 - **No Initializer Functions**: `create` does **not** support Zustand-style initializer functions like `(set, get) => ({ ... })`.
 - **Selector Subscriptions**: The hook internally uses `useSyncExternalStore` to subscribe to the store.
 - **SSR Support**: Supports SSR by using `store.getInitialState()` for the server snapshot.
+
+## Where to go next
+
+- Read [Selectors](./selectors) if you want the subscription and memoization model in detail.
+- Read [Accessors](./accessors) if you plan to move actions outside components.
+- Read [Existing Store](./existing-store) if your app already owns a vanilla `Store` and only needs the React hook layer.

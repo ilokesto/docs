@@ -1,0 +1,83 @@
+---
+title: Quick Start
+description: The shortest path to useful rendering primitives.
+---
+
+# Quick Start
+
+This page is the shortest path to something real. The goal is not to cover every utility. It is to show the few primitives that explain what Utilinent is good at.
+
+```package-install
+@ilokesto/utilinent
+```
+
+## 1. Replace noisy branching with `Show`
+
+`Show` is the smallest useful entry point. It makes “render this when that is truthy” explicit and gives you a first-class fallback.
+
+```tsx
+import { Show } from '@ilokesto/utilinent';
+
+function Profile({ user }: { user: { name: string } | null }) {
+  return (
+    <Show when={user} fallback={<p>Please log in</p>}>
+      {(currentUser) => <h1>Welcome, {currentUser.name}</h1>}
+    </Show>
+  );
+}
+```
+
+If `when` is an array, Utilinent treats it as “all values must be truthy.”
+
+## 2. Replace repeated list boilerplate with `For`
+
+`For` turns the common “map when present, fallback when empty” pattern into one JSX primitive.
+
+```tsx
+import { For } from '@ilokesto/utilinent';
+
+function TodoList({ items }: { items: Array<{ id: string; text: string }> | null }) {
+  return (
+    <For each={items} fallback={<li>No tasks found</li>}>
+      {(item) => <li key={item.id}>{item.text}</li>}
+    </For>
+  );
+}
+```
+
+## 3. Treat async children as a rendering concern with `Mount`
+
+`Mount` accepts regular children or a function that returns a node or a promise.
+
+```tsx
+import { Mount } from '@ilokesto/utilinent';
+
+function AsyncPanel() {
+  return (
+    <Mount fallback={<p>Loading...</p>}>
+      {async () => <section>Loaded panel</section>}
+    </Mount>
+  );
+}
+```
+
+If the function throws or rejects, `fallback` stays visible and `onError` can observe the error.
+
+## 4. Use `Slot` when behavior should land on the child
+
+`Slot` is for as-child composition patterns where the parent wants to merge props into a child element instead of adding another wrapper.
+
+```tsx
+import { Slot } from '@ilokesto/utilinent';
+
+function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const Component = asChild ? Slot : 'button';
+  return <Component {...props} />;
+}
+```
+
+## What to read next
+
+- [Mental Model](./mental-model) for the package-wide frame
+- [Conditional Rendering](./conditional) for `Show`, `Switch`, `Match`, and `OptionalWrapper`
+- [Async & Visibility](./async) for `Mount`, `Observer`, `Slacker`, and `useIntersectionObserver`

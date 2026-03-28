@@ -1,0 +1,53 @@
+---
+title: Mental Model
+description: The conceptual frame behind Utilinent's rendering helpers.
+---
+
+# Mental Model
+
+Utilinent is easiest to understand if you think of it as a **rendering-logic layer**. It does not own state, data fetching, or styling. It gives repeated JSX logic patterns a clearer shape.
+
+## The package has three user-facing jobs
+
+### 1. Name common control-flow patterns
+
+`Show`, `Switch`, `Match`, `For`, `Repeat`, and `Mount` all exist because branching and repetition tend to sprawl when left as raw JSX expressions.
+
+### 2. Turn visibility into rendering input
+
+`Observer`, `Slacker`, and `useIntersectionObserver` let viewport state affect rendering without hand-writing the observer lifecycle each time.
+
+### 3. Let behavior land on children without wrapper noise
+
+`Slot` and `Slottable` solve a composition problem: sometimes the parent owns behavior, but the child should own the actual DOM element.
+
+## Declarative does not mean magical
+
+These helpers are still ordinary React components and hooks.
+
+- `Show` still follows truthiness rules.
+- `Switch` still returns the first matching branch.
+- `For` still maps arrays.
+- `Mount` still resolves children into visible output.
+
+The value is not a new runtime. The value is that the rendering rule becomes visible in the JSX.
+
+## Why the proxy pattern exists
+
+Several exports are proxy-backed, which is why patterns like `Show.div` or `For.ul` exist.
+
+That proxy layer does two things:
+
+- generate intrinsic-tag variants,
+- leave room for category-specific and base plugin extensions.
+
+This is why Utilinent is both a user-facing helper library and an extensible rendering toolkit.
+
+## A good way to choose primitives
+
+- Use **conditional primitives** when the branch itself deserves a name.
+- Use **collection primitives** when fallback and repeated rendering belong together.
+- Use **async/visibility primitives** when viewport or promise resolution should drive output.
+- Use **composition helpers** when wrapper elements would damage the component API.
+
+From here, most readers should go to [Conditional Rendering](./conditional) or [Async & Visibility](./async).

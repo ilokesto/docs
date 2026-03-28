@@ -1,23 +1,15 @@
 ---
-title: Composition Utilities
-description: Slot, Slottable, prop merging, and as-child style composition
+title: Composition
+description: Slot, Slottable, and as-child style composition.
 ---
 
 # Composition
 
-`Slot` and `Slottable` help you move behavior onto a child element instead of forcing another wrapper into the DOM tree.
+The composition utilities exist for one specific problem: a parent component wants to contribute props or behavior, but the child should remain the actual DOM element.
 
 ## `Slot`
 
-`Slot` looks at its children, finds the element that should receive merged props, and clones that element with:
-
-- merged props
-- composed refs
-- preserved children structure
-
-If there is no valid React element child, it returns `null`.
-
-### Example: as-child pattern
+`Slot` clones a child and merges props into it instead of rendering another wrapper element.
 
 ```tsx
 import { Slot } from '@ilokesto/utilinent';
@@ -28,9 +20,11 @@ function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLA
 }
 ```
 
+This is the core “as child” use case.
+
 ## `Slottable`
 
-`Slottable` marks which nested child should become the merge target when your component has more than one child node.
+Use `Slottable` when a component has more than one child node and you need to mark which child should receive the merged props.
 
 ```tsx
 import { Slot, Slottable } from '@ilokesto/utilinent';
@@ -45,14 +39,19 @@ function ButtonWithIcon({ children }: { children: React.ReactNode }) {
 }
 ```
 
-## Mental model
+## What actually gets merged
 
-- `Slot` does not render its own element.
-- It clones the child that should receive props.
-- Refs are composed so both the parent and child refs keep working.
+The merge behavior is opinionated and worth knowing:
 
-## Caveats
+- event handlers call the child handler first, then the slot handler
+- `style` objects are merged
+- `className` values are concatenated
+- refs are composed so both sides still work
 
-- `Slot` needs a valid React element target.
-- If `Slottable` exists, its child becomes the merge target.
-- If the `Slottable` child is not a valid element, `Slot` returns `null`.
+If there is no valid element target, `Slot` returns `null`.
+
+## When this is the right tool
+
+Use `Slot` when an extra wrapper element would hurt semantics or styling, but the parent still needs to contribute behavior.
+
+If the next problem is not composition but extending the proxy system itself, continue to [Extensibility](./extensibility).

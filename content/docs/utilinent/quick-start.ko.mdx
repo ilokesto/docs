@@ -1,0 +1,83 @@
+---
+title: 퀵 스타트
+description: 가장 짧은 경로로 핵심 렌더링 프리미티브를 익힙니다.
+---
+
+# 퀵 스타트
+
+이 페이지의 목표는 모든 유틸리티를 다 설명하는 것이 아닙니다. Utilinent가 어떤 문제를 푸는 패키지인지 가장 짧은 경로로 보여주는 데 집중합니다.
+
+```package-install
+@ilokesto/utilinent
+```
+
+## 1. 분기 소음을 `Show`로 바꾼다
+
+`Show`는 Utilinent에 들어가는 가장 작은 출발점입니다. “이 값이 truthy일 때만 렌더한다”는 의도를 직접 드러내고, fallback도 함께 다룰 수 있습니다.
+
+```tsx
+import { Show } from '@ilokesto/utilinent';
+
+function Profile({ user }: { user: { name: string } | null }) {
+  return (
+    <Show when={user} fallback={<p>로그인이 필요합니다</p>}>
+      {(currentUser) => <h1>환영합니다, {currentUser.name}님</h1>}
+    </Show>
+  );
+}
+```
+
+`when`에 배열을 넘기면 Utilinent는 “모든 값이 truthy여야 한다”는 규칙으로 처리합니다.
+
+## 2. 반복 로직은 `For`로 드러낸다
+
+`For`는 “배열이 있으면 map하고, 비어 있으면 fallback을 렌더한다”는 패턴을 하나의 JSX 프리미티브로 바꿔 줍니다.
+
+```tsx
+import { For } from '@ilokesto/utilinent';
+
+function TodoList({ items }: { items: Array<{ id: string; text: string }> | null }) {
+  return (
+    <For each={items} fallback={<li>작업이 없습니다</li>}>
+      {(item) => <li key={item.id}>{item.text}</li>}
+    </For>
+  );
+}
+```
+
+## 3. 비동기 자식도 렌더링 문제로 다룬다
+
+`Mount`는 일반 children도 받을 수 있고, node나 promise를 반환하는 함수도 받을 수 있습니다.
+
+```tsx
+import { Mount } from '@ilokesto/utilinent';
+
+function AsyncPanel() {
+  return (
+    <Mount fallback={<p>로딩 중...</p>}>
+      {async () => <section>로드된 패널</section>}
+    </Mount>
+  );
+}
+```
+
+함수가 throw하거나 reject되면 `fallback`이 유지되고, `onError`로 오류를 받을 수 있습니다.
+
+## 4. 동작을 자식에 붙이고 싶을 때는 `Slot`
+
+`Slot`은 부모가 새 래퍼를 하나 더 렌더하지 않고, 자식 요소에 prop을 병합하고 싶을 때 쓰는 as-child 컴포지션 패턴용 도구입니다.
+
+```tsx
+import { Slot } from '@ilokesto/utilinent';
+
+function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const Component = asChild ? Slot : 'button';
+  return <Component {...props} />;
+}
+```
+
+## 다음으로 읽을 페이지
+
+- 패키지 전체를 어떤 틀로 이해하면 좋은지 알고 싶다면 [멘탈 모델](./mental-model)
+- `Show`, `Switch`, `Match`, `OptionalWrapper`를 자세히 보려면 [조건부 렌더링](./conditional)
+- `Mount`, `Observer`, `Slacker`, `useIntersectionObserver`를 보려면 [비동기 및 가시성](./async)

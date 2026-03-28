@@ -1,8 +1,62 @@
 ---
-title: 컬렉션 렌더링
-description: For, Repeat
+title: 컬렉션 헬퍼
+description: 배열과 횟수 기반 렌더링을 위한 For와 Repeat.
 ---
 
-# 컬렉션 렌더링
+# 컬렉션 헬퍼
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/utilinent/collection)을 참고해 주세요.
+Utilinent의 반복 렌더링 프리미티브는 두 가지지만, 해결하는 문제는 다릅니다.
+
+- `For`는 이미 존재하는 컬렉션을 위한 도구이고,
+- `Repeat`는 고정된 양의 정수 횟수를 위한 도구입니다.
+
+## `For`
+
+`For`는 “map + fallback” 패턴을 JSX 프리미티브로 만든 것입니다.
+
+```tsx
+import { For } from '@ilokesto/utilinent';
+
+function ProductList({ products }: { products: Array<{ id: string; name: string }> | null }) {
+  return (
+    <For each={products} fallback={<li>상품이 없습니다</li>}>
+      {(item) => <li key={item.id}>{item.name}</li>}
+    </For>
+  );
+}
+```
+
+구현상 중요한 점은 다음과 같습니다.
+
+- `each`는 배열, `null`, `undefined`를 받을 수 있고,
+- 컬렉션이 비어 있거나 없으면 `fallback`이 렌더링되며,
+- `children`은 `(item, index)`를 받습니다.
+
+`For`가 key를 대신 관리해 주는 것은 아닙니다. 안정적인 key는 여전히 렌더링하는 쪽에서 책임져야 합니다.
+
+## `Repeat`
+
+`Repeat`는 횟수 기반 렌더링을 위한 도구입니다.
+
+```tsx
+import { Repeat } from '@ilokesto/utilinent';
+
+function SkeletonRows() {
+  return (
+    <Repeat times={3} fallback={<p>표시할 내용이 없습니다</p>}>
+      {(index) => <div key={index}>로딩 행 {index + 1}</div>}
+    </Repeat>
+  );
+}
+```
+
+구현상 중요한 점은 `Repeat`가 **양의 정수**일 때만 렌더링된다는 것입니다. 그렇지 않으면 fallback 경로로 갑니다.
+
+`For`와 마찬가지로 proxy-backed export이기 때문에 `Repeat.ul` 같은 형태도 사용할 수 있습니다.
+
+## 어떻게 고르면 좋은가
+
+- 이미 컬렉션이 있다면 `For`
+- 단순히 횟수만 필요하다면 `Repeat`
+
+문제가 반복이 아니라 가시성이나 지연 로딩에 가깝다면 이어서 [비동기 및 가시성](./async)을 읽으면 됩니다.

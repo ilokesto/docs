@@ -1,8 +1,100 @@
 ---
 title: 비동기 및 가시성
-description: Mount, Observer
+description: Mount, Observer, Slacker, useIntersectionObserver.
 ---
 
 # 비동기 및 가시성
 
-이 페이지는 현재 번역을 보강하는 중입니다. 우선 [English version](/en/utilinent/async)을 참고해 주세요.
+이 섹션은 출력이 시간이나 가시성에 따라 달라져야 할 때를 다룹니다.
+
+- `Mount`는 비동기 children을 렌더링 문제로 다루고,
+- `Observer`는 intersection 상태를 렌더링으로 바꾸며,
+- `Slacker`는 영역이 보일 때까지 무거운 로딩을 늦추고,
+- `useIntersectionObserver`는 그 아래의 low-level hook 역할을 합니다.
+
+## `Mount`
+
+`Mount`는 일반 children도 받을 수 있고, node나 promise를 반환하는 함수도 받을 수 있습니다.
+
+```tsx
+import { Mount } from '@ilokesto/utilinent';
+
+function AsyncProfile() {
+  return (
+    <Mount fallback={<p>로딩 중...</p>}>
+      {async () => <section>로드된 프로필</section>}
+    </Mount>
+  );
+}
+```
+
+구현상 중요한 동작은 다음과 같습니다.
+
+- `children`이 이미 node면 즉시 렌더링되고,
+- 함수면 결과가 resolve될 때까지 `fallback`이 유지되며,
+- 함수가 throw하거나 reject되면 `fallback`이 남고 `onError`가 호출됩니다.
+
+## `Observer`
+
+`Observer`는 “보일 때 렌더한다”는 규칙을 높은 수준에서 다루는 컴포넌트입니다.
+
+```tsx
+import { Observer } from '@ilokesto/utilinent';
+
+function LazyImage() {
+  return (
+    <Observer triggerOnce fallback={<div>뷰포트를 기다리는 중…</div>}>
+      <img src="/hero.png" alt="hero" />
+    </Observer>
+  );
+}
+```
+
+내부적으로 `useIntersectionObserver()`를 사용하고, 관찰 대상이 실제로 교차할 수 있도록 기본 `minHeight`, `minWidth`, `display: block`을 넣습니다.
+
+## `Slacker`
+
+`Slacker`는 가시성 관찰과 loader 실행을 결합한 컴포넌트입니다.
+
+```tsx
+import { Slacker } from '@ilokesto/utilinent';
+
+function LazyPanel() {
+  return (
+    <Slacker
+      loader={async () => ({ title: 'Loaded' })}
+      loadingFallback={<p>로딩 중…</p>}
+      errorFallback={({ retry }) => <button onClick={retry}>다시 시도</button>}
+    >
+      {(data) => <section>{data.title}</section>}
+    </Slacker>
+  );
+}
+```
+
+구현상 `null`을 “아직 로드되지 않음” sentinel로 사용하고, `maxRetries`, `retryDelay`를 통해 재시도 경로도 지원합니다.
+
+## `useIntersectionObserver`
+
+intersection 상태만 필요하고 렌더링 래퍼는 원치 않는다면 hook을 직접 쓰면 됩니다.
+
+```tsx
+import { useIntersectionObserver } from '@ilokesto/utilinent';
+
+function Sentinel() {
+  const { ref, isIntersecting, entry } = useIntersectionObserver({
+    threshold: 0.5,
+    rootMargin: '50px',
+  });
+
+  return <div ref={ref}>{isIntersecting ? 'Visible' : 'Hidden'}</div>;
+}
+```
+
+중요한 동작은 다음과 같습니다.
+
+- 첫 번째 callback은 건너뛰고,
+- `freezeOnceVisible`은 첫 visible 상태 이후 관찰을 멈추며,
+- 관찰 대상 노드가 사라지면 상태를 초기화합니다.
+
+다음 문제가 가시성이 아니라 prop/ref 컴포지션에 가깝다면 [컴포지션](./composition)으로 이어서 읽으면 됩니다.

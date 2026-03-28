@@ -5,25 +5,19 @@ description: createProxy, PluginManager, and the exported helper types.
 
 # Extensibility
 
-This page is for the part of Utilinent that regular consumers may never touch directly: the machinery behind proxy-backed variants and plugin-based extension.
+This page is the overview of Utilinent's extension story. It exists to answer one question: if the built-in primitives are not enough, what are the moving parts behind custom variants and proxy-backed APIs?
 
 ## `createProxy`
 
 `createProxy(base, renderForTag, category)` is the function that turns a base primitive into a proxy-backed export such as `Show` or `For`.
 
-It builds a target from:
+If you want the full runtime flow, type model, and a custom component tutorial, read [createProxy](./create-proxy).
+
+At a high level it combines:
 
 - the base component,
 - generated HTML-tag variants,
-- plugin-backed variants resolved at access time.
-
-The resolution order is important:
-
-1. existing properties on the target
-2. plugins registered for the current category
-3. plugins registered for `base`
-
-That means built-ins win before plugin lookups happen.
+- plugin-backed variants resolved by category and then `base`.
 
 ## `PluginManager`
 
@@ -60,7 +54,7 @@ The root package also exports type helpers for extension work:
 - `BaseTypeHelperFn`
 - `ProxyType`
 
-These are relevant when you want typed module augmentation or your own proxy-aware APIs.
+These are relevant when you want typed module augmentation or your own proxy-aware APIs. The detailed type walkthrough lives on [createProxy](./create-proxy).
 
 ## Where `useIntersectionObserver` fits
 
@@ -68,4 +62,4 @@ The hook is user-facing, but it also belongs to the extension story because `Obs
 
 ## When to read this page
 
-Read this page if you want to extend Utilinent itself. If you only want to consume the existing primitives, the earlier sections are the better starting point.
+Read this page if you want the architecture at a glance. If you want the step-by-step “how do I actually build one?” version, continue to [createProxy](./create-proxy).

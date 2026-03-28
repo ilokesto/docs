@@ -5,11 +5,13 @@ description: Slot, Slottable, as-child 스타일 컴포지션.
 
 # 컴포지션
 
-컴포지션 유틸리티는 하나의 구체적인 문제를 해결합니다. 부모 컴포넌트가 동작이나 prop을 제공하고 싶지만, 실제 DOM 요소는 자식이 그대로 가져야 하는 경우입니다.
+Utilinent의 컴포지션 유틸리티는 하나의 구체적인 아키텍처 문제를 해결합니다: **부모 컴포넌트가 동작이나 prop을 제공하고 싶지만, 실제 DOM 요소는 자식이 그대로 가져야 하는 경우입니다.**
+
+흔히 "asChild"라고 불리는 이 패턴은 불필요한 래퍼(wrapper) 요소로 DOM을 오염시키지 않으면서도, 스타일링과 접근성 로직을 온전히 유지할 수 있는 유연한 컴포넌트 라이브러리를 구축할 수 있게 해줍니다.
 
 ## `Slot`
 
-`Slot`은 새 래퍼를 하나 더 렌더하는 대신, 자식을 clone해서 prop을 그 자식에 병합합니다.
+`Slot`은 이 패턴의 핵심 도구입니다. 새로운 요소를 렌더링하는 대신, 자신의 자식을 복제(clone)하고 자신의 prop을 그 자식에 병합합니다.
 
 ```tsx
 import { Slot } from '@ilokesto/utilinent';
@@ -18,40 +20,69 @@ function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLA
   const Component = asChild ? Slot : 'button';
   return <Component className="btn" {...props} />;
 }
-```
 
-이것이 대표적인 “as child” 패턴입니다.
+// 사용 예시: "btn" 클래스와 href 동작을 가진 단일 <a> 태그가 렌더링됩니다.
+<Button asChild>
+  <a href="/login">로그인</a>
+</Button>
+```
 
 ## `Slottable`
 
-자식 노드가 여러 개 있을 때, 그중 어떤 자식이 병합 대상이 되어야 하는지 표시하고 싶다면 `Slottable`을 사용합니다.
+컴포넌트가 아이콘과 라벨 같은 고정된 구조를 가지고 있으면서도 `asChild`를 지원해야 한다면, `Slottable`을 사용하여 자식 중 어느 부분이 "메인" 요소로서 병합 대상이 되어야 하는지 표시하십시오.
 
 ```tsx
 import { Slot, Slottable } from '@ilokesto/utilinent';
 
-function ButtonWithIcon({ children }: { children: React.ReactNode }) {
+function ButtonWithIcon({ children, asChild }: { children: React.ReactNode, asChild?: boolean }) {
+  const Component = asChild ? Slot : 'button';
   return (
-    <Slot className="btn-with-icon">
+    <Component className="btn-with-icon">
       <span aria-hidden>★</span>
       <Slottable>{children}</Slottable>
-    </Slot>
+    </Component>
   );
 }
+
+// 사용 예시: <a> 요소가 Slottable 위치에서 병합 대상이 됩니다.
+<ButtonWithIcon asChild>
+  <a href="/">클릭하세요</a>
+</ButtonWithIcon>
 ```
 
-## 실제 병합 규칙
+이 패턴에서는 별 아이콘은 그대로 형제 노드로 남고, slotted `<a>`가 병합 대상이 됩니다. `Slot`이 모든 형제 노드를 자동으로 자식 링크 안으로 감싸는 것은 아닙니다.
 
-병합 동작은 꽤 명확한 규칙을 따릅니다.
+## 런타임 내부 동작
 
-- 이벤트 핸들러는 child 쪽을 먼저 호출하고 slot 쪽을 나중에 호출하며,
-- `style` 객체는 병합되고,
-- `className`은 이어 붙여지고,
-- ref는 compose되어 양쪽이 계속 동작합니다.
+`Slot`은 자식을 처리할 때 두 가지 런타임 경로를 따릅니다:
+1. **첫 번째 자식 기본값**: `Slottable`이 없으면 `Slot`은 첫 번째 자식을 확인합니다. 그 자식이 유효한 React 엘리먼트라면 병합 대상이 됩니다.
+2. **`Slottable` 대상**: 자식 중에 `Slottable` 컴포넌트가 발견되면, 그 `Slottable`의 자식들이 병합 대상으로 처리됩니다. 이를 통해 컴포넌트의 JSX 깊숙한 곳으로 병합 로직을 "텔레포트"할 수 있습니다.
 
-유효한 element target이 없으면 `Slot`은 `null`을 반환합니다.
+## Prop 병합 규칙 (`mergeProps`)
 
-## 언제 이 도구를 쓰면 좋은가
+`mergeProps`는 먼저 자식 prop을 기준으로 시작한 뒤, 몇 가지 예외 규칙과 함께 슬롯 prop을 적용합니다. 실제 우선순위는 다음과 같습니다.
 
-추가 래퍼 요소가 semantics나 스타일링을 망치지만, 부모가 동작은 제공해야 할 때 `Slot`이 가장 잘 맞습니다.
+- **이벤트 핸들러**: `onClick` 같은 핸들러는 **자식 핸들러가 먼저**, **슬롯 핸들러가 나중에** 실행됩니다.
+- **`style`**: 스타일 객체는 `{ ...childStyle, ...slotStyle }` 순서로 병합되므로, 겹치는 키에서는 슬롯이 우선합니다.
+- **`className`**: 클래스 이름은 자식 우선 순서로 이어 붙여집니다.
+- **기타 prop**: `id`, `title`, `role`, `data-*` 같은 일반 prop은 슬롯 값이 자식 값을 덮어씁니다.
 
-다음 문제가 컴포지션이 아니라 proxy 시스템 자체를 확장하는 것이라면 [확장성](./extensibility)을 이어서 읽으면 됩니다. 이미 `createProxy`가 필요한 상황이라는 걸 알고 있다면 [createProxy](./create-proxy)로 바로 가도 됩니다.
+## Ref 컴포지션
+
+Ref는 자동으로 합성(composed)됩니다. `Slot`과 자식 엘리먼트 모두에 ref가 있다면, Utilinent는 동일한 DOM 노드에 대해 두 ref가 모두 올바르게 업데이트되도록 "합성된 ref"를 생성합니다. 이는 `useImperativeHandle`이나 직접적인 DOM 측정이 필요한 라이브러리에 매우 중요합니다.
+
+## 예외 상황 처리
+
+- **여러 개의 자식**: `Slottable` 없이 `Slot`에 여러 자식을 전달하면 첫 번째 자식에만 prop이 병합됩니다. 다른 자식들은 렌더링될 수 있지만 의도한 대로 동작하지 않을 수 있습니다.
+- **`null` 반환**: 유효한 엘리먼트 대상을 찾지 못한 경우(예: 자식이 단순 문자열이거나 `null`인 경우), `Slot`은 복제 중 발생할 수 있는 런타임 오류를 방지하기 위해 `null`을 반환합니다.
+
+## 결정 가이드
+
+- **`Slot`을 써야 할 때**: 재사용 가능한 원시 컴포넌트(Button, Link, Input)를 만들면서 래퍼 지옥을 피하고 `asChild` 패턴을 지원하고 싶을 때.
+- **`Slot`을 피해야 할 때**: 사용자가 오버라이드할 수 없는 엄격한 내부 DOM 구조를 유지해야 하거나, 특정 엘리먼트 타입을 기대하는 `React.Children` 로직을 사용해야 할 때.
+
+## 흔히 하는 실수
+
+1. **`Slot`에 여러 엘리먼트 전달**: `Slottable`이 없으면 첫 번째 엘리먼트만 prop을 받습니다. 나머지는 렌더링은 되지만 의도한 기능을 수행하지 못할 수 있습니다.
+2. **엘리먼트가 아닌 자식 병합**: `<Button asChild>클릭</Button>`처럼 단순 문자열과 함께 `asChild`를 쓰는 경우입니다. 문자열은 병합할 prop이 없으므로 아무것도 렌더링되지 않습니다.
+3. **핸들러 충돌**: 두 핸들러가 모두 실행된다는 점을 잊는 경우입니다. 부모 핸들러가 실행되지 않게 하려면 자식 핸들러에서 `event.stopPropagation()`을 호출해야 합니다.

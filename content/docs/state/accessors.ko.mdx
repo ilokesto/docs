@@ -5,16 +5,22 @@ description: writeOnly()와 readOnly()의 현재 제약을 설명합니다.
 
 # 접근자
 
-접근자는 `create`가 반환하는 훅에 붙는 메서드입니다. 다만 둘의 성격은 다릅니다. `writeOnly()`는 안정적인 imperative writer이지만, `readOnly()`는 현재 일반 selector 읽기와 같은 hook 경로를 통해 동작합니다.
+접근자는 `create`로 생성된 훅에 붙어 있는 정적 메서드입니다. 이들은 React 기반의 상태 관리와 명령형 코드(imperative code) 또는 외부 액션 파일 사이의 가교 역할을 합니다.
+
+여기서 가장 중요한 점은 **접근자들이 구현 방식이나 안전성 면에서 대칭적이지 않다는 것**입니다.
 
 ## `writeOnly()`
 
-`writeOnly()`는 스토어의 `setState` 함수를 반환합니다. 이는 React 외부에서 정의된 액션이나 부가 효과(side effects)를 관리하는 가장 권장되는 방법입니다.
+`writeOnly()`는 표준적인 명령형 작성자(imperative writer)입니다. 이는 스토어의 `setState` 함수(또는 리듀서를 사용하는 경우 `dispatch`)를 반환합니다.
+
+- **React 외부**: 이는 React 컴포넌트 트리 외부에서 정의되는 액션, 부가 효과(side effects), 또는 이벤트 리스너를 관리하는 가장 권장되는 방법입니다.
+
+`writeOnly()`를 호출할 때마다 bound writer 함수가 새로 만들어지지만, 중요한 안정성은 참조 자체보다 같은 store를 계속 가리킨다는 점에 있습니다.
 
 ```ts
 const useCounter = create({ count: 0 });
 
-// React 외부에서 액션 정의
+// 독립적인 액션 파일을 정의할 때 이상적입니다.
 export const increment = () => {
   const setState = useCounter.writeOnly();
   setState(state => ({ count: state.count + 1 }));
@@ -23,9 +29,11 @@ export const increment = () => {
 
 ## `readOnly()`
 
-`readOnly()`는 반환된 훅에 존재하지만, 현재 구현은 일반 selector 읽기와 같은 hook 경로를 다시 사용합니다.
+`readOnly()`는 훅의 기존 로직을 통해 상태를 읽는 편의 기능을 제공하지만, 매우 중요한 제약 사항이 있습니다: **이는 단순한 명령형 게터(imperative getter)가 아닙니다.**
 
-즉 이것을 임의의 imperative getter처럼 생각하면 안 되고, React 안에서 쓰는 편의 기능 정도로 보는 편이 맞습니다.
+런타임 시, `readOnly()`는 일반적인 셀렉터 읽기에 사용되는 것과 동일한 React 훅 경로를 거칩니다. 즉:
+1. **React 전용**: 업데이트를 구독하지 않고 상태만 읽어야 하는 컴포넌트 내에서의 편의 기능 정도로 보는 것이 좋습니다.
+2. **임의의 코드에서 사용 불가**: React 컨텍스트나 훅을 사용할 수 없는 일반 유틸리티 함수나 백그라운드 워커 내에서 `readOnly()`를 호출하지 마십시오.
 
 ```tsx
 function CounterSummary() {
@@ -35,17 +43,49 @@ function CounterSummary() {
 }
 ```
 
-React 바깥에서 imperative read가 필요하다면 `@ilokesto/store`의 vanilla `Store` API를 직접 쓰고, 그 스토어를 `create(store)`에 전달하는 편이 더 안전합니다.
+## 언제 vanilla `Store`를 써야 하는가?
 
-## 액션에서의 활용
+WebSocket 핸들러나 깊은 유틸리티 함수처럼 React 외부에서 정말로 안전하고 명령형인 읽기가 필요하다면, `@ilokesto/store`의 vanilla `Store` API를 사용해야 합니다.
 
-접근자는 `writeOnly()`를 통해 독립적인 액션 파일을 정의할 때 특히 유용합니다:
+가장 좋은 패턴은 스토어를 별도로 생성하고 이를 `create()`에 전달하는 것입니다:
 
 ```ts
-// actions/counter.ts
-import { useCounter } from '../stores/counter';
+import { Store } from '@ilokesto/store';
+import { create } from '@ilokesto/state';
 
-export const reset = () => {
-  useCounter.writeOnly()({ count: 0 });
+// 1. vanilla store를 먼저 생성합니다.
+export const counterStore = new Store({ count: 0 });
+
+// 2. 이 스토어로부터 훅을 생성합니다.
+export const useCounter = create(counterStore);
+
+// 3. 이제 어디서나 안전한 비-훅(non-hook) 게터를 사용할 수 있습니다.
+export const checkCount = () => {
+  console.log(counterStore.getState().count);
 };
 ```
+
+## 액션 파일 패턴 (Action-File Patterns)
+
+스토어와 액션을 분리해서 관리하는 것은 흔한 아키텍처 패턴입니다. 접근자를 쓰면 코드가 깔끔해집니다:
+
+```ts
+// stores/auth.ts
+export const useAuth = create({ user: null, loading: false });
+
+// actions/auth.ts
+import { useAuth } from '../stores/auth';
+
+export const login = async (credentials) => {
+  const setState = useAuth.writeOnly();
+  setState((prev) => ({ ...prev, loading: true }));
+  const user = await api.login(credentials);
+  setState((prev) => ({ ...prev, user, loading: false }));
+};
+```
+
+## 흔히 하는 실수
+
+1. **유틸리티 파일에서 `readOnly()` 사용**: 내부 훅 상태에 의존하기 때문에 "Hooks can only be called inside the body of a function component" 오류가 발생할 가능성이 매우 높습니다.
+2. **훅 튜플 대칭 무시**: `useStore(selector)`는 튜플을 반환하지만, `writeOnly()`는 오직 writer 함수 하나만 반환한다는 점을 잊는 경우입니다.
+3. **컴포넌트 내에서 `readOnly()` 남용**: 렌더링에 값이 필요하다면 셀렉터와 함께 훅을 직접 쓰십시오. `readOnly()`는 이벤트나 이펙트 실행 중에만 값이 필요한 경우를 위한 것입니다.

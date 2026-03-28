@@ -5,11 +5,13 @@ description: Slot, Slottable, and as-child style composition.
 
 # Composition
 
-The composition utilities exist for one specific problem: a parent component wants to contribute props or behavior, but the child should remain the actual DOM element.
+The composition utilities in Utilinent solve one specific architectural problem: **A parent component wants to contribute props or behavior, but the child should remain the actual DOM element.**
+
+This pattern, often called "asChild", allows you to build flexible component libraries that don't pollute the DOM with unnecessary wrappers while keeping your styling and accessibility logic intact.
 
 ## `Slot`
 
-`Slot` clones a child and merges props into it instead of rendering another wrapper element.
+`Slot` is the primary tool for this pattern. Instead of rendering a new element, it clones its child and merges its own props into that child.
 
 ```tsx
 import { Slot } from '@ilokesto/utilinent';
@@ -18,40 +20,69 @@ function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLA
   const Component = asChild ? Slot : 'button';
   return <Component className="btn" {...props} />;
 }
-```
 
-This is the core “as child” use case.
+// Usage: Renders a single <a> tag with "btn" class and href behavior
+<Button asChild>
+  <a href="/login">Login</a>
+</Button>
+```
 
 ## `Slottable`
 
-Use `Slottable` when a component has more than one child node and you need to mark which child should receive the merged props.
+If your component has a fixed structure (like an icon plus a label) but still needs to support `asChild`, use `Slottable` to mark which part of the children should be considered the "main" element to be merged.
 
 ```tsx
 import { Slot, Slottable } from '@ilokesto/utilinent';
 
-function ButtonWithIcon({ children }: { children: React.ReactNode }) {
+function ButtonWithIcon({ children, asChild }: { children: React.ReactNode, asChild?: boolean }) {
+  const Component = asChild ? Slot : 'button';
   return (
-    <Slot className="btn-with-icon">
+    <Component className="btn-with-icon">
       <span aria-hidden>★</span>
       <Slottable>{children}</Slottable>
-    </Slot>
+    </Component>
   );
 }
+
+// Usage: the <a> element becomes the merge target at the Slottable position
+<ButtonWithIcon asChild>
+  <a href="/">Click me</a>
+</ButtonWithIcon>
 ```
 
-## What actually gets merged
+With this pattern, the star remains its own sibling and the slotted `<a>` receives the merged props. `Slot` does not automatically wrap every sibling into the slotted child.
 
-The merge behavior is opinionated and worth knowing:
+## Runtime Internals
 
-- event handlers call the child handler first, then the slot handler
-- `style` objects are merged
-- `className` values are concatenated
-- refs are composed so both sides still work
+`Slot` follows two specific runtime paths when processing children:
+1. **First-child default**: If no `Slottable` is present, `Slot` looks at its first child. If that child is a valid React element, it becomes the merge target.
+2. **`Slottable` target**: If a `Slottable` component is found among the children, its own children are treated as the target. This allows you to "teleport" the merge logic into a nested part of your component's JSX.
 
-If there is no valid element target, `Slot` returns `null`.
+## Prop Merge Rules (`mergeProps`)
 
-## When this is the right tool
+`mergeProps` starts from the child props and then applies slot props with a few special cases. The practical precedence rules are:
 
-Use `Slot` when an extra wrapper element would hurt semantics or styling, but the parent still needs to contribute behavior.
+- **Event Handlers**: If both sides provide a handler like `onClick`, the **child handler runs first** and the **slot handler runs second**.
+- **`style`**: Style objects are merged as `{ ...childStyle, ...slotStyle }`, so the slot wins on overlapping keys.
+- **`className`**: Class names are concatenated in child-first order.
+- **Other props**: For non-special props like `id`, `title`, `role`, or `data-*`, the slot value overwrites the child value.
 
-If the next problem is not composition but extending the proxy system itself, continue to [Extensibility](./extensibility). If you already know that `createProxy` is the piece you need, jump straight to [createProxy](./create-proxy).
+## Ref Composition
+
+Refs are automatically composed. If both the `Slot` and the child element have refs, Utilinent creates a "composed ref" that ensures both refs are updated correctly with the same DOM node. This is critical for libraries that rely on `useImperativeHandle` or manual DOM measurements.
+
+## Edge Cases
+
+- **Multiple children**: If `Slot` receives multiple children without a `Slottable`, it will only merge into the first one.
+- **`null` return**: If no valid element target is found (e.g., if children is just a string or `null`), `Slot` returns `null` to avoid runtime errors during cloning.
+
+## Decision Guidance
+
+- **Use `Slot` when**: You are building a reusable primitive (Button, Link, Input) and want to support the `asChild` pattern to avoid wrapper hell.
+- **Avoid `Slot` when**: You need to maintain a strict internal DOM structure that the user should not be able to override, or if you need to use `React.Children` logic that expects a specific element type.
+
+## Common Mistakes
+
+1. **Passing multiple elements to `Slot`**: Without `Slottable`, only the first element gets the props. The others might be rendered but won't behave as intended.
+2. **Merging non-element children**: Trying to use `asChild` with a plain string like `<Button asChild>Click</Button>`. This will render nothing because a string has no props to merge into.
+3. **Handler conflicts**: Forgetting that both handlers will fire. If you want to stop the parent's handler from firing, you must call `event.stopPropagation()` in the child handler.

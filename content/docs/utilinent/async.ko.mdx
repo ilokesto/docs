@@ -5,96 +5,112 @@ description: Mount, Observer, Slacker, useIntersectionObserver.
 
 # 비동기 및 가시성
 
-이 섹션은 출력이 시간이나 가시성에 따라 달라져야 할 때를 다룹니다.
+Utilinent의 비동기 및 가시성 유틸리티는 타이밍이나 뷰포트 교차(intersection)에 따른 데이터 로딩과 렌더링을 처리하도록 설계되었습니다. 이들은 저수준 훅(hook)에서 시작하여 구조화된 레이아웃 컴포넌트로 확장되는 의존성 체인을 형성합니다.
 
-- `Mount`는 비동기 children을 렌더링 문제로 다루고,
-- `Observer`는 intersection 상태를 렌더링으로 바꾸며,
-- `Slacker`는 영역이 보일 때까지 무거운 로딩을 늦추고,
-- `useIntersectionObserver`는 그 아래의 low-level hook 역할을 합니다.
+## 의존성 체인 (Dependency Chain)
+
+이 컴포넌트들이 서로 어떻게 연결되는지 이해하면 적절한 추상화 수준을 선택하는 데 도움이 됩니다:
+- **`useIntersectionObserver`**: 가시성을 추적하는 저수준 훅입니다.
+- **`Observer`**: "보일 때 렌더링"하는 동작을 위해 훅을 감싼 컴포넌트입니다.
+- **`Slacker`**: 영역이 보일 때까지 비동기 로딩을 지연시키기 위해 `Observer`를 사용하는 고수준 컴포넌트입니다.
+- **`Mount`**: 가시성과 상관없이 비동기 자식(children)을 처리하는 별도의 브랜치입니다.
 
 ## `Mount`
 
-`Mount`는 일반 children도 받을 수 있고, node나 promise를 반환하는 함수도 받을 수 있습니다.
+`Mount`는 비동기 작업을 일급 렌더링 관심사로 다룹니다. 일반 노드, 노드를 반환하는 함수, 또는 Promise를 반환하는 함수를 자식으로 받을 수 있습니다.
 
 ```tsx
 import { Mount } from '@ilokesto/utilinent';
 
 function AsyncProfile() {
   return (
-    <Mount fallback={<p>로딩 중...</p>}>
-      {async () => <section>로드된 프로필</section>}
+    <Mount fallback={<p>프로필 로딩 중...</p>}>
+      {async () => {
+        const data = await fetchProfile();
+        return <section>{data.name}</section>;
+      }}
     </Mount>
   );
 }
 ```
 
-구현상 중요한 동작은 다음과 같습니다.
-
-- `children`이 이미 node면 즉시 렌더링되고,
-- 함수면 결과가 resolve될 때까지 `fallback`이 유지되며,
-- 함수가 throw하거나 reject되면 `fallback`이 남고 `onError`가 호출됩니다.
+### 런타임 동작
+- **노드 경로**: `children`이 이미 React node면 즉시 그 node로 해석됩니다.
+- **함수 경로**: `children`이 함수라면 effect 기반 경로에서 실행되고, 결과가 해석될 때까지 fallback이 유지됩니다.
+- **오류 경로**: 함수가 throw하거나 promise가 reject되면 `fallback`이 유지되고 `onError`가 실행됩니다.
+- **이전 호출 방지**: 이전 promise가 아직 대기 중일 때 다시 렌더링되면, 내부 call-id guard를 통해 오래된 결과를 무시합니다.
 
 ## `Observer`
 
-`Observer`는 “보일 때 렌더한다”는 규칙을 높은 수준에서 다루는 컴포넌트입니다.
+`Observer`는 콘텐츠가 뷰포트에 들어올 때만 렌더링하는 선언적인 방법입니다.
 
 ```tsx
 import { Observer } from '@ilokesto/utilinent';
 
-function LazyImage() {
+function LazyContent() {
   return (
-    <Observer triggerOnce fallback={<div>뷰포트를 기다리는 중…</div>}>
-      <img src="/hero.png" alt="hero" />
+    <Observer triggerOnce fallback={<div style={{ height: 400 }} />}>
+      <ExpensiveComponent />
     </Observer>
   );
 }
 ```
 
-내부적으로 `useIntersectionObserver()`를 사용하고, 관찰 대상이 실제로 교차할 수 있도록 기본 `minHeight`, `minWidth`, `display: block`을 넣습니다.
+### 주요 기능
+- **기본 크기 지정**: 교차 상태를 실제로 감지할 수 있도록 `Observer`는 기본적으로 `display: block`을 적용하고, 값이 없을 때 `minHeight` / `minWidth`를 주입합니다.
+- **Ref 전달**: 내부 관찰용 ref와 사용자가 제공하는 ref를 올바르게 병합합니다.
+- **Show 기반 렌더링**: 내부적으로 `Show.div`를 통해 렌더링하므로, intersection state가 렌더링의 `when` 조건이 됩니다.
 
 ## `Slacker`
 
-`Slacker`는 가시성 관찰과 loader 실행을 결합한 컴포넌트입니다.
+`Slacker`는 이 제품군에서 가장 특화된 컴포넌트입니다. 가시성 관찰과 비동기 로더(loader)를 결합합니다.
 
 ```tsx
 import { Slacker } from '@ilokesto/utilinent';
 
-function LazyPanel() {
+function DeferredData() {
   return (
     <Slacker
-      loader={async () => ({ title: 'Loaded' })}
-      loadingFallback={<p>로딩 중…</p>}
+      loader={fetchData}
+      loadingFallback={<p>로딩 중...</p>}
       errorFallback={({ retry }) => <button onClick={retry}>다시 시도</button>}
     >
-      {(data) => <section>{data.title}</section>}
+      {(data) => <DataView data={data} />}
     </Slacker>
   );
 }
 ```
 
-구현상 `null`을 “아직 로드되지 않음” sentinel로 사용하고, `maxRetries`, `retryDelay`를 통해 재시도 경로도 지원합니다.
+### 내부 동작
+- **Null Sentinel**: "아직 보이지 않음/로드되지 않음"을 나타내기 위해 내부 상태 파수꾼(sentinel)으로 `null`을 사용합니다.
+- **가시성 게이트 (Visibility-Gated)**: 컴포넌트가 뷰포트에 들어왔을 때만(즉, `Observer`를 통해) `loader`가 실행됩니다.
+- **재시도 로직**: 일시적인 네트워크 실패를 우아하게 처리하기 위해 `maxRetries`와 `retryDelay`를 지원합니다.
 
 ## `useIntersectionObserver`
 
-intersection 상태만 필요하고 렌더링 래퍼는 원치 않는다면 hook을 직접 쓰면 됩니다.
+가시성 감지를 위한 기초 훅입니다.
 
-```tsx
-import { useIntersectionObserver } from '@ilokesto/utilinent';
-
-function Sentinel() {
-  const { ref, isIntersecting, entry } = useIntersectionObserver({
-    threshold: 0.5,
-    rootMargin: '50px',
-  });
-
-  return <div ref={ref}>{isIntersecting ? 'Visible' : 'Hidden'}</div>;
-}
+```ts
+const { ref, isIntersecting, entry } = useIntersectionObserver({
+  threshold: 0.1,
+  rootMargin: '100px',
+  freezeOnceVisible: true,
+});
 ```
 
-중요한 동작은 다음과 같습니다.
+### 주목할 만한 동작
+- **첫 번째 콜백 건너뛰기**: 마운트 시 흔히 발생하는 초기 옵저버 실행을 건너뛰어 오탐지를 방지합니다.
+- **`freezeOnceVisible`**: 고수준 컴포넌트의 `triggerOnce`와 매핑되며, 첫 번째 성공적인 교차 이후 브라우저 옵저버를 중단합니다.
+- **노드 초기화 (Node Reset)**: 관찰 중인 DOM 노드가 제거되거나 사라지면 내부 상태가 적절히 초기화됩니다.
 
-- 첫 번째 callback은 건너뛰고,
-- `freezeOnceVisible`은 첫 visible 상태 이후 관찰을 멈추며,
-- 관찰 대상 노드가 사라지면 상태를 초기화합니다.
+## 결정 가이드
 
-다음 문제가 가시성이 아니라 prop/ref 컴포지션에 가깝다면 [컴포지션](./composition)으로 이어서 읽으면 됩니다.
+- **`Mount`를 써야 할 때**: 컴포넌트가 마운트되자마자 시작되어야 하는 독립적인 비동기 작업이 있을 때.
+- **`Observer`를 써야 할 때**: 초기 페이지 로드 성능을 높이기 위해 거대한 DOM 트리의 렌더링을 늦추고 싶을 때.
+- **`Slacker`를 써야 할 때**: 가시성에 따른 렌더링과 실제 데이터 페칭을 결합하고 싶을 때.
+
+## 흔히 하는 실수
+
+1. **Fallback 크기 누락**: `fallback`의 높이가 0이면 뷰포트 밖에 있거나 보이지 않는 것으로 간주되어 교차 상태가 감지되지 않을 수 있습니다. 항상 자리 표시자(placeholder) 높이를 제공하십시오.
+2. **`triggerOnce` 트레이드오프 무시**: `triggerOnce`를 쓰지 않으면 컴포넌트가 뷰포트를 벗어날 때마다 언마운트되어, 반복적인 로딩과 상태 손실이 발생할 수 있습니다.
+3. **순환 가시성 (Circular visibility)**: 엘리먼트가 렌더링되면서 크기가 커져 뷰포트 밖으로 밀려났다가, 다시 작아져서 들어오는 깜빡임 루프가 발생할 수 있습니다.

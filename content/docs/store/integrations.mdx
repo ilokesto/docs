@@ -1,0 +1,31 @@
+---
+title: Integrations
+description: A hub for libraries and adapters built on top of @ilokesto/store.
+---
+
+`@ilokesto/store` is designed to act as a small core. This page is a hub for packages and adapter layers built on top of that core.
+
+### How to Read This Page
+
+This page is intentionally short. It does not try to teach every integration in place. Instead, it points you toward the layer that owns a particular use case.
+
+### Current Packages
+
+#### `@ilokesto/state`
+
+A higher-level state package built on top of `@ilokesto/store`.
+
+- Use it when you want a richer state API than the vanilla store.
+- Read its own docs for the React-facing `create()` flow, selectors, reducer mode, and middleware utilities.
+
+### Future Integrations
+
+- **Form libraries** can use the store as a small state engine for values, errors, and submission lifecycle.
+- **Overlay or modal systems** can use it to coordinate open state and payloads.
+- **Framework adapters** can translate `getState`, `setState`, and `subscribe` into a framework-specific reactive API.
+
+### If You Are Building Your Own
+
+If you are creating a new package on top of `@ilokesto/store`, start with [Building on Store](./building-on-store). That page explains the stable contract that adapters and higher-level libraries should rely on.
+
+Use this integrations page as a directory, not as the canonical implementation guide for every consumer.

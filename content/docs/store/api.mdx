@@ -1,105 +1,77 @@
 ---
 title: API Reference
-description: Store constructor and public methods
+description: The public surface of the Store class.
 ---
 
-# Store API
+The `@ilokesto/store` package exports a single class: `Store<T>`.
 
-The package exports one public class: `Store<T>`.
+### Constructor
 
-## `new Store<T>(initialState: T)`
+#### `new Store<T>(initialState: T)`
 
 Creates a new store instance with the provided initial state.
 
-```ts
+```typescript
 const store = new Store({ count: 0 });
 ```
 
-### Parameters
+- **`initialState`**: The starting value for the store.
 
-- `initialState`: the starting value stored internally by the instance.
+---
 
-## Methods
+### Methods
 
-### `store.getState(): Readonly<T>`
+#### `store.getState(): Readonly<T>`
 
-Returns the current state. The return value is typed as `Readonly<T>` to discourage direct mutations.
+Returns the current state of the store.
 
-```ts
+```typescript
 const state = store.getState();
-console.log(state.count);
 ```
 
-### `store.getInitialState(): Readonly<T>`
+The returned state is typed as `Readonly<T>` to discourage direct mutation. See [Semantics](./semantics) for more on the meaning of `Readonly<T>`.
 
-Returns the state provided to the `Store` constructor during initialization.
+#### `store.getInitialState(): Readonly<T>`
 
-```ts
-const initialState = store.getInitialState();
-console.log(initialState.count); // 0
+Returns the state originally passed to the constructor. This is useful for resetting the store to its original value.
+
+```typescript
+const initial = store.getInitialState();
 ```
 
-### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
+#### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
 
-Updates the store state. You can provide either the next value directly or an updater function.
+Updates the store state. It accepts either a new state value or an updater function.
 
-```ts
-store.setState({ count: 10 });
+```typescript
+// Replacement
+store.setState({ count: 1 });
 
-store.setState((prev) => ({
-  count: prev.count + 1,
-}));
+// Updater function
+store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 ```
 
-`setState()` does **not** shallow-merge objects. Whatever you return becomes the next full state value.
+For detailed behavior on updates, including bailout rules and immutable patterns, see [Update Semantics](./updates).
 
-If you want to keep existing fields, spread them yourself:
+#### `store.subscribe(listener: () => void): () => void`
 
-```ts
-store.setState((prev) => ({
-  ...prev,
-  count: prev.count + 1,
-}));
-```
+Registers a callback that will be executed synchronously whenever the state changes.
 
-#### Same-reference bailout
-
-If `Object.is(prevState, nextState)` is `true`, the update is ignored and subscribers are not notified.
-
-Function-valued state is also not a good fit here, because functions passed to `setState()` are always treated as updater functions.
-
-### `store.pushMiddleware(middleware: Middleware<T>): void`
-
-Appends a middleware to the end of the internal middleware array.
-
-Current middleware shape:
-
-```ts
-type Middleware<T> = (
-  nextState: T | ((prevState: T) => T),
-  next: (value: T | ((prevState: T) => T)) => void,
-) => void;
-```
-
-Use `pushMiddleware()` when you want to add middleware after the existing chain.
-
-### `store.unshiftMiddleware(middleware: Middleware<T>): void`
-
-Prepends a middleware to the beginning of the internal middleware array.
-
-Use `unshiftMiddleware()` when you want that middleware to run before the already-registered chain.
-
-### `store.subscribe(listener: () => void): () => void`
-
-Registers a listener function to be called after every successful state change.
-
-```ts
+```typescript
 const unsubscribe = store.subscribe(() => {
-  const current = store.getState();
-  console.log('State changed to:', current);
+  console.log("New state:", store.getState());
 });
 
+// To stop listening:
 unsubscribe();
 ```
 
-- **Execution**: listeners are called synchronously after `setState` completes.
+See [Subscriptions](./subscriptions) for more on the subscription lifecycle and notification guarantees.
+
+---
+
+### Public Export Summary
+
+The package exposes one public class, `Store<T>`, with the constructor and methods documented above.
+
+Current source code also contains middleware-related internals, but they are documented in [Implementation Notes](./implementation-notes) rather than treated as the main public contract here.

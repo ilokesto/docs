@@ -1,0 +1,66 @@
+---
+title: 구현 노트
+description: "@ilokesto/store의 현재 내부 메커니즘에 대한 심층 분석입니다."
+---
+
+이 페이지는 `Store<T>`의 현재 구현에 대한 기술적인 세부 사항을 제공합니다. 이는 내부 동작으로 간주되며 향후 버전에서 변경될 수 있습니다.
+
+### 내부 필드 (Internal Fields)
+
+`Store` 클래스는 네 가지 주요 프라이빗 필드를 유지합니다:
+
+- `initialState`: 생성 시점에 캡처된 원래 상태입니다.
+- `state`: 현재 값 원자(atom).
+- `listeners`: 고유한 구독 콜백을 관리하기 위한 `Set<Listener>`.
+- `middlewares`: 업데이트를 가로채기 위한 `Middleware<T>[]` 배열.
+
+### 미들웨어 체인 실행 (Middleware Chain Execution)
+
+`setState`가 호출되면 스토어는 `reduceRight`를 사용하여 실행기(runner) 함수를 구성합니다.
+
+```typescript
+const runner = [...this.middlewares].reduceRight<Dispatch<SetStateAction<T>>>(
+  (next, middleware) => {
+    return (state: SetStateAction<T>) => middleware(state, next);
+  },
+  (state: SetStateAction<T>) => this.applyState(state),
+);
+```
+
+- 체인의 마지막 단계는 항상 `applyState`입니다.
+- `unshiftMiddleware`(배열의 앞쪽)로 등록된 미들웨어는 다른 미들웨어를 감싸며 가장 먼저 실행됩니다.
+- 미들웨어가 `next(nextState)`를 호출하지 않으면 업데이트가 중단되고 `applyState`에 도달하지 않습니다.
+
+### 상태 적용 (applyState)
+
+`applyState` 메서드는 상태 교체의 핵심 지점입니다. 다음을 처리합니다:
+
+1. `SetStateAction`을 해결(값과 업데이트 함수 모두 처리).
+2. `Object.is` 참조 확인 수행.
+3. `state` 필드 교체.
+4. `notify` 메서드 트리거.
+
+### 알림 스냅샷 (Notification Snapshotting)
+
+알림 루프 중에 리스너가 구독을 취소하는 등 리스너 세트의 동시 수정 문제를 방지하기 위해 `notify`는 스냅샷을 찍습니다:
+
+```typescript
+private notify(): void {
+  for (const listener of Array.from(this.listeners)) {
+    listener();
+  }
+}
+```
+
+이를 통해 `notify`가 호출되는 시점에 알림을 받을 리스너 목록이 고정되도록 보장합니다.
+
+### 현재 미들웨어 계약 (Current Middleware Contract)
+
+`Middleware<T>` 타입은 다음을 요구합니다:
+
+- `nextState`: 제안된 다음 상태 또는 업데이트 함수.
+- `next`: 다음 미들웨어나 `applyState`로 업데이트를 전달하기 위한 디스패치 함수.
+
+미들웨어 작성자는 의도적으로 업데이트를 차단하려는 경우가 아니면 최종적으로 `next`를 호출할 책임이 있습니다.
+
+이 내용은 안정적인 공개 API 보장이라기보다 현재 구현 세부 사항으로서 문서화한 것입니다.

@@ -1,1 +1,15 @@
-{"title": "Store", "root": true, "pages": ["index", "api", "semantics"]}
+{
+  "title": "Store",
+  "root": true,
+  "pages": [
+    "index",
+    "api",
+    "updates",
+    "subscriptions",
+    "patterns",
+    "building-on-store",
+    "integrations",
+    "semantics",
+    "implementation-notes"
+  ]
+}

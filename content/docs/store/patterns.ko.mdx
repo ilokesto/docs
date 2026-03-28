@@ -1,0 +1,88 @@
+---
+title: 공통 패턴
+description: 실전 활용을 위한 패턴들입니다.
+---
+
+`@ilokesto/store`로 상태를 관리할 때 효과적인 패턴들을 살펴봅니다.
+
+### 모듈 범위 스토어 (Module-scope Store)
+
+공유되는 전역 상태의 경우, 모듈 수준에서 스토어를 생성하고 이를 내보낼 수 있습니다.
+
+```typescript
+// store.ts
+export const authStore = new Store({ user: null, isAuthenticated: false });
+```
+
+### 액션과 유사한 래퍼 (Action-like Wrappers)
+
+모든 곳에서 직접 `setState`를 호출하는 대신, 업데이트를 의미론적인 함수(액션)로 감싸서 관리하십시오.
+
+```typescript
+export const login = (user: User) => {
+  authStore.setState({ user, isAuthenticated: true });
+};
+
+export const logout = () => {
+  authStore.setState({ user: null, isAuthenticated: false });
+};
+```
+
+### 읽기/쓰기 분리 (Read/Write Separation)
+
+접근 제어를 위해 스토어의 다른 부분들을 개별적으로 내보낼 수 있습니다.
+
+```typescript
+// 읽기 전용 뷰와 액션만 내보냄
+export const getAuthState = () => authStore.getState();
+export const subscribeToAuth = (listener: () => void) =>
+  authStore.subscribe(listener);
+```
+
+### 재설정 패턴 (Reset Pattern)
+
+`getInitialState()`를 사용하여 스토어를 초기 상태로 쉽게 재설정하십시오.
+
+```typescript
+const resetStore = () => {
+  store.setState(store.getInitialState());
+};
+```
+
+### 파생된 값 (Derived Values)
+
+`Store`는 원시 원자(raw atom)만을 관리하므로, 필요할 때마다 파생된 상태를 계산할 수 있습니다.
+
+```typescript
+const getFullName = () => {
+  const { firstName, lastName } = userStore.getState();
+  return `${firstName} ${lastName}`;
+};
+```
+
+### 스토어 분리 (Splitting Stores)
+
+모든 것을 하나의 거대한 스토어에 담을 필요는 없습니다. 관심사별로 여러 스토어를 분리하여 관리하십시오.
+
+```typescript
+const themeStore = new Store("light");
+const userStore = new Store({ id: 1, name: "Alice" });
+```
+
+### 테스트 패턴 (Testing Patterns)
+
+스토어 로직은 프레임워크 의존성이 없기 때문에 테스트하기가 매우 간단합니다.
+
+```typescript
+test("increments count", () => {
+  const store = new Store({ count: 0 });
+  store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+  expect(store.getState().count).toBe(1);
+});
+```
+
+### 안티 패턴
+
+- **깊은 수정(Deep mutation)**: 새로운 객체를 반환하는 대신 상태 속성을 직접 수정하는 것.
+- **동기식 루프(Sync loops)**: 스토어를 구독하고 리스너 내부에서 동일한 스토어의 `setState`를 호출하는 것.
+- **모든 것을 하나의 스토어에 담기**: 단일 원자가 강력하기는 하지만, 관련 없는 상태를 과도하게 중앙 집중화하면 컨슈머에게 불필요한 알림이 발생할 수 있습니다.

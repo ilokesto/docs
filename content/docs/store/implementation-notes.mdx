@@ -1,0 +1,66 @@
+---
+title: Implementation Notes
+description: Deep dive into the current internal mechanics of @ilokesto/store.
+---
+
+This page provides technical details about the current implementation of `Store<T>`. These are considered internal behaviors and may change in future versions.
+
+### Internal Fields
+
+The `Store` class maintains four primary private fields:
+
+- `initialState`: The original state captured at construction time.
+- `state`: The current value atom.
+- `listeners`: A `Set<Listener>` for managing unique subscription callbacks.
+- `middlewares`: An array `Middleware<T>[]` for intercepting updates.
+
+### Middleware Chain Execution
+
+When `setState` is called, the store constructs a runner function using `reduceRight`.
+
+```typescript
+const runner = [...this.middlewares].reduceRight<Dispatch<SetStateAction<T>>>(
+  (next, middleware) => {
+    return (state: SetStateAction<T>) => middleware(state, next);
+  },
+  (state: SetStateAction<T>) => this.applyState(state),
+);
+```
+
+- The final step in the chain is always `applyState`.
+- Middleware registered with `unshiftMiddleware` (front of array) will wrap others and be executed first.
+- If a middleware does not call `next(nextState)`, the update will be halted and `applyState` will never be reached.
+
+### State Application (applyState)
+
+The `applyState` method is the core point of state replacement. It handles:
+
+1. Resolving the `SetStateAction` (handling both value and updater function).
+2. Performing the `Object.is` reference check.
+3. Replacing the `state` field.
+4. Triggering the `notify` method.
+
+### Notification Snapshotting
+
+To prevent issues with concurrent mutation of the listeners set (e.g., when a listener unsubscribes during the notification loop), `notify` takes a snapshot:
+
+```typescript
+private notify(): void {
+  for (const listener of Array.from(this.listeners)) {
+    listener();
+  }
+}
+```
+
+This ensures that the list of listeners being notified is fixed at the moment `notify` is called.
+
+### Current Middleware Contract
+
+The `Middleware<T>` type expects:
+
+- `nextState`: The proposed next state or updater function.
+- `next`: A dispatch function to pass the update to the next middleware or `applyState`.
+
+Middleware authors are responsible for ensuring that they eventually call `next` unless they intentionally want to block an update.
+
+This is documented here as a current implementation detail rather than as a stable public API guarantee.

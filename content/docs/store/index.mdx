@@ -1,69 +1,61 @@
 ---
 title: Introduction
-description: The minimal vanilla state container behind @ilokesto/state
+description: A framework-agnostic foundational store for predictable state management.
 ---
 
-# @ilokesto/store
+`@ilokesto/store` is a core primitive in the ilokesto ecosystem. It provides a minimal, synchronous, and framework-agnostic store implementation designed for reliability and performance.
 
-`@ilokesto/store` is the smallest package in the ilokesto state family. It gives you one class — `Store<T>` — with state storage, replacement, subscriptions, and lightweight middleware registration.
+While other packages in the ecosystem provide framework bindings or complex state management patterns, `store` remains a lean foundation that focuses on the basic contract of state: storage, updates, and notifications.
 
-It still does **not** include React hooks, persistence helpers, or devtools integration by itself. That is exactly why it is useful: it is the low-level primitive that higher-level packages such as `@ilokesto/state` can build on.
+### What it is
 
-## Installation
+- **Foundational**: A minimal set of primitives for state storage.
+- **Framework-agnostic**: Works in any JavaScript environment (Node.js, Browser, Deno, etc.).
+- **Synchronous**: State updates and notifications happen immediately.
+- **Predictable**: Uses standard `Object.is` checks and immutable patterns.
 
-```bash
-pnpm add @ilokesto/store
-```
+### What it is not
 
-## Mental model
+- **A Framework Binding**: It does not contain React hooks or Vue composables.
+- **A Data Fetching Library**: It does not manage server cache or loading states.
+- **A Multi-store Orchestrator**: It manages a single state atom.
 
-The mental model is simple:
+### Mental Model
 
-1. create a store with an initial state
-2. read the current state with `getState()`
-3. replace the state with `setState(...)`
-4. optionally register middleware with `pushMiddleware(...)` or `unshiftMiddleware(...)`
-5. subscribe to changes with `subscribe(...)`
+Think of a `Store` as a safe box for a single value. You can look at the value at any time, replace it with a new one, and register listeners to be notified whenever the value changes. It doesn't care what is inside the box, as long as you follow immutable update patterns.
 
-### Key characteristics
+### Quick Example
 
-- **Vanilla JS**: zero dependencies on React or any other framework.
-- **Synchronous**: state updates and listener notifications happen synchronously.
-- **Reference equality**: updates are ignored if the new state is strictly equal (`Object.is`) to the current state.
-- **Composable middleware**: updates can flow through a middleware chain before the state is applied.
-- **Type-safe**: TypeScript types describe the stored shape and updater contract.
+```typescript
+import { Store } from "@ilokesto/store";
 
-## Basic example
+const store = new Store({ count: 0 });
 
-```ts
-import { Store } from '@ilokesto/store';
-
-interface CounterState {
-  count: number;
-}
-
-const counterStore = new Store<CounterState>({ count: 0 });
-
-const unsubscribe = counterStore.subscribe(() => {
-  console.log('State updated:', counterStore.getState());
+// Subscribe to changes
+const unsubscribe = store.subscribe(() => {
+  console.log("State changed:", store.getState());
 });
 
-counterStore.setState({ count: 1 });
-counterStore.setState((prev) => ({ count: prev.count + 1 }));
+// Update state
+store.setState({ count: 1 });
 
+// Clean up
 unsubscribe();
 ```
 
-## When to use it
+### When to Use
 
-Use `@ilokesto/store` when you need a raw state container that does not care about the UI layer.
+- When building a library that needs internal state management without forcing a framework dependency on users.
+- When you need a simple, reliable state container for vanilla JavaScript or TypeScript projects.
+- As a base for building higher-level libraries, adapters, or domain-specific state layers.
 
-It is a good fit for:
+### Documentation Map
 
-- non-React or framework-agnostic state
-- custom bindings for another framework
-- small shared stores where full middleware or React integration would be overkill
-
-If you want hook-based access in React, use `@ilokesto/state` on top of it.
-
-If you want to intercept updates inside the vanilla store itself, use the middleware methods described in the API reference.
+- [API Reference](./api): The public surface of the `Store` class.
+- [Update Semantics](./updates): How state updates work and the bailout rules.
+- [Subscriptions](./subscriptions): Managing the observer lifecycle.
+- [Common Patterns](./patterns): Practical recipes for real-world usage.
+- [Building on Store](./building-on-store): Guidelines for adapter and library authors.
+- [Integrations](./integrations): The ecosystem around `@ilokesto/store`.
+- [Semantics](./semantics): The strict behavioral specification.
+- [Implementation Notes](./implementation-notes): Deep dive into internal mechanics.

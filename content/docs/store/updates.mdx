@@ -1,0 +1,78 @@
+---
+title: Update Semantics
+description: How state updates are processed and when notifications are triggered.
+---
+
+State updates in `@ilokesto/store` follow strict rules to ensure predictability and performance.
+
+### Replacement Semantics
+
+`setState` does not perform a shallow merge. When you provide a new object, it replaces the entire state atom.
+
+```typescript
+const store = new Store({ a: 1, b: 2 });
+
+// Incorrect: 'b' is lost
+store.setState({ a: 10 });
+// Final state: { a: 10 }
+
+// Correct: Preserving fields
+store.setState((prev) => ({ ...prev, a: 10 }));
+// Final state: { a: 10, b: 2 }
+```
+
+### Updater Form
+
+Using the functional updater form `(prevState) => nextState` is the safest way to update state when the next value depends on the current one.
+
+```typescript
+store.setState((prev) => {
+  // Logic based on prev
+  return { ...prev, count: prev.count + 1 };
+});
+```
+
+### Immutable Patterns
+
+Always treat the state as immutable. Directly mutating the object returned by `getState()` will not trigger notifications and can lead to bugs.
+
+```typescript
+// ANTI-PATTERN: Mutating state directly
+const state = store.getState();
+state.count = 100; // Does not trigger listeners
+```
+
+Instead, always return a new object reference when you want to trigger an update.
+
+### Same-reference Bailout
+
+To optimize performance, `Store` uses `Object.is` to compare the previous state with the new state. If they are the same reference, the update is ignored:
+
+1. The internal state is not replaced.
+2. Listeners are **not** notified.
+
+This allows you to safely bail out of an update if no changes are necessary.
+
+```typescript
+store.setState((prev) => {
+  if (noChangeNeeded) return prev; // Bail out
+  return { ...prev, changed: true };
+});
+```
+
+### Function-valued State Caveat
+
+Because `setState` checks if the provided argument is a function to decide whether to treat it as an updater, you cannot store a function as the root state value easily.
+
+```typescript
+// This will be treated as an updater function, not the next state
+store.setState(() => console.log("Hello"));
+```
+
+If you need to store a function, wrap it in an object: `{ fn: () => void }`.
+
+### State Shape Guidance
+
+- **Flat is better**: Deeply nested state makes immutable updates more verbose and error-prone.
+- **Serializability**: While not strictly required by the core store, keeping state serializable (POJOs) makes it easier to add persistence or devtools later.
+- **Atomicity**: Keep related values together if they always update together.

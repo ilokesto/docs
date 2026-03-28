@@ -1,27 +1,77 @@
 ---
-title: Store 클래스 API
-description: 핵심 API 레퍼런스
+title: API 레퍼런스
+description: Store 클래스의 공개 인터페이스입니다.
 ---
 
-# Store API
+`@ilokesto/store` 패키지는 단일 클래스인 `Store<T>`를 내보냅니다.
 
-## `new Store<T>(initialState: T)`
-초기 상태와 함께 Store 인스턴스를 생성합니다.
+### 생성자 (Constructor)
 
-## `store.getState(): Readonly<T>`
-현재 상태의 스냅샷을 반환합니다.
+#### `new Store<T>(initialState: T)`
 
-## `store.getInitialState(): Readonly<T>`
-생성 시 제공된 초기 상태를 반환합니다.
+제공된 초기 상태로 새로운 스토어 인스턴스를 생성합니다.
 
-## `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
-상태를 새 값으로 교체하거나 이전 상태를 기반으로 다음 상태를 계산합니다. `Object.is(prevState, nextState)`가 `true`인 경우 구독자에게 알리지 않습니다.
+```typescript
+const store = new Store({ count: 0 });
+```
 
-## `store.pushMiddleware(middleware: Middleware<T>): void`
-미들웨어를 내부 체인의 뒤쪽에 추가합니다.
+- **`initialState`**: 스토어의 시작 값입니다.
 
-## `store.unshiftMiddleware(middleware: Middleware<T>): void`
-미들웨어를 내부 체인의 앞쪽에 추가합니다.
+---
 
-## `store.subscribe(listener: () => void): () => void`
-상태 변경 시 실행될 리스너를 등록합니다. 구독 취소 함수를 반환합니다.
+### 메서드 (Methods)
+
+#### `store.getState(): Readonly<T>`
+
+스토어의 현재 상태를 반환합니다.
+
+```typescript
+const state = store.getState();
+```
+
+반환된 상태는 직접적인 수정을 방지하기 위해 `Readonly<T>` 타입으로 지정됩니다. `Readonly<T>`의 의미에 대해서는 [시맨틱](./semantics)을 참조하십시오.
+
+#### `store.getInitialState(): Readonly<T>`
+
+생성자에 원래 전달되었던 상태를 반환합니다. 이는 스토어를 원래 값으로 재설정할 때 유용합니다.
+
+```typescript
+const initial = store.getInitialState();
+```
+
+#### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
+
+스토어 상태를 업데이트합니다. 새 상태 값이나 업데이트 함수를 인자로 받습니다.
+
+```typescript
+// 값 교체
+store.setState({ count: 1 });
+
+// 업데이트 함수
+store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+```
+
+베일아웃(bailout) 규칙 및 불변성 패턴을 포함한 업데이트 동작에 대한 자세한 내용은 [업데이트 시맨틱](./updates)을 참조하십시오.
+
+#### `store.subscribe(listener: () => void): () => void`
+
+상태가 변경될 때마다 동기적으로 실행될 콜백을 등록합니다.
+
+```typescript
+const unsubscribe = store.subscribe(() => {
+  console.log("새 상태:", store.getState());
+});
+
+// 구독 중단 시:
+unsubscribe();
+```
+
+구독 생명주기 및 알림 보장에 대한 자세한 내용은 [구독](./subscriptions)을 참조하십시오.
+
+---
+
+### 공개 export 요약
+
+이 패키지는 하나의 공개 클래스인 `Store<T>`를 내보내며, 생성자와 메서드는 위에서 설명한 내용이 전부입니다.
+
+현재 소스 코드에는 미들웨어 관련 구현도 존재하지만, 여기서는 주된 공개 계약으로 다루지 않고 [구현 노트](./implementation-notes)에서 설명합니다.

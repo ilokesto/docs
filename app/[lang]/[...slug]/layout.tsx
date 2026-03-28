@@ -1,6 +1,6 @@
 import { source } from '@/lib/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { baseOptions, getPackageTabs } from '@/lib/layout.shared';
+import { baseOptions, getPackageTabs, packageMetadata } from '@/lib/layout.shared';
 import { ReactNode } from 'react';
 
 export default async function Layout({
@@ -8,16 +8,31 @@ export default async function Layout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ lang: string }>;
+  params: Promise<{ lang: string; slug?: string[] }>;
 }) {
   const resolvedParams = await params;
+  const pkgName = resolvedParams.slug?.[0] || 'store';
+  const metadata = packageMetadata[pkgName] || packageMetadata.store;
+
   return (
-    <DocsLayout
-      tree={source.getPageTree(resolvedParams.lang)}
-      tabs={getPackageTabs(resolvedParams.lang)}
-      {...baseOptions()}
-    >
-      {children}
-    </DocsLayout>
+    <>
+      <style>{`
+        html:root {
+          --color-fd-primary: ${metadata.cssVarLight};
+          --color-fd-primary-foreground: ${metadata.fgVarLight};
+        }
+        html.dark {
+          --color-fd-primary: ${metadata.cssVarDark};
+          --color-fd-primary-foreground: ${metadata.fgVarDark};
+        }
+      `}</style>
+      <DocsLayout
+        tree={source.getPageTree(resolvedParams.lang)}
+        tabs={getPackageTabs(resolvedParams.lang)}
+        {...baseOptions()}
+      >
+        {children}
+      </DocsLayout>
+    </>
   );
 }

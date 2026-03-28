@@ -1,0 +1,36 @@
+---
+title: adaptor
+description: Immer 기반 객체 updater를 만듭니다.
+---
+
+# `adaptor`
+
+`adaptor`는 Immer의 `produce()`를 얇게 감싼 헬퍼입니다. draft 스타일의 객체 업데이트를 작성하면, 그 결과를 순수 updater 함수로 돌려줍니다.
+
+```ts
+import { adaptor } from '@ilokesto/state/utils';
+
+type State = { user: { profile: { name: string } } };
+
+const renameProfile = adaptor<State>((draft) => {
+  draft.user.profile.name = 'New Name';
+});
+
+useStore.writeOnly()(renameProfile);
+```
+
+## 제약 사항
+
+- `adaptor`는 객체 상태 형태에만 사용할 수 있습니다.
+- 선택적 peer dependency인 `immer`에 의존합니다.
+
+## 설치
+
+```package-install
+immer
+```
+
+## 관련 API
+
+- [`유틸리티`](./): 유틸리티 개요.
+- [`접근자`](../accessors): 반환된 updater는 `writeOnly()`와 함께 쓰기 좋습니다.

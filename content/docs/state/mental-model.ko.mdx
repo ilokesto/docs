@@ -1,32 +1,46 @@
 ---
 title: 정신 모델
-description: "@ilokesto/state가 상태를 관리하는 방식과 그 차이점."
+description: "store-first React state를 이해하는 개념적 모델."
 ---
 
 # 정신 모델
 
-`@ilokesto/state`는 간단하지만 강력한 원칙 위에 구축되었습니다: 상태는 외부에 존재해야 하지만, 그 구독은 React의 렌더링 생명주기와 깊게 통합되어야 한다는 것입니다.
+`@ilokesto/state`는 “또 다른 React 상태 관리 라이브러리”라고 생각하면 오히려 이해가 늦어집니다. 이 패키지는 React 안에 새로운 상태 모델을 만드는 쪽보다, 외부 스토어를 React에 자연스럽게 연결하는 쪽에 더 가깝습니다.
 
-## 스토어-훅의 통합
+이 패키지는 store, hook, selector, writer라는 네 층으로 생각하면 가장 이해하기 쉽습니다.
 
-애플리케이션을 `Provider`로 감싸야 하는 많은 상태 관리 라이브러리와 달리, `@ilokesto/state`는 **스토어-훅의 통합** 방식을 사용합니다.
+## Provider + Context가 아니라 Store + Hook
 
-1. **스토어 (Store)**: 데이터에 대한 간단한 컨테이너로, React 외부에 존재합니다. 리스너(listeners)와 동기적 업데이트를 지원합니다.
-2. **훅 (Hook)**: `create`에 의해 반환되는 특수한 React 훅으로, 스토어의 특정 부분을 컴포넌트에 연결합니다.
+Provider 중심 라이브러리와 달리, `@ilokesto/state`는 먼저 store를 두고 그 위에 React 훅을 얹습니다.
+
+1. **store**는 React 바깥에 있고, 실제 상태를 소유합니다.
+2. **hook**은 `create()`가 반환하며, 컴포넌트가 그 store를 구독하는 방식입니다.
+3. **selector**는 컴포넌트가 읽을 범위를 좁힙니다.
+4. **writer**는 여전히 전체 상태를 갱신하거나 reducer action을 dispatch합니다.
 
 ## 셀렉터가 핵심입니다
 
-최적의 성능을 보장하기 위해 `@ilokesto/state`는 **셀렉터** 사용을 권장합니다. 전체 스토어를 구독하는 대신, 특정 조각(slice)만 구독하게 됩니다.
+셀렉터는 raw external store보다 이 패키지를 더 실용적으로 만드는 핵심 요소입니다.
 
-- **선택적 렌더링**: 컴포넌트는 자신이 선택한 특정 데이터가 변경될 때만 리렌더링됩니다.
-- **스냅샷 재사용 (Snapshot Reuse)**: 내부적으로 훅은 스토어 스냅샷 단위로 메모이즈하며, 그 스냅샷이 깊게 같으면 이전 선택 값을 재사용할 수 있습니다.
+- 컴포넌트가 읽는 범위를 좁혀 주고,
+- 불필요한 리렌더링을 줄이며,
+- store snapshot이 깊게 같을 때 이전 선택 값을 재사용할 수 있게 합니다.
+
+다만 selector가 있다고 해서 slice 전용 setter가 생기는 것은 아닙니다. writer는 여전히 전체 store state를 기준으로 동작합니다.
 
 ## 데이터 흐름
 
-- **읽기**: 컴포넌트는 셀렉터를 사용하여 훅을 통해 상태를 읽습니다. 이는 내부적으로 `useSyncExternalStore`를 사용하여 구독을 생성합니다.
-- **쓰기**: 상태는 함수 기반의 `setState`(React의 `useState`와 유사)를 사용하여 업데이트됩니다. 쓰기는 컴포넌트 내부나 외부 어디에서든 발생할 수 있습니다.
-- **미들웨어**: 스토어 수준에서 데이터 흐름을 가로채어 로깅이나 영속화와 같은 부가 효과(side effects)를 추가합니다.
+- **읽기**는 `useSyncExternalStore`를 통해 일어납니다.
+- **쓰기**는 store writer 또는 reducer dispatch를 통해 일어납니다.
+- **미들웨어**는 React 계층이 아니라 store 계층에 붙습니다.
+- **SSR**은 `store.getInitialState()`를 server snapshot으로 사용하기 때문에 성립합니다.
 
-## 보일러플레이트 제거
+## 왜 이 모양이 유용한가
 
-기본적으로 "Reducer"(원하는 경우 사용 가능), "Action", "Dispatcher"와 같은 복잡한 개념이 없습니다. 단순히 상태를 정의하고 업데이트하기만 하면 됩니다. 따라서 대규모 프레임워크의 오버헤드 없이 강력한 상태 관리가 필요한 소규모 및 중규모 애플리케이션에 적합합니다.
+이 구조는 중간 지점을 잘 잡아 줍니다.
+
+- provider-heavy 구조보다 가볍고,
+- 컴포넌트별 local state보다 명시적이며,
+- 실제 store 위에서 동작하므로 미들웨어나 non-React 통합도 가능하게 남겨 둡니다.
+
+정확한 API 모양을 보고 싶다면 [`create`](./create)를, 실제 조직 패턴을 보고 싶다면 [패턴](./patterns)을 이어서 읽어 보세요.

@@ -1,9 +1,11 @@
 ---
 title: 빠른 시작
-description: 몇 분 만에 @ilokesto/state를 시작하세요.
+description: 설치부터 첫 store hook까지 가장 짧은 경로.
 ---
 
 # 빠른 시작
+
+이 페이지의 목표는 모든 기능을 다 설명하는 것이 아닙니다. 가장 짧은 경로로 store hook 하나를 화면에 올리고, 올바른 업데이트 형태를 보여준 뒤, 다음에 무엇을 읽어야 하는지 연결하는 데 초점을 둡니다.
 
 선호하는 패키지 매니저를 사용하여 패키지를 설치합니다:
 
@@ -11,18 +13,22 @@ description: 몇 분 만에 @ilokesto/state를 시작하세요.
 @ilokesto/state
 ```
 
-## 기본 사용법
+## 1. store hook 만들기
 
-스토어를 생성하고 컴포넌트에서 사용하는 방법은 매우 간단합니다.
+가장 작은 `@ilokesto/state` 사용 예제는 plain initial state에서 시작합니다.
 
 ```tsx
 import { create } from '@ilokesto/state';
 
-// 1. 스토어 훅 생성
 const useCounter = create({ count: 0 });
+```
 
+## 2. slice를 읽고, 전체 상태를 쓴다
+
+selector는 컴포넌트가 무엇을 읽을지를 정합니다. 하지만 반환되는 writer는 여전히 전체 store state를 갱신합니다.
+
+```tsx
 function Counter() {
-  // 2. 셀렉터와 함께 훅 사용
   const [count, setState] = useCounter((state) => state.count);
 
   return (
@@ -36,9 +42,11 @@ function Counter() {
 }
 ```
 
-## 전역 액션
+이 지점이 처음엔 가장 헷갈리기 쉽습니다. selector가 `count`만 반환하더라도 writer는 이전 전체 상태를 받아 다음 전체 상태를 만들어야 합니다.
 
-`writeOnly` 접근자를 사용하여 컴포넌트 외부에서 액션을 정의할 수 있습니다.
+## 3. 쓰기가 로컬 이벤트를 넘어서면 컴포넌트 밖으로 뺀다
+
+업데이트 로직이 버튼 핸들러를 넘어서 “액션”처럼 느껴지기 시작하면 `writeOnly()` 뒤로 빼는 편이 좋습니다.
 
 ```ts
 const useCounter = create({ count: 0 });
@@ -49,8 +57,11 @@ export const increment = () => {
 };
 ```
 
+이렇게 하면 컴포넌트는 더 작아지고, store 동작은 재사용하거나 테스트하기 쉬워집니다.
+
 ## 다음 단계는?
 
-- 라이브러리 이면의 [정신 모델](./mental-model)을 이해하세요.
-- [핵심 API](./create)에 대해 자세히 알아보세요.
-- 로깅, 영속화 등을 위한 [미들웨어](./middleware)를 살펴보세요.
+- store가 왜 React 바깥에 있는지 이해하고 싶다면 [정신 모델](./mental-model)을 읽어 보세요.
+- reducer mode까지 포함한 정확한 시그니처를 보고 싶다면 [`create`](./create)를 읽어 보세요.
+- 컴포넌트 밖 액션을 만들 계획이라면 [접근자](./accessors)를 읽어 보세요.
+- 로깅, 영속화, 검증, DevTools가 필요하다면 [미들웨어](./middleware)를 이어서 보는 것이 좋습니다.

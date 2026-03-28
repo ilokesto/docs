@@ -1,67 +1,28 @@
 ---
 title: Utilities
-description: Overview of @ilokesto/state utility helpers.
+description: Utility helpers for store composition and object updates.
 ---
 
 # Utilities
 
-The `@ilokesto/state/utils` entry point currently exposes two helpers: `pipe` and `adaptor`.
+`@ilokesto/state/utils` is where the package puts small helpers that improve ergonomics without changing the main `create()` API.
 
-These helpers do different jobs:
+Right now that means two different kinds of help:
 
 - [`pipe`](./pipe) composes middleware around plain initial state and returns a `Store`.
 - [`adaptor`](./adaptor) wraps Immer's `produce()` so you can write draft-style object updates.
 
 ## When to reach for utilities
 
-Use `utils` when you want to improve store setup ergonomics or object update ergonomics without changing the public `create()` API.
+Reach for `utils` when the problem is ergonomic rather than architectural.
+
+- Use `pipe` when store setup is becoming too nested.
+- Use `adaptor` when object updates are becoming too verbose.
+- Stay with plain `create()` when the base API is already readable enough.
 
 ## Related APIs
 
 - [`create`](../create): Main entry point for React integration.
 - [`middleware`](../middleware): Built-in middleware for common tasks.
 
-```ts
-import { create } from '@ilokesto/state';
-import { pipe } from '@ilokesto/state/utils';
-import { logger, devtools } from '@ilokesto/state/middleware';
-
-const store = pipe(
-  { count: 0 },
-  logger(),
-  devtools('MyStore')
-);
-
-const useStore = create(store);
-```
-
-Using `pipe` is the recommended way to set up complex stores with multiple middleware.
-
-## `adaptor`
-
-`adaptor` is a thin wrapper around Immer's `produce`. It lets you write a draft-style state recipe and get back a pure updater function.
-
-```ts
-import { adaptor } from '@ilokesto/state/utils';
-
-type State = { user: { profile: { name: string } } };
-
-const renameProfile = adaptor<State>((draft) => {
-  draft.user.profile.name = 'New Name';
-});
-
-useStore.writeOnly()(renameProfile);
-```
-
-### Installation
-
-`adaptor` requires `immer` to be installed in your project.
-
-```package-install
-immer
-```
-
-## Related APIs
-
-- [`create`](./create): Main entry point for React integration.
-- [`middleware`](./middleware): Built-in middleware for common tasks.
+Read [`pipe`](./pipe) if your store setup is the problem. Read [`adaptor`](./adaptor) if object update syntax is the problem.

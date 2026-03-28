@@ -1,32 +1,46 @@
 ---
 title: Mental Model
-description: How @ilokesto/state manages state and why it's different.
+description: The conceptual model behind store-first React state.
 ---
 
 # Mental Model
 
-`@ilokesto/state` is built on a simple but powerful principle: state should be external, but its subscription should be deeply integrated with React's rendering lifecycle.
+`@ilokesto/state` only really makes sense once you stop thinking of it as “another React state library.” It is closer to a React binding for an external store that happens to feel small enough to use like local state.
 
-## Store-Hook Unity
+The package is easiest to reason about if you keep four layers in your head: the store, the hook, the selector, and the writer.
 
-Unlike many state management libraries that require a `Provider` to wrap your application, `@ilokesto/state` uses a **store-hook unity**.
+## Store + hook, not provider + context
 
-1. **The Store**: A simple container for your data that exists outside of React. It supports listeners and synchronous updates.
-2. **The Hook**: A specialized React hook (returned by `create`) that connects a specific part of that store to your component.
+Unlike provider-first libraries, `@ilokesto/state` starts with a store and then binds that store to React.
 
-## Selectors are Key
+1. **The store** lives outside React and owns the real state.
+2. **The hook** returned by `create()` is how components subscribe to that store.
+3. **The selector** narrows what a component reads.
+4. **The writer** still updates the full state or dispatches a reducer action.
 
-To ensure optimal performance, `@ilokesto/state` encourages the use of **selectors**. Instead of subscribing to the entire store, you subscribe to a specific slice.
+## Selectors narrow reads, not writes
 
-- **Selective Rendering**: Components only re-render when the specific data they select changes.
-- **Snapshot Reuse**: Internally, the hook memoizes across store snapshots and can reuse the previous selected value when those snapshots are deeply equal.
+Selectors are the main reason the API looks more scalable than a raw external store.
+
+- They keep components subscribed to a narrow slice.
+- They reduce noisy re-renders.
+- They let the hook reuse a previous selected value when store snapshots are deeply equal.
+
+But selectors do **not** give you a slice-local setter. The writer still updates the whole store state.
 
 ## Data Flow
 
-- **Reads**: Components read state through the hook using selectors. This creates a subscription using `useSyncExternalStore`.
-- **Writes**: State is updated using a function-based `setState` (similar to React's `useState`). Writes can happen inside or outside components.
-- **Middleware**: Intercepts the data flow at the store level to add side effects like logging or persistence.
+- **Reads** happen through `useSyncExternalStore`.
+- **Writes** go through the store writer or reducer dispatch.
+- **Middleware** sits at the store layer, not the React layer.
+- **SSR** works because the server snapshot comes from `store.getInitialState()`.
 
-## No Boilerplate
+## Why this shape is useful
 
-There are no complex concepts like "Reducers" (unless you want them), "Actions", or "Dispatchers" by default. You simply define your state and update it. This makes it ideal for small to medium-sized applications that need robust state management without the overhead of larger frameworks.
+This model gives you a useful middle ground:
+
+- lighter than a provider-heavy architecture,
+- more explicit than ad-hoc local state spread across components,
+- still close enough to a real store that middleware and non-React integration remain possible.
+
+If you want the exact API surface next, read [`create`](./create). If you want practical organization patterns, go to [Patterns](./patterns).

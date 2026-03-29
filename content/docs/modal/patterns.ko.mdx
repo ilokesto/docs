@@ -1,0 +1,71 @@
+---
+title: Patterns
+description: "현재 API에 잘 맞는 일반적인 modal 사용 패턴."
+---
+
+# Patterns
+
+## Stable id로 닫기
+
+`children`는 plain `ReactNode`이기 때문에, 가장 안정적인 패턴은 호출 지점에서 stable id를 만들고 close 콜백을 content로 내려주는 방식입니다.
+
+```tsx
+function ConfirmPanel({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div>
+      <button onClick={onCancel}>Cancel</button>
+      <button onClick={onConfirm}>Confirm</button>
+    </div>
+  );
+}
+
+const modalId = 'archive-item';
+
+await display<boolean>({
+  id: modalId,
+  children: (
+    <ConfirmPanel
+      onConfirm={() => close(modalId, true)}
+      onCancel={() => close(modalId, false)}
+    />
+  ),
+});
+```
+
+## 기본 provider 하나와 global facade 사용
+
+모듈 레벨 명령을 쓰고 싶다면 루트 근처에 기본 `ModalProvider` 하나를 마운트하고, 다른 곳에서는 `modal.display()`를 쓰면 됩니다.
+
+```tsx
+<ModalProvider>{children}</ModalProvider>
+```
+
+```tsx
+const result = await modal.display<boolean>({
+  id: 'global-delete',
+  children: <DeletePanel />,
+});
+```
+
+## transport는 의도적으로 선택하기
+
+- animation 제어와 앱 주도 backdrop styling이 중요하면 `inline`
+- 스타일 자유도보다 브라우저 top-layer 동작이 더 중요하면 `top-layer`
+
+## `display()`를 가장 안전한 continuation point로 보기
+
+promise는 remove 뒤에 resolve되므로, `await display()` 이후가 navigation, destructive write, follow-up UI를 이어가기 가장 안전한 지점입니다.
+
+```tsx
+const confirmed = await display<boolean>({ id: 'delete-item', children: <DeletePanel /> });
+
+if (confirmed) {
+  await api.delete();
+}
+```

@@ -1,0 +1,83 @@
+---
+title: Quick Start
+description: The shortest path to a working modal flow.
+---
+
+# Quick Start
+
+This page gets one working modal flow on screen with the minimum mental overhead.
+
+```package-install
+@ilokesto/modal
+```
+
+## 1. Mount a `ModalProvider`
+
+`useModal()` and the global `modal` facade both need a mounted provider.
+
+```tsx
+import { ModalProvider } from '@ilokesto/modal';
+
+function App() {
+  return <ModalProvider>{/* your app */}</ModalProvider>;
+}
+```
+
+## 2. Open a modal through `display()`
+
+The practical pattern is to assign a stable `id` and let your content call `close(id, result)`.
+
+```tsx
+import { useModal } from '@ilokesto/modal';
+
+function Page() {
+  const { display, close } = useModal();
+
+  const handleOpen = async () => {
+    const modalId = 'settings-modal';
+
+    const result = await display<string>({
+      id: modalId,
+      dismissible: true,
+      children: (
+        <div>
+          <button onClick={() => close(modalId, 'saved')}>Save</button>
+          <button onClick={() => close(modalId, 'cancelled')}>Cancel</button>
+        </div>
+      ),
+    });
+
+    console.log(result);
+  };
+
+  return <button onClick={handleOpen}>Open Modal</button>;
+}
+```
+
+## 3. Switch transport only when you need it
+
+Inline is the default and usually the best choice for animation control.
+
+```tsx
+await display({
+  id: 'top-layer-modal',
+  transport: 'top-layer',
+  children: <SettingsDialog />,
+});
+```
+
+## 4. Use position when center is not enough
+
+```tsx
+await display({
+  id: 'corner-modal',
+  position: 'bottom-right',
+  children: <MiniPanel />,
+});
+```
+
+## What to read next
+
+- Read [Mental Model](./mental-model) if you want to understand why modal resolves after removal.
+- Read [API Reference](./api) if you want the exact props and exports.
+- Read [Patterns](./patterns) if your next step is global facade usage, result handling, or transport choice.

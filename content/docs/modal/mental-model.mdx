@@ -1,0 +1,61 @@
+---
+title: Mental Model
+description: The conceptual split between modal policy and overlay presence.
+---
+
+# Mental Model
+
+`@ilokesto/modal` is easiest to understand if you keep three layers in your head:
+
+- the command surface (`useModal()` or `modal`)
+- the modal policy layer
+- the overlay-backed presence lifecycle
+
+## Grunfeld-inspired philosophy
+
+This package follows the same core idea Grunfeld had: a modal is not just “visible UI,” it is an interaction flow that can return a result.
+
+That is why `display()` is the center of the API.
+
+## Modal policy stays in `@modal`
+
+`@modal` owns:
+
+- light dismiss rules
+- focus restore and simple trapping
+- inline scroll lock
+- inline vs top-layer transport choice
+- backdrop behavior
+- position mapping
+- open/close animation policy
+
+## Overlay owns only presence lifecycle
+
+`@ilokesto/overlay` does not become a modal package. It only owns:
+
+- open
+- closing
+- remove
+- promise settlement timing tied to actual removal
+
+That separation is what lets modal keep content mounted during exit motion.
+
+## Why results resolve after removal
+
+If the promise resolved at the first close request, caller code would continue while the modal was still animating out and before focus restoration finished.
+
+Instead, the lifecycle is:
+
+1. open
+2. close → `status = 'closing'`
+3. remove
+4. resolve awaited result
+
+This is the most important mental difference from a plain boolean `isOpen` modal.
+
+## Inline vs top-layer
+
+- `inline` is the default because it offers the best animation control
+- `top-layer` is a native `<dialog>` path for cases where browser top-layer behavior matters more than styling freedom
+
+If you want the exact public surface next, read [API Reference](./api). If you want practical usage patterns, go to [Patterns](./patterns).

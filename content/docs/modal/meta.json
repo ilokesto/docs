@@ -1,0 +1,16 @@
+{
+  "title": "Modal",
+  "root": true,
+  "pages": [
+    "index",
+    "---Introduction---",
+    "quick-start",
+    "mental-model",
+    "---Reference---",
+    "api",
+    "---Guides---",
+    "patterns",
+    "---Advanced---",
+    "implementation-notes"
+  ]
+}

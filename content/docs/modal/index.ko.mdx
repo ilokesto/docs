@@ -1,0 +1,87 @@
+---
+title: Introduction
+description: "@ilokesto/overlay 위에 구축된 프로미스 기반 modal 패키지."
+---
+
+# @ilokesto/modal
+
+`@ilokesto/modal`은 `@ilokesto/overlay` 위에 구축된 React modal 패키지로, Grunfeld의 awaitable dialog 철학을 유지하면서 기본 open/close motion을 더 부드럽게 만든 패키지입니다.
+
+## 이 패키지가 주는 것
+
+- `display()`를 통해 `await` 가능한 modal flow
+- `useModal()` 기반 React hook surface
+- 기본 store를 사용하는 module-level `modal` facade
+- 더 부드러운 fade/scale motion이 들어간 기본 inline transport
+- `<dialog>` 기반 optional native top-layer transport
+- focus restore, 간단한 tab trap, light dismiss, inline scroll lock 내장
+
+## 의도적으로 주지 않는 것
+
+- 아직은 고수준 confirm/alert helper API 없음
+- opinionated panel component나 디자인 시스템 스킨 없음
+- result와 함께 닫히는 경우 content에서 stable `id`가 자주 필요하다는 사실을 숨기지 않음
+
+## Quick Look
+
+```tsx
+import { ModalProvider, useModal } from '@ilokesto/modal';
+
+function ConfirmDialog({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div role="document">
+      <h2>Delete item?</h2>
+      <button onClick={onCancel}>Cancel</button>
+      <button onClick={onConfirm}>Delete</button>
+    </div>
+  );
+}
+
+function Page() {
+  const { display, close } = useModal();
+
+  const handleClick = async () => {
+    const modalId = 'delete-confirm';
+
+    const result = await display<boolean>({
+      id: modalId,
+      dismissible: true,
+      children: (
+        <ConfirmDialog
+          onConfirm={() => close(modalId, true)}
+          onCancel={() => close(modalId, false)}
+        />
+      ),
+    });
+
+    console.log(result);
+  };
+
+  return <button onClick={handleClick}>Open Modal</button>;
+}
+
+export function App() {
+  return (
+    <ModalProvider>
+      <Page />
+    </ModalProvider>
+  );
+}
+```
+
+## Start Here
+
+- [Quick Start](./quick-start): 가장 빠르게 첫 modal을 띄우는 방법
+- [Mental Model](./mental-model): overlay presence와 modal policy가 어떻게 나뉘는지
+- [API Reference](./api): 현재 public surface 전체
+
+## Go Deeper
+
+- [Patterns](./patterns): stable id closing, global facade 사용, transport 선택
+- [Implementation Notes](./implementation-notes): promise settlement, top-layer 동작, focus 세부 사항

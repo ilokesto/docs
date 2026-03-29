@@ -1,0 +1,83 @@
+---
+title: Quick Start
+description: "가장 빠르게 동작하는 modal flow를 만드는 방법."
+---
+
+# Quick Start
+
+이 페이지는 가장 적은 맥락으로 첫 modal flow를 화면에 띄우는 방법을 설명합니다.
+
+```package-install
+@ilokesto/modal
+```
+
+## 1. `ModalProvider`를 마운트합니다
+
+`useModal()`과 global `modal` facade는 모두 mounted provider가 필요합니다.
+
+```tsx
+import { ModalProvider } from '@ilokesto/modal';
+
+function App() {
+  return <ModalProvider>{/* your app */}</ModalProvider>;
+}
+```
+
+## 2. `display()`로 modal을 엽니다
+
+가장 실용적인 패턴은 stable `id`를 주고, content에서 `close(id, result)`를 호출하는 방식입니다.
+
+```tsx
+import { useModal } from '@ilokesto/modal';
+
+function Page() {
+  const { display, close } = useModal();
+
+  const handleOpen = async () => {
+    const modalId = 'settings-modal';
+
+    const result = await display<string>({
+      id: modalId,
+      dismissible: true,
+      children: (
+        <div>
+          <button onClick={() => close(modalId, 'saved')}>Save</button>
+          <button onClick={() => close(modalId, 'cancelled')}>Cancel</button>
+        </div>
+      ),
+    });
+
+    console.log(result);
+  };
+
+  return <button onClick={handleOpen}>Open Modal</button>;
+}
+```
+
+## 3. 정말 필요할 때만 transport를 바꿉니다
+
+inline이 기본값이며, animation 제어 측면에서도 보통 가장 좋은 선택입니다.
+
+```tsx
+await display({
+  id: 'top-layer-modal',
+  transport: 'top-layer',
+  children: <SettingsDialog />,
+});
+```
+
+## 4. center 말고 다른 위치가 필요하면 `position`을 씁니다
+
+```tsx
+await display({
+  id: 'corner-modal',
+  position: 'bottom-right',
+  children: <MiniPanel />,
+});
+```
+
+## 다음으로 읽을 것
+
+- modal이 왜 remove 뒤에 resolve되는지 알고 싶다면 [Mental Model](./mental-model)
+- 정확한 props와 exports를 보고 싶다면 [API Reference](./api)
+- global facade, result 처리, transport 선택이 다음 단계라면 [Patterns](./patterns)

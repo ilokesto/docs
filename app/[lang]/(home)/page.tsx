@@ -18,6 +18,9 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         <Link href={`/${resolvedParams.lang}/overlay`} className="font-medium underline">
           @ilokesto/overlay
         </Link>
+        <Link href={`/${resolvedParams.lang}/modal`} className="font-medium underline">
+          @ilokesto/modal
+        </Link>
         <Link href={`/${resolvedParams.lang}/toast`} className="font-medium underline">
           @ilokesto/toast
         </Link>

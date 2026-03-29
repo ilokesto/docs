@@ -1,0 +1,56 @@
+# 헤드리스 사용 (Headless Usage)
+
+`useToaster` 훅을 사용하여 나만의 토스트 UI를 빌드하세요.
+
+## `useToaster()` 훅
+
+`useToaster` 훅은 반드시 `ToasterContext` 내에서 (`<Toaster />` 하위에서) 호출되어야 합니다. 토스트 목록과 개별 토스트 항목을 관리하기 위한 핸들러를 반환합니다.
+
+```tsx
+const { toasts, handlers } = useToaster();
+```
+
+### `toasts` (ToastItem[])
+
+이 런타임에서 관리하는 현재 토스트 목록입니다.
+
+### `handlers` (핸들러)
+
+- `updateHeight(id, height)`: 오프셋 계산을 위해 토스트의 측정된 높이를 런타임에 알립니다.
+- `startPause()`: 모든 자동 닫기 타이머를 일시 정지합니다.
+- `endPause()`: 모든 자동 닫기 타이머를 재개합니다.
+- `calculateOffset(id, options?)`: 위치, 간격, 형제 토스트들의 높이를 기반으로 특정 토스트의 픽셀 오프셋을 계산합니다.
+
+## 예제: 간단한 헤드리스 목록
+
+```tsx
+import { useToaster, toast } from '@ilokesto/toast';
+
+function MyCustomToastList() {
+  const { toasts, handlers } = useToaster();
+
+  return (
+    <div onMouseEnter={handlers.startPause} onMouseLeave={handlers.endPause}>
+      {toasts.map((t) => (
+        <div 
+          key={t.id} 
+          ref={(node) => {
+            if (node) handlers.updateHeight(t.id, node.offsetHeight);
+          }}
+        >
+          {t.message}
+          <button onClick={() => toast.dismiss(t.id)}>X</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## `useToastItems()`
+
+데이터(단순 `ToastItem` 목록)만 필요한 경우 `useToastItems()` 훅을 사용하세요. 이는 토스트 스토어에 대한 간단한 구독입니다.
+
+```ts
+const toasts = useToastItems('my-toaster-id');
+```

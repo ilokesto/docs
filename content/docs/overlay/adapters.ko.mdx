@@ -1,0 +1,113 @@
+---
+title: 어댑터
+description: overlay type가 component로 해석되는 방식과 adapter prop 흐름.
+---
+
+# 어댑터
+
+어댑터는 `@ilokesto/overlay`의 표현 계층입니다. runtime은 item을 저장하지만, adapter가 그 item이 실제로 어떻게 보일지를 결정합니다.
+
+## `type`이 라우팅 키다
+
+모든 overlay item은 `type: string`을 가집니다. `OverlayHost`는 현재 item 목록을 읽고 다음처럼 렌더링 대상을 찾습니다.
+
+```ts
+const Adapter = adapters[item.type];
+```
+
+이게 라우팅 규칙의 전부입니다.
+
+## adapter가 받는 props
+
+adapter는 두 종류의 prop을 한 번에 받습니다.
+
+1. overlay system이 주는 runtime prop
+2. item에 저장된 custom prop
+
+runtime prop은 다음과 같습니다.
+
+- `id`
+- `isOpen`
+- `status`
+- `close(result?)`
+- `remove()`
+
+이것들이 `OverlayRenderProps`에서 오는 값입니다.
+
+## 가장 작은 adapter 예제
+
+```tsx
+import type { OverlayAdapterComponent } from '@ilokesto/overlay';
+
+type ConfirmProps = {
+  title: string;
+};
+
+const ConfirmDialog: OverlayAdapterComponent<boolean> = ({
+  status,
+  close,
+  remove,
+  ...props
+}) => {
+  const { title } = props as ConfirmProps;
+
+  return (
+    <div data-status={status} role="dialog" aria-modal="true">
+      <h1>{title}</h1>
+      <button onClick={() => close(true)}>확인</button>
+      <button onClick={() => close(false)}>취소</button>
+      <button onClick={remove}>강제 제거</button>
+    </div>
+  );
+};
+```
+
+## adapter 안에서 `close()`와 `remove()`의 차이
+
+- `close(result)`는 정상적인 완료 경로이고
+- `remove()`는 즉시 삭제 경로입니다
+
+exit animation을 원한다면 보통 `close()`가 더 자연스럽습니다. item이 먼저 `closing` 상태가 된 뒤 나중에 제거될 수 있기 때문입니다.
+
+## adapter가 없을 때의 동작
+
+`OverlayHost`가 `adapters[item.type]`를 찾지 못하면 그 item에 대해서는 `null`을 렌더링합니다.
+
+즉:
+
+- fallback UI도 없고,
+- 자동 오류도 없고,
+- item은 닫거나 제거하거나 clear할 때까지 store에 남아 있습니다.
+
+그래서 adapter map은 장식이 아니라 앱 wiring의 일부라고 생각하는 편이 맞습니다.
+
+## adapter map의 형태
+
+```ts
+type OverlayAdapterMap = Readonly<Record<string, OverlayAdapterComponent>>;
+```
+
+실제로는 평범한 객체 하나면 충분합니다.
+
+```ts
+const adapters = {
+  confirm: ConfirmDialog,
+  drawer: SettingsDrawer,
+  popover: HelpPopover,
+};
+```
+
+## adapter는 작게 유지하는 편이 좋다
+
+adapter는 표현과 lifecycle 반응에 집중하는 편이 좋습니다.
+
+가능하면 다음 같은 무거운 정책은 바깥으로 빼세요.
+
+- focus trap
+- scroll lock
+- 도메인 전용 side effect
+- deduplication rule
+
+이런 것은 generic overlay core보다, 그 의미를 실제로 소유한 상위 패키지나 앱 계층에 두는 편이 맞습니다.
+
+다음 질문이 “실제 앱 패턴은 어떤 모양인가?”라면 [패턴](./patterns)으로 이어서 읽으면 됩니다.

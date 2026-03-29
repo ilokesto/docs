@@ -1,0 +1,56 @@
+# Headless Usage
+
+Build your own toast UI using the `useToaster` hook.
+
+## `useToaster()` Hook
+
+The `useToaster` hook must be called within a `ToasterContext` (under a `<Toaster />`). It returns the toast list and handlers for managing individual toast items.
+
+```tsx
+const { toasts, handlers } = useToaster();
+```
+
+### `toasts` (ToastItem[])
+
+The current list of toasts managed by this runtime.
+
+### `handlers`
+
+- `updateHeight(id, height)`: Inform the runtime about a toast's measured height for offset calculations.
+- `startPause()`: Pause all auto-dismiss timers.
+- `endPause()`: Resume all auto-dismiss timers.
+- `calculateOffset(id, options?)`: Calculate the pixel offset for a given toast based on its position, gutter, and sibling heights.
+
+## Example: Simple Headless List
+
+```tsx
+import { useToaster, toast } from '@ilokesto/toast';
+
+function MyCustomToastList() {
+  const { toasts, handlers } = useToaster();
+
+  return (
+    <div onMouseEnter={handlers.startPause} onMouseLeave={handlers.endPause}>
+      {toasts.map((t) => (
+        <div 
+          key={t.id} 
+          ref={(node) => {
+            if (node) handlers.updateHeight(t.id, node.offsetHeight);
+          }}
+        >
+          {t.message}
+          <button onClick={() => toast.dismiss(t.id)}>X</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## `useToastItems()`
+
+If you only need the data (the list of `ToastItem`), use the `useToastItems()` hook. This is a simple subscription to the toast store.
+
+```ts
+const toasts = useToastItems('my-toaster-id');
+```

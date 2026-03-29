@@ -1,0 +1,113 @@
+---
+title: Adapters
+description: How overlay types resolve to components and how adapter props flow.
+---
+
+# Adapters
+
+Adapters are the presentation layer of `@ilokesto/overlay`. The runtime stores items, but adapters decide what those items actually look like.
+
+## `type` is the routing key
+
+Every overlay item has a `type: string`. `OverlayHost` reads the current item list and renders:
+
+```ts
+const Adapter = adapters[item.type];
+```
+
+That is the entire routing rule.
+
+## What an adapter receives
+
+An adapter gets two sets of props at once:
+
+1. runtime props from the overlay system
+2. the custom props stored on the item itself
+
+The runtime props are:
+
+- `id`
+- `isOpen`
+- `status`
+- `close(result?)`
+- `remove()`
+
+Those come from `OverlayRenderProps`.
+
+## Minimal adapter example
+
+```tsx
+import type { OverlayAdapterComponent } from '@ilokesto/overlay';
+
+type ConfirmProps = {
+  title: string;
+};
+
+const ConfirmDialog: OverlayAdapterComponent<boolean> = ({
+  status,
+  close,
+  remove,
+  ...props
+}) => {
+  const { title } = props as ConfirmProps;
+
+  return (
+    <div data-status={status} role="dialog" aria-modal="true">
+      <h1>{title}</h1>
+      <button onClick={() => close(true)}>Confirm</button>
+      <button onClick={() => close(false)}>Cancel</button>
+      <button onClick={remove}>Force remove</button>
+    </div>
+  );
+};
+```
+
+## `close()` vs `remove()` inside an adapter
+
+- `close(result)` is the normal completion path
+- `remove()` is the immediate deletion path
+
+If you want exit animation, `close()` is usually the correct operation because it leaves the item in `closing` state before later removal.
+
+## Missing adapter behavior
+
+If `OverlayHost` cannot find `adapters[item.type]`, it renders `null` for that item.
+
+That means:
+
+- there is no fallback UI,
+- there is no automatic error,
+- and the item still remains in the store until it is closed, removed, or cleared.
+
+This is one reason adapter maps should be treated as part of app wiring, not as optional decoration.
+
+## Adapter map shape
+
+```ts
+type OverlayAdapterMap = Readonly<Record<string, OverlayAdapterComponent>>;
+```
+
+In practice, that means a plain object is enough.
+
+```ts
+const adapters = {
+  confirm: ConfirmDialog,
+  drawer: SettingsDrawer,
+  popover: HelpPopover,
+};
+```
+
+## When to keep adapters small
+
+An adapter should focus on presentation and lifecycle response.
+
+Keep heavy policy outside when possible:
+
+- focus trap
+- scroll lock
+- domain-specific side effects
+- deduplication rules
+
+Those belong in the package or app layer that owns the semantics, not in the generic overlay core.
+
+If your next question is “what does a real app pattern look like?”, continue to [Patterns](./patterns).

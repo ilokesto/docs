@@ -1,0 +1,61 @@
+---
+title: Implementation Notes
+description: Internal lifecycle, snapshots, and promise settlement details.
+---
+
+# Implementation Notes
+
+This page is about the current implementation details that matter to power users.
+
+## Store shape
+
+Internally, the runtime is a `Store<OverlayState>` where state looks like:
+
+```ts
+{ items: OverlayItem[] }
+```
+
+Each item contains:
+
+- `id`
+- `type`
+- `props`
+- `status`
+- `createdAt`
+
+## Promise settlement path
+
+`createOverlayStore()` keeps a `pendingResolvers` map keyed by overlay id.
+
+- `open()` creates an item and a pending promise
+- `close()` settles that promise with the provided result
+- `remove()` settles with `undefined` only if the item was not already closing
+- `clear()` settles every pending promise with `undefined`
+
+That means promise settlement is tied to item lifecycle, not just rendering.
+
+## Lifecycle path
+
+The current item flow is:
+
+1. `open()` adds `{ status: 'open' }`
+2. `close()` changes status to `closing`
+3. `remove()` deletes the item from the store
+
+`close()` and `remove()` are separate on purpose.
+
+## Provider and host wiring
+
+`OverlayProvider` creates a store if one is not passed, provides `{ store, adapters }` through context, and mounts `OverlayHost` after `children`.
+
+That default host mounting means a normal app usually does not need to render `OverlayHost` manually.
+
+## Snapshot path
+
+`useOverlayItems()` uses `useSyncExternalStore` with:
+
+- `store.subscribe`
+- `store.getSnapshot`
+- `store.getInitialSnapshot`
+
+So the low-level read path is already aligned with React's external-store subscription model.

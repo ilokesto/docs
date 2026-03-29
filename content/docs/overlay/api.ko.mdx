@@ -1,0 +1,128 @@
+---
+title: API 레퍼런스
+description: 공개 runtime, provider, host, hook, export type.
+---
+
+# API 레퍼런스
+
+`@ilokesto/overlay`는 루트 엔트리포인트에서 작은 공개 표면만 내보냅니다.
+
+## 값 export
+
+### `createOverlayStore()`
+
+새 overlay runtime store를 생성합니다.
+
+```ts
+function createOverlayStore(): OverlayStoreApi;
+```
+
+반환된 store는 overlay item, pending resolver, 그리고 React가 구독에 쓰는 snapshot 인터페이스를 소유합니다.
+
+### `OverlayProvider`
+
+overlay runtime과 adapters를 React 트리에 제공합니다.
+
+```tsx
+<OverlayProvider adapters={adapters} store={optionalStore}>
+  {children}
+</OverlayProvider>
+```
+
+- `adapters`는 필수
+- `store`는 선택 사항
+- `OverlayHost`는 `children` 뒤에 자동으로 마운트됩니다
+
+### `OverlayHost`
+
+현재 item 목록을 읽고 각 item을 `adapters[item.type]`로 위임해 렌더링합니다.
+
+주어진 `type`에 대한 adapter가 없으면 그 item은 `null`로 렌더링됩니다.
+
+### `useOverlay()`
+
+명령형 API를 반환합니다.
+
+```ts
+const { display, open, close, remove, clear } = useOverlay();
+```
+
+#### `display<TResult>(options)`
+
+```ts
+display<TResult>(options: DisplayOptions): Promise<TResult | undefined>
+```
+
+`open()`의 promise-only wrapper입니다.
+
+#### `open(options)`
+
+```ts
+open(options: DisplayOptions): OverlayId
+```
+
+hook 레벨에서는 `open()`이 `id`만 반환합니다. 내부 store-level `open()`은 `{ id, promise }`를 반환하지만, `useOverlay().open()`은 id 중심 convenience form만 노출합니다.
+
+#### `close(id, result?)`
+
+item을 `closing`으로 표시하고, 대기 중인 promise를 `result`로 resolve합니다.
+
+#### `remove(id?)`
+
+item을 즉시 제거합니다. item이 아직 closing이 아니었다면 먼저 `undefined`로 promise를 resolve합니다.
+
+`id`를 생략하면 가장 최근 item을 제거합니다.
+
+#### `clear()`
+
+대기 중인 모든 overlay를 `undefined`로 resolve하고 목록을 비웁니다.
+
+### `useOverlayItems()`
+
+`useSyncExternalStore`를 통해 현재 item 목록을 구독합니다.
+
+```ts
+function useOverlayItems(): ReadonlyArray<OverlayItem>
+```
+
+## 타입
+
+### `DisplayOptions`
+
+```ts
+type DisplayOptions = {
+  id?: OverlayId;
+  type: string;
+  props?: Record<string, unknown>;
+}
+```
+
+### `OverlayItem`
+
+```ts
+type OverlayItem = {
+  id: OverlayId;
+  type: string;
+  props: Readonly<Record<string, unknown>>;
+  status: 'open' | 'closing';
+  createdAt: number;
+}
+```
+
+### adapter 관련 타입
+
+- `OverlayRenderProps`
+- `OverlayAdapterComponent`
+- `OverlayAdapterMap`
+
+### runtime 관련 타입
+
+- `OverlayId`
+- `OverlayStatus`
+- `OverlayState`
+- `OverlayStoreApi`
+- `OverlayProviderProps`
+- `OverlayRequest`
+- `UseOverlayReturn`
+
+adapter가 이 타입을 실제로 어떻게 소비하는지 보려면 [어댑터](./adapters)로 이어서 읽으면 됩니다.

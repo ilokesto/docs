@@ -1,0 +1,62 @@
+# 패턴 (Patterns)
+
+`@ilokesto/toast`의 고급 사용 패턴입니다.
+
+## 프로미스 토스트 (Promise Toasts)
+
+모든 `Promise` 또는 `Promise`를 반환하는 함수를 처리할 수 있습니다. 동일한 토스트가 로딩, 성공, 오류 상태에 따라 자동으로 업데이트됩니다.
+
+```ts
+const myPromise = fetchData();
+
+toast.promise(myPromise, {
+  loading: '데이터를 가져오는 중...',
+  success: (data) => `${data.name}를 불러왔습니다!`,
+  error: '데이터를 가져오지 못했습니다.',
+});
+```
+
+## 커스텀 행 렌더링 (Custom Row Rendering)
+
+`toast.custom()`에 커스텀 컴포넌트를 전달하거나 `ToastBar`의 `children` 렌더 프롭을 사용하여 기본 `ToastBar` 로직을 대체할 수 있습니다.
+
+```tsx
+toast.custom((t) => (
+  <div style={{ background: '#333', color: '#fff', padding: '16px' }}>
+    완전한 커스텀 토스트입니다!
+    <button onClick={() => toast.dismiss(t.id)}>닫기</button>
+  </div>
+));
+```
+
+## 개별 토스트 스타일 및 테마
+
+모든 토스트 호출은 자신만의 `style`, `className`, `iconTheme`을 가질 수 있습니다.
+
+```ts
+toast.success('삭제됨!', {
+  style: { background: 'red', color: 'white' },
+  iconTheme: { primary: 'white', secondary: 'red' },
+});
+```
+
+## 다중 토스터 (Multiple Toasters)
+
+`toasterId`를 사용하여 `toast()` 호출을 특정 `Toaster`에 연결할 수 있습니다.
+
+```tsx
+// 레이아웃에서
+<Toaster toasterId="workspace-alerts" />
+
+// 다른 곳에서
+toast.success('업데이트 준비됨', { toasterId: 'workspace-alerts' });
+```
+
+## 모두 닫기 및 제거
+
+ID를 생략하면 `dismiss()`와 `remove()`가 대상 런타임의 모든 활성 토스트에 영향을 미칩니다.
+
+```ts
+toast.dismiss(); // 모두 닫기
+toast.remove();  // 즉시 모두 제거
+```

@@ -1,0 +1,17 @@
+{
+  "title": "Overlay",
+  "root": true,
+  "pages": [
+    "index",
+    "---Introduction---",
+    "quick-start",
+    "mental-model",
+    "---Reference---",
+    "api",
+    "adapters",
+    "---Guides---",
+    "patterns",
+    "---Advanced---",
+    "implementation-notes"
+  ]
+}

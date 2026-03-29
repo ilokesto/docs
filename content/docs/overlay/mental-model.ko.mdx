@@ -1,0 +1,59 @@
+---
+title: 멘탈 모델
+description: overlay runtime, adapter, promise를 이해하는 개념적 틀.
+---
+
+# 멘탈 모델
+
+`@ilokesto/overlay`는 세 가지를 분리해서 생각하면 가장 이해하기 쉽습니다.
+
+- **runtime**
+- **adapter**
+- **result promise**
+
+## provider-scoped runtime
+
+이 runtime은 전역 싱글턴이 아닙니다. 가장 가까운 `OverlayProvider`에 속합니다.
+
+즉 필요하다면 한 앱 안에서도 서로 독립적인 overlay 시스템을 둘 수 있습니다.
+
+## headless semantics
+
+코어 패키지는 “modal”이나 “toast”라는 의미를 알지 못합니다. 오직 다음만 압니다.
+
+- `type`
+- `props`
+- `status`
+- store가 관리하는 lifecycle
+
+보이는 방식은 전부 adapter로 밀어냅니다.
+
+## promise 기반 오프닝
+
+가장 중요한 동작은 overlay를 여는 것이 promise를 만들 수 있다는 점입니다.
+
+- `open()`은 `{ id, promise }`를 반환하고
+- `display()`는 promise만 반환합니다
+
+그래서 confirmation 같은 흐름을 자연스럽게 쓸 수 있습니다.
+
+## 코어는 lifecycle을, adapter는 표현을 맡는다
+
+runtime은 item이 언제 `open`이고, 언제 `closing`이 되고, 언제 제거되는지를 결정합니다.
+
+adapter는 그 상태가 화면에서 어떻게 보일지를 결정합니다.
+
+## `closing`은 의미가 있다
+
+`close()`는 item을 즉시 삭제하지 않습니다. item을 `closing`으로 바꾸고 promise를 resolve합니다.
+
+덕분에 adapter는 `remove()` 전에 transition window를 가질 수 있습니다.
+
+## 왜 이 패키지는 generic하게 남아 있나
+
+코어가 generic하기 때문에 상위 패키지가 같은 runtime 위에 다른 의미를 얹을 수 있습니다.
+
+- modal 계층은 focus trap, backdrop 같은 정책을 맡고
+- toast 계층은 timer, stacking 같은 정책을 맡을 수 있습니다.
+
+정확한 공개 표면을 보고 싶다면 [API 레퍼런스](./api), adapter 메커니즘이 궁금하다면 [어댑터](./adapters)를 읽으면 됩니다.

@@ -1,0 +1,90 @@
+---
+title: Quick Start
+description: The shortest path to a working overlay runtime.
+---
+
+# Quick Start
+
+This page gets one overlay working as quickly as possible. The goal is to define one adapter, mount one provider, call `display()`, and understand what value comes back.
+
+```package-install
+@ilokesto/overlay
+```
+
+## 1. Define one adapter
+
+An adapter is a React component mapped to a `type` string.
+
+```tsx
+import type { OverlayAdapterMap } from '@ilokesto/overlay';
+
+const adapters: OverlayAdapterMap = {
+  confirm: ({ close, props }) => {
+    const title = String((props as { title?: string }).title ?? 'Confirm');
+
+    return (
+      <div role="dialog" aria-modal="true">
+        <h1>{title}</h1>
+        <button onClick={() => close(true)}>Confirm</button>
+        <button onClick={() => close(false)}>Cancel</button>
+      </div>
+    );
+  },
+};
+```
+
+## 2. Mount the provider
+
+`OverlayProvider` owns the store context and automatically mounts `OverlayHost` after its children.
+
+```tsx
+import { OverlayProvider } from '@ilokesto/overlay';
+
+function App() {
+  return (
+    <OverlayProvider adapters={adapters}>
+      <Page />
+    </OverlayProvider>
+  );
+}
+```
+
+## 3. Open an overlay and await the result
+
+`display()` is the simplest command. It returns only the promise.
+
+```tsx
+import { useOverlay } from '@ilokesto/overlay';
+
+function Page() {
+  const { display } = useOverlay();
+
+  const handleDelete = async () => {
+    const confirmed = await display<boolean>({
+      type: 'confirm',
+      props: { title: 'Delete this item?' },
+    });
+
+    if (confirmed) {
+      // perform delete
+    }
+  };
+
+  return <button onClick={handleDelete}>Delete</button>;
+}
+```
+
+## 4. Know what `close()` means
+
+When the adapter calls `close(result)`, two things happen:
+
+- the item status becomes `closing`
+- the pending promise resolves with `result`
+
+The item can still remain in the store afterward if you want an exit animation before removal.
+
+## What to read next
+
+- Read [Mental Model](./mental-model) if the provider/adapters/runtime split still feels abstract.
+- Read [Adapters](./adapters) if you want the exact prop contract.
+- Read [Patterns](./patterns) if your next use case is a confirmation dialog or a custom store.

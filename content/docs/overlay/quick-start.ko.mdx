@@ -19,12 +19,10 @@ adapter는 `type` 문자열에 매핑되는 React component입니다.
 import type { OverlayAdapterMap } from '@ilokesto/overlay';
 
 const adapters: OverlayAdapterMap = {
-  confirm: ({ close, props }) => {
-    const title = String((props as { title?: string }).title ?? 'Confirm');
-
+  confirm: ({ close, title }) => {
     return (
       <div role="dialog" aria-modal="true">
-        <h1>{title}</h1>
+        <h1>{String(title ?? 'Confirm')}</h1>
         <button onClick={() => close(true)}>확인</button>
         <button onClick={() => close(false)}>취소</button>
       </div>

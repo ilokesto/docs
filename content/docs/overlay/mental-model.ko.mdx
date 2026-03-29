@@ -35,6 +35,8 @@ description: overlay runtime, adapter, promise를 이해하는 개념적 틀.
 - `open()`은 `{ id, promise }`를 반환하고
 - `display()`는 promise만 반환합니다
 
+다만 이 구분은 레벨에 따라 다릅니다. **store level**의 `open()`은 `{ id, promise }`를 반환하지만, **hook level**의 `useOverlay().open()`은 `id`만 반환하고 `display()`가 promise 경로를 담당합니다.
+
 그래서 confirmation 같은 흐름을 자연스럽게 쓸 수 있습니다.
 
 ## 코어는 lifecycle을, adapter는 표현을 맡는다

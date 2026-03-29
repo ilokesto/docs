@@ -1,80 +1,97 @@
+---
+title: API Reference
+description: Public facade, components, hooks, runtime, and exported types.
+---
+
 # API Reference
 
-Detailed information on the classes, components, and hooks provided by `@ilokesto/toast`.
+`@ilokesto/toast` exports named values only.
 
-## `toast` (Facade)
+## Values
 
-The main object used to show notifications. It routes your commands to the registered `Toaster` runtime.
+### `toast`
 
-```ts
-import { toast } from '@ilokesto/toast';
-
-toast('Hello World'); // default
-toast.success('Saved successfully!'); // success icon
-toast.error('Something went wrong.'); // error icon
-toast.loading('Saving...'); // loading icon, duration = Infinity
-toast.custom(<div>Custom toast</div>); // custom content
-```
-
-### Methods
-
-- `toast(message, options?)`: Shows a default (blank) toast.
-- `toast.success(message, options?)`: Shows a success toast.
-- `toast.error(message, options?)`: Shows an error toast.
-- `toast.loading(message, options?)`: Shows a loading toast with infinite duration.
-- `toast.custom(message, options?)`: Shows a custom toast.
-- `toast.promise(promise, messages, options?)`: Handles a promise and shows loading, success, and error toasts automatically.
-- `toast.dismiss(id?)`: Dismisses a toast (soft close). If no ID is provided, it dismisses all toasts.
-- `toast.remove(id?)`: Removes a toast (hard delete). If no ID is provided, it removes all toasts.
-
-## `createToastRuntime`
-
-Creates a new toast runtime. This is primarily used by the `Toaster` component internally.
+The facade surface:
 
 ```ts
-const runtime = createToastRuntime(toasterId, defaultOptions);
+toast(message, options?)
+toast.success(message, options?)
+toast.error(message, options?)
+toast.loading(message, options?)
+toast.custom(message, options?)
+toast.promise(promiseOrFactory, messages, options?)
+toast.dismiss(id?, toasterId?)
+toast.remove(id?, toasterId?)
 ```
 
-## `Toaster`
+Important behavior:
 
-The React component that renders the toasts for a specific runtime.
+- `toast.loading()` forces infinite duration
+- `toast.promise()` accepts either `Promise<T>` or `() => Promise<T>`
+- `dismiss()` is soft close
+- `remove()` is immediate
 
-```tsx
-<Toaster 
-  position="top-right" 
-  limit={20} 
-  gutter={8}
-  reverseOrder={false}
-  toastOptions={{ ... }}
-/>
-```
+### `Toaster`
 
-- See [Toaster Reference](./toaster) for more details.
+The main rendering component for one runtime.
 
-## `ToastBar`
+See [Toaster](./toaster) for full prop details.
 
-The default component used to render each toast's message and icon.
+### `ToastBar`
 
-- See [ToastBar Reference](./toast-bar) for more details.
+The default row renderer primitive.
 
-## `useToaster`
+See [ToastBar](./toast-bar) for details.
 
-A hook that provides the state and handlers for building your own custom toast UI.
+### `ToastIcon`
 
-- See [Headless Usage](./headless) for more details.
+The built-in icon renderer used by the default row.
 
-## `useToastItems`
+### `useToaster()`
 
-Returns the current list of toast items from the store.
+Headless hook returning:
 
 ```ts
-const items = useToastItems(toasterId?);
+{
+  toasts,
+  handlers: {
+    updateHeight,
+    startPause,
+    endPause,
+    calculateOffset,
+  }
+}
 ```
 
-## Exported Types
+### `useToastItems(runtime)`
 
-- `ToastItem`: The shape of a single toast in the store.
-- `ToastOptions`: Options for a single toast.
-- `ToasterProps`: Props for the `Toaster` component.
-- `ToastType`: `'success' | 'error' | 'loading' | 'blank' | 'custom'`.
-- `ToastStatus`: `'open' | 'closing'`.
+Low-level external-store subscription for visible toast items of a runtime.
+
+### `createToastRuntime(toasterId)`
+
+Creates one toast runtime instance.
+
+## Types
+
+The root package also exports these public types:
+
+- `ToastBarProps`
+- `Renderable`
+- `ToastId`
+- `ToasterId`
+- `ToastType`
+- `ToastStatus`
+- `ToastPosition`
+- `ToastTransport`
+- `ToastItem`
+- `ToastState`
+- `ToastOptions`
+- `DefaultToastOptions`
+- `IconTheme`
+- `ToastStoreApi`
+- `ToastFacade`
+- `ToasterProps`
+- `UseToasterResult`
+- `ToastRowHelpers`
+- `ToastRuntimeApi`
+- `PromiseToastMessages`

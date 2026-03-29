@@ -1,32 +1,56 @@
+---
+title: Mental Model
+description: The conceptual model behind facade, runtime, and presence lifecycle.
+---
+
 # Mental Model
 
-Understanding the architecture of `@ilokesto/toast`.
+`@ilokesto/toast` is easiest to understand if you keep three layers in your head:
 
-## 1. Runtime Registry by `toasterId`
+- the `toast` facade
+- the provider-scoped runtime
+- the overlay-backed presence lifecycle
 
-Toasts are not managed by a single global store. Instead, each `Toaster` component registers its own **runtime** in a registry. When you call `toast.success()`, the library looks up the correct runtime based on a `toasterId` (which defaults to `"default"`).
+## Runtime registry by `toasterId`
 
-This allows you to have multiple, independent toast areas in your application.
+There is no implicit global singleton. Each `Toaster` registers one runtime by `toasterId`.
 
-## 2. Facade/Runtime Split
+When you call `toast.success()`, the facade resolves the runtime from the registry first.
 
-The `toast` object you import is a **facade**. It doesn't hold any state itself. It simply routes your commands to the appropriate runtime. The runtime is responsible for managing the state of toasts for a specific `Toaster`.
+## Facade / runtime split
 
-## 3. Store + Overlay Presence Split
+The imported `toast` object does not own state. It only routes commands.
 
-Internally, each runtime uses two different stores:
-- A **Toast Store**: Manages the content, timers, and specific options for each toast.
-- An **Overlay Store**: Uses `@ilokesto/overlay` to manage the presence (mounting/unmounting) and lifecycle of the toast items.
+The runtime owns:
 
-## 4. Options Merge Order
+- item state
+- timers
+- dismiss/remove behavior
+- visible filtering
+- pause/resume behavior
 
-Toast options are merged in the following order:
-1. **Global Defaults**: Built-in defaults in the library.
-2. **Toaster Props**: Options passed to the `<Toaster toastOptions={...} />` component.
-3. **Type Defaults**: Options specific to the type of toast (e.g., `toastOptions.success`).
-4. **Per-toast Options**: Options passed directly to the `toast()` call.
+## Store plus overlay presence split
 
-## 5. Dismiss vs Remove
+Each runtime uses:
 
-- **Dismiss**: A "soft" close. It marks the toast as `closing`, stops timers, and triggers exit animations. The toast remains in the store for a short period (default 1000ms) before being hard-removed.
-- **Remove**: A "hard" delete. The toast is immediately removed from the store and the UI.
+- a toast store for toast data and timers
+- an overlay store for presence lifecycle only
+
+This is why toast rendering feels higher-level than overlay even though overlay still participates under the hood.
+
+## Options merge order
+
+The effective options are merged in this order:
+
+1. global `toastOptions`
+2. per-type `toastOptions.success/error/loading/blank/custom`
+3. per-toast call options
+
+## Dismiss vs remove
+
+- `dismiss()` is soft close + delayed removal
+- `remove()` is immediate deletion
+
+That distinction matters for animation and lifecycle timing.
+
+If you want the exact public surface next, read [API Reference](./api). If you want rendering details, go to [Toaster](./toaster).

@@ -1,42 +1,62 @@
+---
+title: Quick Start
+description: The shortest path to a working toaster and first notification.
+---
+
 # Quick Start
 
-Get `@ilokesto/toast` up and running in minutes.
+This page gets a working toast stack on screen with the minimum mental overhead.
 
-## Installation
+```package-install
+@ilokesto/toast
+```
 
-<package-install names={['@ilokesto/toast']} />
+## 1. Mount a `Toaster`
 
-## 1. Setup Toaster
-
-Mount the `<Toaster />` component at the root of your application (or near your main content).
+`toast.*` calls only work when a runtime has been registered. In practice that means you must mount a `<Toaster />`.
 
 ```tsx
 import { Toaster } from '@ilokesto/toast';
 
 function App() {
-  return (
-    <div>
-      {/* ... your content ... */}
-      <Toaster />
-    </div>
-  );
+  return <Toaster />;
 }
 ```
 
-## 2. Show a Toast
-
-Import the `toast` object and call any of its methods to show a notification.
+## 2. Call the facade
 
 ```tsx
 import { toast } from '@ilokesto/toast';
 
-function MyButton() {
-  const handleClick = () => {
-    toast.success('Successfully saved!');
-  };
-
-  return <button onClick={handleClick}>Save</button>;
-}
+toast.success('Saved successfully');
 ```
 
-That's it! By default, the toast will appear in the top-right corner of your screen and auto-dismiss after a few seconds.
+That is enough to show a toast in the default runtime.
+
+## 3. Use other built-in variants
+
+```tsx
+toast('Hello');
+toast.error('Something went wrong');
+toast.loading('Saving...');
+```
+
+`toast.loading()` uses infinite duration until something else updates or dismisses it.
+
+## 4. Promise toasts stay close to the common path
+
+```tsx
+toast.promise(fetch('/api/save'), {
+  loading: 'Saving…',
+  success: 'Saved',
+  error: 'Failed',
+});
+```
+
+The same toast id is reused across loading -> success/error transitions.
+
+## What to read next
+
+- Read [Mental Model](./mental-model) if you want to understand the runtime registry and `toasterId`.
+- Read [Toaster](./toaster) if you want to control position, limit, transport, or rendering.
+- Read [Patterns](./patterns) if your next step is promise flows, custom rows, or multiple toasters.

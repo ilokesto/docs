@@ -1,40 +1,61 @@
+---
+title: Toaster
+description: Runtime registration, stacking, transport, and row rendering.
+---
+
 # Toaster
 
-The `<Toaster />` component is the main rendering area for your toasts. It registers a runtime and listens for any `toast()` calls.
+`Toaster` is more than a visual container. It is the component that creates one runtime, registers it by `toasterId`, configures view options, and renders the current visible toast stack.
 
-## Props
+## Core props
 
-### `toasterId` (string, optional)
-Defaults to `"default"`. Used to link `toast()` calls to this specific renderer.
+- `toasterId?`
+- `position?`
+- `transport?`
+- `limit?`
+- `reverseOrder?`
+- `gutter?`
+- `containerStyle?`
+- `containerClassName?`
+- `toastOptions?`
+- `children?`
 
-### `position` (`ToastPosition`, optional)
-Defaults to `"top-right"`. Possible values:
-- `top-left`, `top-center`, `top-right`
-- `bottom-left`, `bottom-center`, `bottom-right`
+## Runtime registration
 
-### `limit` (number, optional)
-Defaults to `20`. The maximum number of toasts visible at once.
+`Toaster` gets its runtime from `useToasterRuntime(toasterId)`, and that runtime is registered into the global registry. That is why facade calls can later find it.
 
-### `reverseOrder` (boolean, optional)
-Defaults to `false`. If `true`, new toasts appear at the bottom of the stack.
+If no matching runtime is mounted for a given `toasterId`, the facade throws.
 
-### `gutter` (number, optional)
-Defaults to `8`. The spacing between toasts in pixels.
+## Position, limit, and order
 
-### `containerStyle` (React.CSSProperties, optional)
-Styles for the container that holds all toasts.
+- `position` filters which runtime items are visible in this rendered stack
+- `limit` caps the visible subset, not the raw store contents
+- `reverseOrder` only changes render ordering
+- `gutter` affects offset calculation between measured rows
 
-### `containerClassName` (string, optional)
-CSS class for the toast container.
+## `transport`
 
-### `toastOptions` (`DefaultToastOptions`, optional)
-Global options applied to all toasts shown by this renderer. This is where you set durations, themes, and styles globally.
+- `inline` renders in the normal React tree
+- `top-layer` uses manual popover when supported and falls back to inline otherwise
 
-### `transport` (`ToastTransport`, optional)
-Defaults to `"inline"`. 
-- `"inline"`: Renders toasts in the normal React tree.
-- `"top-layer"`: Renders toasts using the `popover` API to ensure they appear above all other elements.
+## `toastOptions`
 
-## Hover Pause
+`toastOptions` provides the global and per-type defaults for this runtime's view layer.
 
-By default, toasts will pause their dismiss timers when the user hovers over the `Toaster` container. This allows users to read long messages without them disappearing too quickly.
+These are merged before per-toast call options.
+
+## Custom row rendering
+
+If `children` is provided, `Toaster` uses that render function instead of rendering a plain `ToastBar` row.
+
+```tsx
+<Toaster>
+  {(toast, { dismiss }) => (
+    <button onClick={dismiss}>{toast.message}</button>
+  )}
+</Toaster>
+```
+
+## Hover pause
+
+The default container pauses runtime timers on mouse enter and resumes them on mouse leave.

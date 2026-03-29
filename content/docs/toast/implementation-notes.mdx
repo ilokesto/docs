@@ -1,28 +1,50 @@
+---
+title: Implementation Notes
+description: Runtime architecture, timers, registry, and overlay presence details.
+---
+
 # Implementation Notes
 
-Deep dive into the architecture of `@ilokesto/toast`.
+This page explains the current implementation details that matter when you need to understand how the runtime really behaves.
 
-## Runtime/Store Architecture
+## One runtime, several moving parts
 
-Each `Toaster` component creates its own `ToastRuntime`. This runtime manages:
-1. **Toast Store**: A central state containing `ToastItem` records.
-2. **Overlay Store**: An instance of `@ilokesto/overlay` used only to manage the mount lifecycle of the toast bars.
-3. **Timers**: Individual `setTimeout` calls for each toast's duration.
+Each `Toaster` creates one `ToastRuntimeApi` with:
 
-## Timers and Pause Logic
+- a toast store
+- an overlay store
+- dismiss timers
+- remove timers
+- a listener set
+- runtime-local view config
 
-When a toast is added, a timer is started based on its `duration`.
-- If the user hovers over the `Toaster`, `handlers.startPause()` is called, which clears all active timers and records the time remaining for each toast.
-- When the mouse leaves, `handlers.endPause()` restarts the timers with the remaining durations.
+## Registry lookup
 
-## Overlay Presence Mirror
+The facade never holds runtime state directly. It resolves a runtime by `toasterId` through the registry.
 
-The `ToastStore` and `OverlayStore` are kept in sync. When a toast is added to the `ToastStore`, an equivalent item is "opened" in the `OverlayStore`. When a toast is dismissed, it's "closed" in the `OverlayStore`. This allows us to use `@ilokesto/overlay`'s existing promise-based lifecycle for animations and cleanups.
+If no runtime is mounted, `requireRuntime()` throws.
 
-## Visibility Filtering
+## Overlay presence mirror
 
-The `limit` prop on `<Toaster />` doesn't remove older toasts from the store. Instead, it filters the `toasts` list returned by `useToaster()` to only show the most recent `N` items.
+When a toast is added, the runtime ensures matching presence in an overlay store using id reuse.
 
-## Top-layer Transport
+- add toast -> ensure overlay presence
+- dismiss toast -> close overlay presence
+- remove toast -> remove overlay presence
 
-When `transport="top-layer"` is used, the `Toaster` container is marked as a popover. This ensures the toasts are rendered in the browser's "top layer," appearing above all other elements regardless of their `z-index`.
+The overlay layer is used for presence lifecycle only, not for toast policy.
+
+## Timers and pause logic
+
+- visible toasts schedule dismiss timers based on duration minus accumulated pause duration
+- dismiss schedules delayed removal
+- hover pause clears dismiss timers and records pause start time
+- resume recomputes dismiss timing from the accumulated pause duration
+
+## Visible filtering
+
+`limit` and `position` are runtime view filters. They do not delete raw store entries.
+
+## Promise transitions
+
+`toast.promise()` creates a loading toast first, then reuses the same id for success or error.

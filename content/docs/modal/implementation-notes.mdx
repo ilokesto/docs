@@ -1,0 +1,44 @@
+---
+title: Implementation Notes
+description: Current transport, focus, and lifecycle details that matter to power users.
+---
+
+# Implementation Notes
+
+## Modal is policy, overlay is presence
+
+`@ilokesto/modal` does not build a second runtime like toast. It uses `@ilokesto/overlay` as the presence engine and keeps modal-specific policy in the modal package itself.
+
+## Promise settlement path
+
+The important lifecycle detail is:
+
+- open → overlay item enters as `open`
+- close → overlay item becomes `closing`
+- remove → overlay item is deleted
+- settle → awaited result resolves
+
+That means the caller continues only after exit motion and removal.
+
+## Inline transport details
+
+The inline adapter owns:
+
+- backdrop rendering
+- scroll lock with a small package-local counter
+- ESC and backdrop click handling
+- simple focus restore and tab trapping
+- position mapping through flex alignment
+
+## Top-layer transport details
+
+The top-layer adapter uses the native `<dialog>` element.
+
+- `showModal()` is used to enter the browser top layer
+- native `cancel` is mapped into modal dismiss logic
+- backdrop styling is applied through a scoped `<style>` targeting `::backdrop`
+- position is expressed through dialog margin styles
+
+## Reduced motion
+
+Both adapters fast-track removal when `prefers-reduced-motion` is enabled. They do not wait for a visual animation that the user explicitly asked the OS/browser to suppress.

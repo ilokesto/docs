@@ -1,0 +1,87 @@
+---
+title: Introduction
+description: A promise-based modal package built on top of @ilokesto/overlay.
+---
+
+# @ilokesto/modal
+
+`@ilokesto/modal` is a React modal package built on top of `@ilokesto/overlay`, following Grunfeld’s awaitable dialog philosophy while improving the default open and close motion.
+
+## What this package gives you
+
+- A modal flow you can `await` through `display()`
+- A React hook surface through `useModal()`
+- A module-level `modal` facade backed by a default store
+- Default inline transport with smoother fade/scale motion
+- Optional native top-layer transport through `<dialog>`
+- Built-in focus restore, simple tab trapping, light dismiss, and inline scroll lock
+
+## What it intentionally does not give you
+
+- No high-level confirm/alert helper API yet
+- No built-in opinionated panel component or design system skin
+- No attempt to hide that content usually needs a stable `id` when it closes with a result
+
+## Quick Look
+
+```tsx
+import { ModalProvider, useModal } from '@ilokesto/modal';
+
+function ConfirmDialog({
+  onConfirm,
+  onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div role="document">
+      <h2>Delete item?</h2>
+      <button onClick={onCancel}>Cancel</button>
+      <button onClick={onConfirm}>Delete</button>
+    </div>
+  );
+}
+
+function Page() {
+  const { display, close } = useModal();
+
+  const handleClick = async () => {
+    const modalId = 'delete-confirm';
+
+    const result = await display<boolean>({
+      id: modalId,
+      dismissible: true,
+      children: (
+        <ConfirmDialog
+          onConfirm={() => close(modalId, true)}
+          onCancel={() => close(modalId, false)}
+        />
+      ),
+    });
+
+    console.log(result);
+  };
+
+  return <button onClick={handleClick}>Open Modal</button>;
+}
+
+export function App() {
+  return (
+    <ModalProvider>
+      <Page />
+    </ModalProvider>
+  );
+}
+```
+
+## Start Here
+
+- [Quick Start](./quick-start): the shortest path to your first modal
+- [Mental Model](./mental-model): how overlay presence and modal policy split apart
+- [API Reference](./api): the exact public surface
+
+## Go Deeper
+
+- [Patterns](./patterns): stable id closing, global facade usage, and transport choice
+- [Implementation Notes](./implementation-notes): promise settlement, top-layer behavior, and focus details

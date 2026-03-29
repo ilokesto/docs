@@ -23,6 +23,13 @@ export const packageMetadata: Record<string, { colorClass: string; cssVarDark: s
     fgVarLight: 'hsl(0, 0%, 98%)',
     fgVarDark: 'hsl(0, 0%, 9%)',
   },
+  modal: {
+    colorClass: 'bg-indigo-500',
+    cssVarLight: 'var(--color-indigo-600)',
+    cssVarDark: 'var(--color-indigo-400)',
+    fgVarLight: 'hsl(0, 0%, 98%)',
+    fgVarDark: 'hsl(0, 0%, 9%)',
+  },
   toast: {
     colorClass: 'bg-violet-500',
     cssVarLight: 'var(--color-violet-600)',
@@ -85,6 +92,12 @@ export function getPackageTabs(lang: string): LayoutTab[] {
       description: 'Accessible overlay primitives',
       url: `/${lang}/overlay`,
       icon: <PackageIcon pkg="overlay" />,
+    },
+    {
+      title: 'Modal',
+      description: 'Promise-based dialogs with smooth motion',
+      url: `/${lang}/modal`,
+      icon: <PackageIcon pkg="modal" />,
     },
     {
       title: 'Toast',

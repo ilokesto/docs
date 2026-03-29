@@ -1,0 +1,98 @@
+---
+title: API Reference
+description: Public provider, hook, facade, and exported types.
+---
+
+# API Reference
+
+`@ilokesto/modal` exports named values only.
+
+## Values
+
+### `ModalProvider`
+
+Hosts modal rendering by wiring the modal adapter into `@ilokesto/overlay`.
+
+```tsx
+<ModalProvider>{children}</ModalProvider>
+```
+
+Optional prop:
+
+- `store?` → custom overlay store, otherwise the default global modal store is used
+
+### `useModal()`
+
+React command API returning:
+
+```ts
+{
+  open(options)
+  display<T>(options)
+  close(id, result?)
+  remove(id?)
+  clear()
+}
+```
+
+Important behavior:
+
+- `open()` returns an `id`
+- `display()` returns a promise
+- `close()` begins the closing phase
+- `remove()` force-removes the item
+
+### `modal`
+
+Module-level facade with the same command shape:
+
+```ts
+modal.open(options)
+modal.display<T>(options)
+modal.close(id, result?)
+modal.remove(id?)
+modal.clear()
+```
+
+### `globalModalStore`
+
+The default overlay store used by the facade and by `ModalProvider` when no custom store is passed.
+
+## Types
+
+### `ModalProps`
+
+Supported fields:
+
+- `children?: ReactNode`
+- `transport?: 'inline' | 'top-layer'`
+- `position?: ModalPosition`
+- `dismissible?: boolean`
+- `onDismiss?: () => void`
+- `className?: string`
+- `style?: React.CSSProperties`
+- `backdropClassName?: string`
+- `backdropStyle?: React.CSSProperties`
+- `autoFocus?: boolean`
+- `restoreFocus?: boolean`
+
+### `ModalPosition`
+
+```ts
+'center'
+| 'top'
+| 'bottom'
+| 'left'
+| 'right'
+| 'top-left'
+| 'top-right'
+| 'bottom-left'
+| 'bottom-right'
+```
+
+### Other exported types
+
+- `ModalProviderProps`
+- `UseModalOptions`
+- `ModalFacadeOptions`
+- `ModalAdapterProps`

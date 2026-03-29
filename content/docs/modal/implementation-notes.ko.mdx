@@ -1,0 +1,44 @@
+---
+title: Implementation Notes
+description: "power user에게 중요한 현재 transport, focus, lifecycle 세부 사항."
+---
+
+# Implementation Notes
+
+## modal은 policy, overlay는 presence
+
+`@ilokesto/modal`은 toast처럼 별도 runtime을 하나 더 만드는 대신, `@ilokesto/overlay`를 presence engine으로 쓰고 modal-specific policy는 modal 패키지 안에 둡니다.
+
+## Promise settlement 경로
+
+중요한 lifecycle detail은 다음과 같습니다.
+
+- open → overlay item이 `open`으로 들어감
+- close → overlay item이 `closing`이 됨
+- remove → overlay item이 실제로 삭제됨
+- settle → awaited result가 resolve됨
+
+즉 호출자는 exit motion과 remove가 끝난 뒤에야 다음 로직으로 넘어갑니다.
+
+## Inline transport 세부 사항
+
+inline adapter가 담당하는 것:
+
+- backdrop 렌더링
+- 작은 package-local counter 기반 scroll lock
+- ESC / backdrop click 처리
+- 간단한 focus restore 및 tab trap
+- flex alignment 기반 position mapping
+
+## Top-layer transport 세부 사항
+
+top-layer adapter는 네이티브 `<dialog>`를 사용합니다.
+
+- `showModal()`로 브라우저 top layer에 진입
+- native `cancel`을 modal dismiss logic으로 연결
+- `::backdrop`에 scoped `<style>`을 주입해 backdrop styling 적용
+- dialog margin style로 위치 지정
+
+## Reduced motion
+
+두 adapter 모두 `prefers-reduced-motion`이 켜져 있으면 remove를 빠르게 진행합니다. 사용자가 OS/browser 수준에서 animation 축소를 요청한 상황에서 시각적 animation 대기를 강제하지 않습니다.

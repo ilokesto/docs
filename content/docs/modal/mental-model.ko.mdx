@@ -1,0 +1,61 @@
+---
+title: Mental Model
+description: "modal policy와 overlay presence가 어떻게 나뉘는지에 대한 개념 모델."
+---
+
+# Mental Model
+
+`@ilokesto/modal`은 아래 세 레이어를 나눠서 보면 가장 이해하기 쉽습니다.
+
+- 명령 surface (`useModal()` 또는 `modal`)
+- modal policy layer
+- overlay-backed presence lifecycle
+
+## Grunfeld에서 가져온 철학
+
+이 패키지는 Grunfeld의 핵심 아이디어를 그대로 이어받습니다. modal은 단순히 “보이는 UI”가 아니라, 결과를 반환할 수 있는 상호작용 흐름이라는 점입니다.
+
+그래서 API의 중심도 `display()`입니다.
+
+## modal 정책은 `@modal`이 소유합니다
+
+`@modal`이 담당하는 것:
+
+- light dismiss 규칙
+- focus restore와 간단한 trap
+- inline scroll lock
+- inline vs top-layer transport 선택
+- backdrop 동작
+- position mapping
+- open/close animation 정책
+
+## overlay는 presence lifecycle만 소유합니다
+
+`@ilokesto/overlay`는 modal 패키지가 되지 않습니다. 오직 다음만 담당합니다.
+
+- open
+- closing
+- remove
+- 실제 remove 시점에 맞춘 promise settlement
+
+이 분리가 있기 때문에 modal content는 exit motion 동안 살아 있을 수 있습니다.
+
+## 왜 result는 remove 뒤에 resolve되는가
+
+첫 close 요청 시점에 promise를 resolve하면, 호출자 코드는 modal이 아직 사라지기 전에 계속 실행되고 focus restore도 끝나지 않은 상태가 됩니다.
+
+현재 lifecycle은 다음과 같습니다.
+
+1. open
+2. close → `status = 'closing'`
+3. remove
+4. awaited result resolve
+
+이게 단순한 boolean `isOpen` modal과 가장 크게 다른 개념입니다.
+
+## inline vs top-layer
+
+- `inline`은 기본값이며 animation 제어 측면에서 가장 유리합니다
+- `top-layer`는 브라우저 native `<dialog>` 경로로, styling 자유도보다 top-layer 동작 자체가 중요할 때 사용합니다
+
+다음으로 exact public surface를 보려면 [API Reference](./api), 실제 사용 패턴을 보려면 [Patterns](./patterns)를 읽으면 됩니다.

@@ -26,7 +26,12 @@ description: React를 위한 headless provider-scoped overlay runtime.
 import { OverlayProvider, useOverlay, type OverlayAdapterMap } from '@ilokesto/overlay';
 
 const adapters: OverlayAdapterMap = {
-  confirm: ({ close, props }) => null,
+  confirm: ({ close, title }) => (
+    <div role="dialog" aria-modal="true">
+      <h1>{String(title)}</h1>
+      <button onClick={() => close(true)}>확인</button>
+    </div>
+  ),
 };
 
 function Page() {

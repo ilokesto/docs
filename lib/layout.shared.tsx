@@ -16,6 +16,20 @@ export const packageMetadata: Record<string, { colorClass: string; cssVarDark: s
     fgVarLight: 'hsl(0, 0%, 98%)',
     fgVarDark: 'hsl(0, 0%, 9%)',
   },
+  overlay: {
+    colorClass: 'bg-cyan-500',
+    cssVarLight: 'var(--color-cyan-600)',
+    cssVarDark: 'var(--color-cyan-400)',
+    fgVarLight: 'hsl(0, 0%, 98%)',
+    fgVarDark: 'hsl(0, 0%, 9%)',
+  },
+  toast: {
+    colorClass: 'bg-violet-500',
+    cssVarLight: 'var(--color-violet-600)',
+    cssVarDark: 'var(--color-violet-400)',
+    fgVarLight: 'hsl(0, 0%, 98%)',
+    fgVarDark: 'hsl(0, 0%, 9%)',
+  },
   form: {
     colorClass: 'bg-red-500',
     cssVarLight: 'var(--color-red-600)',
@@ -65,6 +79,18 @@ export function getPackageTabs(lang: string): LayoutTab[] {
       description: 'React state hooks on top of @ilokesto/store',
       url: `/${lang}/state`,
       icon: <PackageIcon pkg="state" />,
+    },
+    {
+      title: 'Overlay',
+      description: 'Accessible overlay primitives',
+      url: `/${lang}/overlay`,
+      icon: <PackageIcon pkg="overlay" />,
+    },
+    {
+      title: 'Toast',
+      description: 'Lightweight toast notifications',
+      url: `/${lang}/toast`,
+      icon: <PackageIcon pkg="toast" />,
     },
     {
       title: 'Form',

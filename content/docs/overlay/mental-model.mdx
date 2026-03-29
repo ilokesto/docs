@@ -35,6 +35,8 @@ The most important behavior is that opening an overlay can produce a promise.
 - `open()` returns `{ id, promise }`
 - `display()` returns only the promise
 
+At the **store level**, `open()` returns `{ id, promise }`. At the **hook level**, `useOverlay().open()` returns only the `id`, while `display()` is the hook-level promise path.
+
 That is what makes confirmation-style flows feel natural.
 
 ## Core owns lifecycle, adapters own presentation

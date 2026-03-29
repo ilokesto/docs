@@ -1,37 +1,25 @@
-# 패턴 (Patterns)
+---
+title: 패턴
+description: promise, styling, multi-toaster의 실전 패턴.
+---
 
-`@ilokesto/toast`의 고급 사용 패턴입니다.
+# 패턴
 
-## 프로미스 토스트 (Promise Toasts)
+## promise toast
 
-모든 `Promise` 또는 `Promise`를 반환하는 함수를 처리할 수 있습니다. 동일한 토스트가 로딩, 성공, 오류 상태에 따라 자동으로 업데이트됩니다.
+가장 흔한 상위 패턴은 `toast.promise()`입니다.
 
 ```ts
-const myPromise = fetchData();
-
-toast.promise(myPromise, {
+toast.promise(fetchData(), {
   loading: '데이터를 가져오는 중...',
-  success: (data) => `${data.name}를 불러왔습니다!`,
+  success: (data) => `${data.name}를 불러왔습니다`,
   error: '데이터를 가져오지 못했습니다.',
 });
 ```
 
-## 커스텀 행 렌더링 (Custom Row Rendering)
+runtime은 loading -> success/error 동안 같은 toast id를 재사용합니다.
 
-`toast.custom()`에 커스텀 컴포넌트를 전달하거나 `ToastBar`의 `children` 렌더 프롭을 사용하여 기본 `ToastBar` 로직을 대체할 수 있습니다.
-
-```tsx
-toast.custom((t) => (
-  <div style={{ background: '#333', color: '#fff', padding: '16px' }}>
-    완전한 커스텀 토스트입니다!
-    <button onClick={() => toast.dismiss(t.id)}>닫기</button>
-  </div>
-));
-```
-
-## 개별 토스트 스타일 및 테마
-
-모든 토스트 호출은 자신만의 `style`, `className`, `iconTheme`을 가질 수 있습니다.
+## 개별 토스트 스타일링
 
 ```ts
 toast.success('삭제됨!', {
@@ -40,23 +28,38 @@ toast.success('삭제됨!', {
 });
 ```
 
-## 다중 토스터 (Multiple Toasters)
+하나의 토스트만 다른 모양이 필요할 때 적당한 수준입니다.
 
-`toasterId`를 사용하여 `toast()` 호출을 특정 `Toaster`에 연결할 수 있습니다.
+## 여러 toaster 함께 쓰기
 
 ```tsx
-// 레이아웃에서
-<Toaster toasterId="workspace-alerts" />
+<>
+  <Toaster toasterId="app" position="top-right" />
+  <Toaster toasterId="editor" position="bottom-center" />
+</>
 
-// 다른 곳에서
-toast.success('업데이트 준비됨', { toasterId: 'workspace-alerts' });
+toast.success('저장됨', { toasterId: 'editor' });
 ```
 
-## 모두 닫기 및 제거
+각 `toasterId`는 독립적인 runtime을 가집니다.
 
-ID를 생략하면 `dismiss()`와 `remove()`가 대상 런타임의 모든 활성 토스트에 영향을 미칩니다.
+## 모두 dismiss vs 모두 remove
 
 ```ts
-toast.dismiss(); // 모두 닫기
-toast.remove();  // 즉시 모두 제거
+toast.dismiss();
+toast.remove();
 ```
+
+id를 생략하면 해당 runtime의 active toast 전체에 적용됩니다.
+
+## `Toaster`를 통한 custom row
+
+```tsx
+<Toaster>
+  {(toast, { dismiss }) => (
+    <button onClick={dismiss}>{toast.message}</button>
+  )}
+</Toaster>
+```
+
+기본 presentation보다 row 제어가 더 중요할 때 이 경로가 맞습니다.

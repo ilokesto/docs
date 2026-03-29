@@ -1,41 +1,51 @@
-# Toast
+---
+title: Introduction
+description: A provider-scoped toast runtime and facade for React.
+---
 
-`@ilokesto/toast` is a provider-scoped toast runtime and facade that uses `@ilokesto/overlay` for its presence lifecycle. It offers a simple, promise-based API for showing temporary notifications.
+# @ilokesto/toast
 
-## What is this package?
+`@ilokesto/toast` is a React toast package built around a provider-scoped runtime and a familiar `toast.*` facade. Internally it uses `@ilokesto/overlay` only for presence lifecycle, while toast policy and rendering stay inside this package.
 
-A lightweight notification library for React. It follows the provider-scoped pattern, meaning you can have multiple toast regions in your app, each with its own configuration.
+## What this package gives you
 
-## What it gives you
+- A familiar facade: `toast()`, `toast.success()`, `toast.error()`, `toast.loading()`, `toast.custom()`, `toast.promise()`
+- Independent runtimes separated by `toasterId`
+- A default `Toaster` with built-in row rendering
+- Headless hooks for custom rendering
+- Optional `transport="top-layer"`
 
-- **Simple Facade**: Call `toast.success()`, `toast.error()`, etc., from anywhere.
-- **Provider-scoped**: Each `Toaster` is independent.
-- **Rich Defaults**: Beautiful icons and styles out of the box.
-- **Promise Support**: Easily handle loading, success, and error states for any promise.
-- **Headless Core**: Use `useToaster` to build your own custom toast UI.
+## What it intentionally does not give you
 
-## What it does not do
+- No global singleton that works without a mounted `Toaster`
+- No notification center or inbox model
+- No attempt to hide that a runtime registry exists behind the facade
 
-- **No Global Singleton**: Toasts are scoped to a `Toaster`. You must mount at least one `Toaster`.
-- **No Manual Lifecycle**: Toasts automatically dismiss and remove themselves based on duration.
-
-## Short Example
+## Quick Look
 
 ```tsx
 import { Toaster, toast } from '@ilokesto/toast';
 
 function App() {
   return (
-    <div>
+    <>
+      <button onClick={() => toast.success('Saved successfully')}>Show toast</button>
       <Toaster />
-      <button onClick={() => toast.success('Saved!')}>Save</button>
-    </div>
+    </>
   );
 }
 ```
 
-## Where to go next?
+## Start Here
 
-- [Quick Start](./quick-start): The shortest path to showing your first toast.
-- [Mental Model](./mental-model): Learn about the facade/runtime split and how it works with `@ilokesto/overlay`.
-- [Toaster Reference](./toaster): Detailed documentation for the `Toaster` component.
+- [Quick Start](./quick-start): the shortest path to showing your first toast
+- [Mental Model](./mental-model): facade/runtime split, `toasterId`, and overlay presence
+- [API Reference](./api): the exact public surface
+
+## Go Deeper
+
+- [Toaster](./toaster): runtime view props and rendering behavior
+- [ToastBar](./toast-bar): the default row primitive
+- [Headless Usage](./headless): `useToaster()` and `useToastItems()`
+- [Migration](./migration): practical move from `react-hot-toast`
+- [Implementation Notes](./implementation-notes): timers, registry, and overlay mirror details

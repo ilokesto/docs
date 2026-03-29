@@ -1,41 +1,51 @@
-# Toast (토스트)
+---
+title: 소개
+description: React를 위한 provider-scoped toast runtime과 facade.
+---
 
-`@ilokesto/toast`는 `@ilokesto/overlay`를 사용하여 생명주기를 관리하는 프로바이더 범위(provider-scoped)의 토스트 런타임 및 퍼사드(facade)입니다. 간단한 프로미스 기반 API를 통해 임시 알림을 표시할 수 있습니다.
+# @ilokesto/toast
 
-## 이 패키지는 무엇인가요?
+`@ilokesto/toast`는 provider-scoped runtime과 익숙한 `toast.*` facade 위에 세운 React toast 패키지입니다. 내부적으로는 `@ilokesto/overlay`를 presence lifecycle 용도로만 사용하고, toast 정책과 렌더링은 이 패키지 안에서 처리합니다.
 
-React를 위한 가벼운 알림 라이브러리입니다. 프로바이더 범위 패턴을 따르므로 애플리케이션 내에 고유한 설정을 가진 여러 토스트 영역을 가질 수 있습니다.
+## 이 패키지가 제공하는 것
 
-## 제공하는 기능
+- 익숙한 facade: `toast()`, `toast.success()`, `toast.error()`, `toast.loading()`, `toast.custom()`, `toast.promise()`
+- `toasterId`로 분리되는 독립 runtime
+- 기본 row 렌더링이 포함된 `Toaster`
+- custom rendering을 위한 headless hook
+- 선택적인 `transport="top-layer"`
 
-- **간단한 퍼사드**: 어디에서나 `toast.success()`, `toast.error()` 등을 호출할 수 있습니다.
-- **프로바이더 범위**: 각 `Toaster`는 독립적으로 작동합니다.
-- **풍부한 기본값**: 아름다운 아이콘과 스타일이 기본으로 제공됩니다.
-- **프로미스 지원**: 모든 프로미스에 대해 로딩, 성공, 오류 상태를 쉽게 처리할 수 있습니다.
-- **헤드리스 코어**: `useToaster`를 사용하여 나만의 커스텀 토스트 UI를 빌드할 수 있습니다.
+## 의도적으로 제공하지 않는 것
 
-## 의도적으로 하지 않는 것
+- mounted `Toaster` 없이 동작하는 전역 싱글턴
+- notification center나 inbox 모델
+- facade 뒤에 runtime registry가 있다는 사실을 완전히 감추는 추상화
 
-- **전역 싱글톤 없음**: 토스트는 `Toaster`로 범위가 제한됩니다. 적어도 하나의 `Toaster`를 마운트해야 합니다.
-- **수동 생명주기 관리 불필요**: 토스트는 설정된 지속 시간(duration)에 따라 자동으로 사라지고 제거됩니다.
-
-## 간단한 예제
+## 훑어보기
 
 ```tsx
 import { Toaster, toast } from '@ilokesto/toast';
 
 function App() {
   return (
-    <div>
+    <>
+      <button onClick={() => toast.success('저장되었습니다')}>토스트 표시</button>
       <Toaster />
-      <button onClick={() => toast.success('저장되었습니다!')}>저장</button>
-    </div>
+    </>
   );
 }
 ```
 
-## 다음 단계
+## 여기서 시작하기
 
-- [빠른 시작](./quick-start): 첫 번째 토스트를 표시하는 가장 빠른 방법입니다.
-- [멘탈 모델](./mental-model): 퍼사드/런타임 분리와 `@ilokesto/overlay`와 어떻게 연동되는지 알아보세요.
-- [Toaster 레퍼런스](./toaster): `Toaster` 컴포넌트에 대한 자세한 문서입니다.
+- [빠른 시작](./quick-start): 첫 번째 토스트를 띄우는 가장 짧은 경로
+- [멘탈 모델](./mental-model): facade/runtime 분리, `toasterId`, overlay presence 이해
+- [API 레퍼런스](./api): 정확한 공개 표면
+
+## 더 깊게 읽기
+
+- [Toaster](./toaster): runtime view props와 렌더링 동작
+- [ToastBar](./toast-bar): 기본 row primitive
+- [헤드리스 사용](./headless): `useToaster()`와 `useToastItems()`
+- [마이그레이션](./migration): `react-hot-toast`에서 실전 전환
+- [구현 노트](./implementation-notes): timer, registry, overlay mirror 세부 사항

@@ -1,49 +1,58 @@
-# 마이그레이션 (Migration)
+---
+title: 마이그레이션
+description: react-hot-toast에서 적은 정신적 비용으로 옮겨옵니다.
+---
 
-`react-hot-toast`에서 오시는 분들을 위해, `@ilokesto/toast`는 더 강력한 기능과 익숙한 API를 제공합니다.
+# 마이그레이션
 
-## 주요 차이점
+`@ilokesto/toast`는 `react-hot-toast` 사용자에게 공통 경로에서 익숙하게 느껴지도록 설계되었습니다.
 
-| 기능 | `react-hot-toast` | `@ilokesto/toast` |
-| --- | --- | --- |
-| **API** | 전역 싱글톤 `toast` | 퍼사드 `toast` + 레지스트리 |
-| **범위 지정** | 전역 전용 | `toasterId`를 통한 프로바이더 범위 |
-| **런타임** | 내부 상태 | `@ilokesto/store` + `@ilokesto/overlay` 기반 |
-| **탑 레이어** | 미지원 | 선택적 `transport="top-layer"` 지원 |
-| **헤드리스** | `useToaster` | `useToaster` + `useToastItems` |
-
-## API 매핑 (Mapping)
-
-대부분의 메서드는 1:1로 호환됩니다.
-
-```ts
-// react-hot-toast
-import toast from 'react-hot-toast';
-toast.success('완료!');
-
-// @ilokesto/toast
-import { toast } from '@ilokesto/toast';
-toast.success('완료!');
-```
-
-## `<Toaster />` 이동하기
-
-`react-hot-toast`에서 `<Toaster />`는 단순한 렌더러입니다. `@ilokesto/toast`에서는 런타임을 생성하고 등록하는 역할도 담당합니다.
-
-애플리케이션 최상단(또는 토스트를 표시하려는 영역)에 `<Toaster />`를 마운트해야 합니다.
+## import 교체
 
 ```tsx
-// react-hot-toast
-import { Toaster } from 'react-hot-toast';
-<Toaster position="top-center" />
+// before
+import { Toaster, toast } from 'react-hot-toast';
 
-// @ilokesto/toast
-import { Toaster } from '@ilokesto/toast';
-<Toaster position="top-center" />
+// after
+import { Toaster, toast } from '@ilokesto/toast';
 ```
 
-## 커스텀 렌더링 (Custom Rendering)
+## 같은 mount 패턴 유지
 
-`react-hot-toast`는 `<Toaster />`에서 `children` 렌더 프롭을 사용하는 반면, `@ilokesto/toast`는 완전한 재정의를 위해 `toast.custom()`을 사용하거나 레이아웃 수정을 위해 `ToastBar` 컴포넌트의 `children` 프롭을 사용하는 것을 선호합니다.
+```tsx
+<Toaster />
+```
 
-더 자세한 내용은 저장소의 [MIGRATION_FROM_REACT_HOT_TOAST.md](https://github.com/ilokesto/ilokesto/blob/main/packages/toast/MIGRATION_FROM_REACT_HOT_TOAST.md)를 참조하세요.
+차이는 `Toaster`가 단순 렌더러가 아니라 runtime을 생성하고 등록하는 역할도 한다는 점입니다.
+
+## facade parity
+
+익숙한 facade 호출은 거의 그대로 유지됩니다.
+
+- `toast()`
+- `toast.success()`
+- `toast.error()`
+- `toast.loading()`
+- `toast.custom()`
+- `toast.promise()`
+
+## 실전 차이점
+
+- `toast.promise()`는 `() => Promise<T>`도 받습니다
+- `dismissAll()` / `removeAll()` 같은 별도 메서드는 없고, id 없이 `dismiss()` / `remove()`를 호출합니다
+- `useToaster()`는 mounted `Toaster` context 아래에서 실행되어야 합니다
+- `transport="top-layer"`는 추가 capability입니다
+
+## `toastOptions` 병합 순서
+
+1. global `toastOptions`
+2. per-type `toastOptions.success/error/loading/blank/custom`
+3. per-toast call option
+
+## 추천 마이그레이션 순서
+
+1. import를 바꾸고
+2. 기존 `toast.*` 호출을 유지하고
+3. `<Toaster />`를 마운트하고
+4. `toastOptions`를 옮기고
+5. advanced custom rendering이 필요할 때만 추가 조정합니다

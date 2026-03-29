@@ -1,37 +1,49 @@
+---
+title: ToastBar
+description: The default row primitive for one toast item.
+---
+
 # ToastBar
 
-`ToastBar` is the default component used by the `Toaster` for rendering its items. It handles the rendering of icons, messages, and any close buttons.
+`ToastBar` is the default row primitive used by `Toaster` when you do not provide a custom row renderer.
 
 ## Props
 
-### `toast` (`ToastItem`, required)
-The toast item object to be rendered.
+- `toast`
+- `position?`
+- `style?`
+- `children?`
 
-### `position` (`ToastPosition`, optional)
-The current position of the `Toaster`.
+## Default behavior
 
-### `style` (React.CSSProperties, optional)
-Custom styles for the toast bar.
+`ToastBar` does three main things:
 
-### `className` (string, optional)
-Custom CSS class for the toast bar.
+- computes enter/exit motion styles from `toast.status` and `position`
+- renders the default icon through `ToastIcon`
+- renders the default message layout unless you override it with `children`
 
-### `children` (RenderProp, optional)
-A function that receives `{ icon, message }` and returns a React node. Use this to customize the layout of the `ToastBar`.
+If `toast.type === 'custom'`, it renders `toast.message` directly.
+
+## Custom row layout
+
+If `children` is a render function, it receives:
+
+```ts
+{ icon, message }
+```
 
 ```tsx
-<ToastBar toast={t}>
+<ToastBar toast={toast}>
   {({ icon, message }) => (
     <>
       {icon}
-      <div className="custom-message">{message}</div>
-      <button onClick={() => toast.dismiss(t.id)}>X</button>
+      <strong>{message}</strong>
     </>
   )}
 </ToastBar>
 ```
 
-## When to use it vs Custom Rows
+## When to use it
 
-- **Use `ToastBar`** if you want to keep the default background, padding, and animations but just want to rearrange or add to the icon and message.
-- **Use a custom row** by using `toast.custom()` or the `useToaster()` hook if you want to replace the entire rendering of a toast item, including the background and container.
+- Use `ToastBar` when you want to keep the default motion/container behavior but customize the inner layout.
+- Use a fully custom row from `Toaster` children when you want to replace the row as a whole.

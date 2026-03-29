@@ -1,49 +1,58 @@
+---
+title: Migration
+description: Move from react-hot-toast with minimal mental overhead.
+---
+
 # Migration
 
-If you are coming from `react-hot-toast`, `@ilokesto/toast` offers a familiar API with additional power.
+`@ilokesto/toast` is designed to feel familiar to `react-hot-toast` users on the common path.
 
-## Key Differences
-
-| Feature | `react-hot-toast` | `@ilokesto/toast` |
-| --- | --- | --- |
-| **API** | Global singleton `toast` | Facade `toast` + Registry |
-| **Scoping** | Global | Provider-scoped via `toasterId` |
-| **Runtime** | Internal state | Powered by `@ilokesto/store` + `@ilokesto/overlay` |
-| **Top Layer** | No | Optional `transport="top-layer"` |
-| **Headless** | `useToaster` | `useToaster` + `useToastItems` |
-
-## Mapping the API
-
-Most methods are 1:1 compatible:
-
-```ts
-// react-hot-toast
-import toast from 'react-hot-toast';
-toast.success('Done!');
-
-// @ilokesto/toast
-import { toast } from '@ilokesto/toast';
-toast.success('Done!');
-```
-
-## Moving the `<Toaster />`
-
-In `react-hot-toast`, the `<Toaster />` is a simple renderer. In `@ilokesto/toast`, it's also responsible for creating the runtime and registering it.
-
-Make sure you mount your `<Toaster />` at the top of your app (or in the region you want to show toasts).
+## Import swap
 
 ```tsx
-// react-hot-toast
-import { Toaster } from 'react-hot-toast';
-<Toaster position="top-center" />
+// before
+import { Toaster, toast } from 'react-hot-toast';
 
-// @ilokesto/toast
-import { Toaster } from '@ilokesto/toast';
-<Toaster position="top-center" />
+// after
+import { Toaster, toast } from '@ilokesto/toast';
 ```
 
-## Custom Rendering
+## Keep the same mount pattern
 
-While `react-hot-toast` uses a `children` render prop on `<Toaster />`, `@ilokesto/toast` prefers `toast.custom()` for full overrides or the `children` prop on the `ToastBar` component for layout tweaks.
+```tsx
+<Toaster />
+```
 
-For more details, see the [MIGRATION_FROM_REACT_HOT_TOAST.md](https://github.com/ilokesto/ilokesto/blob/main/packages/toast/MIGRATION_FROM_REACT_HOT_TOAST.md) in the repository.
+The important difference is that `Toaster` is also responsible for creating and registering the runtime.
+
+## Facade parity
+
+The familiar facade calls stay close:
+
+- `toast()`
+- `toast.success()`
+- `toast.error()`
+- `toast.loading()`
+- `toast.custom()`
+- `toast.promise()`
+
+## Practical differences
+
+- `toast.promise()` also accepts `() => Promise<T>`
+- `dismissAll()` / `removeAll()` are not separate methods; call `dismiss()` / `remove()` without an id
+- `useToaster()` is expected to run under a mounted `Toaster` context
+- `transport="top-layer"` is an extra capability
+
+## `toastOptions` merge order
+
+1. global `toastOptions`
+2. per-type `toastOptions.success/error/loading/blank/custom`
+3. per-toast call options
+
+## Suggested migration order
+
+1. replace imports
+2. keep your existing `toast.*` calls
+3. mount `<Toaster />`
+4. move your `toastOptions`
+5. adjust advanced custom rendering only if needed

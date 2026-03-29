@@ -1,28 +1,50 @@
-# 구현 노트 (Implementation Notes)
+---
+title: 구현 노트
+description: runtime architecture, timer, registry, overlay presence 세부 사항.
+---
 
-`@ilokesto/toast`의 아키텍처에 대한 심층 분석입니다.
+# 구현 노트
 
-## 런타임/스토어 아키텍처 (Runtime/Store Architecture)
+이 페이지는 runtime이 실제로 어떻게 동작하는지 이해해야 할 때 중요한 현재 구현 세부 사항을 설명합니다.
 
-각 `Toaster` 컴포넌트는 고유한 `ToastRuntime`을 생성합니다. 이 런타임은 다음을 관리합니다.
-1. **토스트 스토어 (Toast Store)**: `ToastItem` 레코드를 포함하는 중앙 상태입니다.
-2. **오버레이 스토어 (Overlay Store)**: 토스트바의 마운트 생명주기를 관리하기 위해 사용되는 `@ilokesto/overlay`의 인스턴스입니다.
-3. **타이머 (Timers)**: 각 토스트의 지속 시간(duration)을 위한 개별 `setTimeout` 호출입니다.
+## 하나의 runtime이 가진 요소들
 
-## 타이머 및 일시 정지 로직 (Timers and Pause Logic)
+각 `Toaster`는 다음을 포함하는 `ToastRuntimeApi` 하나를 만듭니다.
 
-토스트가 추가되면 `duration`에 따라 타이머가 시작됩니다.
-- 사용자가 `Toaster`에 마우스를 올리면 `handlers.startPause()`가 호출되어 모든 활성 타이머를 지우고 각 토스트의 남은 시간을 기록합니다.
-- 마우스가 떠나면 `handlers.endPause()`가 남은 지속 시간으로 타이머를 다시 시작합니다.
+- toast store
+- overlay store
+- dismiss timer
+- remove timer
+- listener set
+- runtime-local view config
 
-## 오버레이 존재 유무 미러 (Overlay Presence Mirror)
+## registry lookup
 
-`ToastStore`와 `OverlayStore`는 동기화된 상태를 유지합니다. 토스트가 `ToastStore`에 추가되면 해당 항목이 `OverlayStore`에서 "열립니다". 토스트가 닫히면 `OverlayStore`에서도 "닫힙니다". 이를 통해 애니메이션과 정리를 위해 `@ilokesto/overlay`의 기존 프로미스 기반 생명주기를 사용할 수 있습니다.
+facade는 runtime state를 직접 들고 있지 않습니다. `toasterId`로 registry에서 runtime을 찾습니다.
 
-## 가시성 필터링 (Visibility Filtering)
+해당 runtime이 마운트되어 있지 않으면 `requireRuntime()`이 오류를 던집니다.
 
-`<Toaster />`의 `limit` 프롭은 스토어에서 오래된 토스트를 제거하지 않습니다. 대신 `useToaster()`에서 반환된 `toasts` 목록을 필터링하여 최신 `N`개 항목만 표시하도록 합니다.
+## overlay presence mirror
 
-## 탑 레이어 전송 (Top-layer Transport)
+toast가 추가되면 runtime은 같은 id를 사용해 overlay store에도 presence를 보장합니다.
 
-`transport="top-layer"`가 사용되면 `Toaster` 컨테이너가 팝오버로 표시됩니다. 이는 토스트가 브라우저의 "탑 레이어(top layer)"에 렌더링되도록 하여 `z-index`에 관계없이 다른 모든 요소보다 위에 나타나도록 보장합니다.
+- toast 추가 -> overlay presence 보장
+- toast dismiss -> overlay presence close
+- toast remove -> overlay presence remove
+
+overlay 계층은 presence lifecycle 용도이고, toast 정책 자체를 담당하지는 않습니다.
+
+## timer와 pause 로직
+
+- visible toast는 duration에서 누적 pauseDuration을 뺀 값으로 dismiss timer를 예약하고
+- dismiss는 delayed removal을 예약하며
+- hover pause는 dismiss timer를 지우고 pause 시작 시각을 기록하고
+- resume은 누적 pauseDuration을 기준으로 dismiss timing을 다시 계산합니다
+
+## visible filtering
+
+`limit`과 `position`은 runtime view filter입니다. raw store entry를 삭제하지는 않습니다.
+
+## promise 전환
+
+`toast.promise()`는 먼저 loading toast를 만들고, 그 다음 같은 id를 재사용해 success 또는 error로 바꿉니다.

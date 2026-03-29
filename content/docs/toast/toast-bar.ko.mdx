@@ -1,37 +1,49 @@
-# ToastBar (토스트바)
+---
+title: ToastBar
+description: 하나의 toast item을 위한 기본 row primitive.
+---
 
-`ToastBar`는 `Toaster`에서 항목을 렌더링하는 데 사용하는 기본 컴포넌트입니다. 아이콘, 메시지 및 닫기 버튼의 렌더링을 처리합니다.
+# ToastBar
+
+`ToastBar`는 custom row renderer를 주지 않았을 때 `Toaster`가 사용하는 기본 row primitive입니다.
 
 ## Props
 
-### `toast` (`ToastItem`, 필수 사항)
-렌더링할 토스트 항목 객체입니다.
+- `toast`
+- `position?`
+- `style?`
+- `children?`
 
-### `position` (`ToastPosition`, 선택 사항)
-`Toaster`의 현재 위치입니다.
+## 기본 동작
 
-### `style` (React.CSSProperties, 선택 사항)
-토스트바의 커스텀 스타일입니다.
+`ToastBar`는 세 가지를 주로 담당합니다.
 
-### `className` (string, 선택 사항)
-토스트바의 커스텀 CSS 클래스입니다.
+- `toast.status`와 `position`으로 enter/exit motion style 계산
+- `ToastIcon`을 통한 기본 아이콘 렌더링
+- `children`으로 override하지 않는 한 기본 메시지 레이아웃 렌더링
 
-### `children` (RenderProp, 선택 사항)
-`{ icon, message }`를 인수로 받아 React 노드를 반환하는 함수입니다. `ToastBar`의 레이아웃을 커스터마이징할 때 사용합니다.
+`toast.type === 'custom'`이면 `toast.message`를 그대로 렌더링합니다.
+
+## custom row layout
+
+`children`이 render function이면 다음을 받습니다.
+
+```ts
+{ icon, message }
+```
 
 ```tsx
-<ToastBar toast={t}>
+<ToastBar toast={toast}>
   {({ icon, message }) => (
     <>
       {icon}
-      <div className="custom-message">{message}</div>
-      <button onClick={() => toast.dismiss(t.id)}>X</button>
+      <strong>{message}</strong>
     </>
   )}
 </ToastBar>
 ```
 
-## `ToastBar` 사용 시점 vs 커스텀 행 (Custom Rows)
+## 언제 쓰면 좋은가
 
-- **`ToastBar` 사용**: 기본 배경, 패딩, 애니메이션을 그대로 유지하면서 아이콘과 메시지의 레이아웃을 재배열하거나 추가하고 싶을 때 사용합니다.
-- **커스텀 행 사용**: `toast.custom()` 또는 `useToaster()` 훅을 사용하여 배경과 컨테이너를 포함한 토스트 항목의 전체 렌더링을 대체하고 싶을 때 사용합니다.
+- 기본 motion/container 동작은 유지하면서 내부 레이아웃만 바꾸고 싶다면 `ToastBar`
+- row 전체를 바꾸고 싶다면 `Toaster`의 custom row 렌더링

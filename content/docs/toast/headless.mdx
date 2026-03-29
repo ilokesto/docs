@@ -1,45 +1,52 @@
+---
+title: Headless Usage
+description: Build custom toast UI with useToaster and useToastItems.
+---
+
 # Headless Usage
 
-Build your own toast UI using the `useToaster` hook.
+Use the headless APIs when you want toast state and handlers without the default row rendering.
 
-## `useToaster()` Hook
+## `useToaster()`
 
-The `useToaster` hook must be called within a `ToasterContext` (under a `<Toaster />`). It returns the toast list and handlers for managing individual toast items.
-
-```tsx
+```ts
 const { toasts, handlers } = useToaster();
 ```
 
-### `toasts` (ToastItem[])
+This hook must run under a mounted `Toaster` context.
 
-The current list of toasts managed by this runtime.
+### `toasts`
+
+The current visible toast list for that runtime.
 
 ### `handlers`
 
-- `updateHeight(id, height)`: Inform the runtime about a toast's measured height for offset calculations.
-- `startPause()`: Pause all auto-dismiss timers.
-- `endPause()`: Resume all auto-dismiss timers.
-- `calculateOffset(id, options?)`: Calculate the pixel offset for a given toast based on its position, gutter, and sibling heights.
+- `updateHeight(id, height)`
+- `startPause()`
+- `endPause()`
+- `calculateOffset(toast, options?)`
 
-## Example: Simple Headless List
+These are the same helpers the default `Toaster` uses internally.
+
+## Example
 
 ```tsx
-import { useToaster, toast } from '@ilokesto/toast';
+import { toast, useToaster } from '@ilokesto/toast';
 
-function MyCustomToastList() {
+function CustomToastList() {
   const { toasts, handlers } = useToaster();
 
   return (
     <div onMouseEnter={handlers.startPause} onMouseLeave={handlers.endPause}>
-      {toasts.map((t) => (
-        <div 
-          key={t.id} 
+      {toasts.map((item) => (
+        <div
+          key={item.id}
           ref={(node) => {
-            if (node) handlers.updateHeight(t.id, node.offsetHeight);
+            if (node) handlers.updateHeight(item.id, node.offsetHeight);
           }}
         >
-          {t.message}
-          <button onClick={() => toast.dismiss(t.id)}>X</button>
+          {item.message}
+          <button onClick={() => toast.dismiss(item.id)}>Dismiss</button>
         </div>
       ))}
     </div>
@@ -47,10 +54,6 @@ function MyCustomToastList() {
 }
 ```
 
-## `useToastItems()`
+## `useToastItems(runtime)`
 
-If you only need the data (the list of `ToastItem`), use the `useToastItems()` hook. This is a simple subscription to the toast store.
-
-```ts
-const toasts = useToastItems('my-toaster-id');
-```
+Use this lower-level hook when you already have a runtime and only want the visible item list.

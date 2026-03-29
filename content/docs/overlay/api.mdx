@@ -1,0 +1,128 @@
+---
+title: API Reference
+description: Public runtime, provider, host, hooks, and exported types.
+---
+
+# API Reference
+
+`@ilokesto/overlay` exports a small root-only public surface.
+
+## Values
+
+### `createOverlayStore()`
+
+Creates a new overlay runtime store.
+
+```ts
+function createOverlayStore(): OverlayStoreApi;
+```
+
+The returned store owns overlay items, pending resolvers, and the snapshot subscription interface used by React.
+
+### `OverlayProvider`
+
+Provides the overlay runtime and adapters to the React tree.
+
+```tsx
+<OverlayProvider adapters={adapters} store={optionalStore}>
+  {children}
+</OverlayProvider>
+```
+
+- `adapters` is required
+- `store` is optional
+- `OverlayHost` is mounted automatically after `children`
+
+### `OverlayHost`
+
+Reads current items and dispatches each one to `adapters[item.type]`.
+
+If an adapter is missing for a given `type`, that item renders `null`.
+
+### `useOverlay()`
+
+Returns the command API.
+
+```ts
+const { display, open, close, remove, clear } = useOverlay();
+```
+
+#### `display<TResult>(options)`
+
+```ts
+display<TResult>(options: DisplayOptions): Promise<TResult | undefined>
+```
+
+This is the promise-only wrapper around `open()`.
+
+#### `open(options)`
+
+```ts
+open(options: DisplayOptions): OverlayId
+```
+
+At the hook level, `open()` returns only the `id`. The underlying store-level `open()` returns `{ id, promise }`, but `useOverlay().open()` exposes only the id-focused convenience form.
+
+#### `close(id, result?)`
+
+Marks the item as `closing` and resolves the pending promise with `result`.
+
+#### `remove(id?)`
+
+Removes an item immediately. If the item was not already closing, its pending promise resolves with `undefined` first.
+
+If `id` is omitted, the store removes the most recent item.
+
+#### `clear()`
+
+Resolves all pending overlays with `undefined` and clears the list.
+
+### `useOverlayItems()`
+
+Subscribes to the current item list through `useSyncExternalStore`.
+
+```ts
+function useOverlayItems(): ReadonlyArray<OverlayItem>
+```
+
+## Types
+
+### `DisplayOptions`
+
+```ts
+type DisplayOptions = {
+  id?: OverlayId;
+  type: string;
+  props?: Record<string, unknown>;
+}
+```
+
+### `OverlayItem`
+
+```ts
+type OverlayItem = {
+  id: OverlayId;
+  type: string;
+  props: Readonly<Record<string, unknown>>;
+  status: 'open' | 'closing';
+  createdAt: number;
+}
+```
+
+### Adapter-facing types
+
+- `OverlayRenderProps`
+- `OverlayAdapterComponent`
+- `OverlayAdapterMap`
+
+### Runtime-facing types
+
+- `OverlayId`
+- `OverlayStatus`
+- `OverlayState`
+- `OverlayStoreApi`
+- `OverlayProviderProps`
+- `OverlayRequest`
+- `UseOverlayReturn`
+
+If you want to see how adapters consume these types, continue to [Adapters](./adapters).

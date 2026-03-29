@@ -1,0 +1,42 @@
+# 빠른 시작
+
+`@ilokesto/toast`를 몇 분 만에 설정하고 실행해 보세요.
+
+## 설치
+
+<package-install names={['@ilokesto/toast']} />
+
+## 1. Toaster 설정하기
+
+애플리케이션의 루트(또는 메인 콘텐츠 근처)에 `<Toaster />` 컴포넌트를 마운트하세요.
+
+```tsx
+import { Toaster } from '@ilokesto/toast';
+
+function App() {
+  return (
+    <div>
+      {/* ... 콘텐츠 ... */}
+      <Toaster />
+    </div>
+  );
+}
+```
+
+## 2. 토스트 표시하기
+
+`toast` 객체를 가져와서 알림을 표시하는 메서드 중 하나를 호출하세요.
+
+```tsx
+import { toast } from '@ilokesto/toast';
+
+function MyButton() {
+  const handleClick = () => {
+    toast.success('성공적으로 저장되었습니다!');
+  };
+
+  return <button onClick={handleClick}>저장</button>;
+}
+```
+
+이제 끝입니다! 기본적으로 토스트는 화면 오른쪽 상단에 나타나며 몇 초 후에 자동으로 사라집니다.

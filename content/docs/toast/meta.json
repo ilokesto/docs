@@ -1,0 +1,20 @@
+{
+  "title": "Toast",
+  "root": true,
+  "pages": [
+    "index",
+    "---Introduction---",
+    "quick-start",
+    "mental-model",
+    "---Reference---",
+    "api",
+    "toaster",
+    "toast-bar",
+    "---Guides---",
+    "patterns",
+    "headless",
+    "migration",
+    "---Advanced---",
+    "implementation-notes"
+  ]
+}

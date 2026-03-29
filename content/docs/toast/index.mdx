@@ -1,0 +1,41 @@
+# Toast
+
+`@ilokesto/toast` is a provider-scoped toast runtime and facade that uses `@ilokesto/overlay` for its presence lifecycle. It offers a simple, promise-based API for showing temporary notifications.
+
+## What is this package?
+
+A lightweight notification library for React. It follows the provider-scoped pattern, meaning you can have multiple toast regions in your app, each with its own configuration.
+
+## What it gives you
+
+- **Simple Facade**: Call `toast.success()`, `toast.error()`, etc., from anywhere.
+- **Provider-scoped**: Each `Toaster` is independent.
+- **Rich Defaults**: Beautiful icons and styles out of the box.
+- **Promise Support**: Easily handle loading, success, and error states for any promise.
+- **Headless Core**: Use `useToaster` to build your own custom toast UI.
+
+## What it does not do
+
+- **No Global Singleton**: Toasts are scoped to a `Toaster`. You must mount at least one `Toaster`.
+- **No Manual Lifecycle**: Toasts automatically dismiss and remove themselves based on duration.
+
+## Short Example
+
+```tsx
+import { Toaster, toast } from '@ilokesto/toast';
+
+function App() {
+  return (
+    <div>
+      <Toaster />
+      <button onClick={() => toast.success('Saved!')}>Save</button>
+    </div>
+  );
+}
+```
+
+## Where to go next?
+
+- [Quick Start](./quick-start): The shortest path to showing your first toast.
+- [Mental Model](./mental-model): Learn about the facade/runtime split and how it works with `@ilokesto/overlay`.
+- [Toaster Reference](./toaster): Detailed documentation for the `Toaster` component.

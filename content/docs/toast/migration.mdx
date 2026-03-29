@@ -1,0 +1,49 @@
+# Migration
+
+If you are coming from `react-hot-toast`, `@ilokesto/toast` offers a familiar API with additional power.
+
+## Key Differences
+
+| Feature | `react-hot-toast` | `@ilokesto/toast` |
+| --- | --- | --- |
+| **API** | Global singleton `toast` | Facade `toast` + Registry |
+| **Scoping** | Global | Provider-scoped via `toasterId` |
+| **Runtime** | Internal state | Powered by `@ilokesto/store` + `@ilokesto/overlay` |
+| **Top Layer** | No | Optional `transport="top-layer"` |
+| **Headless** | `useToaster` | `useToaster` + `useToastItems` |
+
+## Mapping the API
+
+Most methods are 1:1 compatible:
+
+```ts
+// react-hot-toast
+import toast from 'react-hot-toast';
+toast.success('Done!');
+
+// @ilokesto/toast
+import { toast } from '@ilokesto/toast';
+toast.success('Done!');
+```
+
+## Moving the `<Toaster />`
+
+In `react-hot-toast`, the `<Toaster />` is a simple renderer. In `@ilokesto/toast`, it's also responsible for creating the runtime and registering it.
+
+Make sure you mount your `<Toaster />` at the top of your app (or in the region you want to show toasts).
+
+```tsx
+// react-hot-toast
+import { Toaster } from 'react-hot-toast';
+<Toaster position="top-center" />
+
+// @ilokesto/toast
+import { Toaster } from '@ilokesto/toast';
+<Toaster position="top-center" />
+```
+
+## Custom Rendering
+
+While `react-hot-toast` uses a `children` render prop on `<Toaster />`, `@ilokesto/toast` prefers `toast.custom()` for full overrides or the `children` prop on the `ToastBar` component for layout tweaks.
+
+For more details, see the [MIGRATION_FROM_REACT_HOT_TOAST.md](https://github.com/ilokesto/ilokesto/blob/main/packages/toast/MIGRATION_FROM_REACT_HOT_TOAST.md) in the repository.

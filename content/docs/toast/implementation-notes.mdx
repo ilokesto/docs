@@ -1,0 +1,28 @@
+# Implementation Notes
+
+Deep dive into the architecture of `@ilokesto/toast`.
+
+## Runtime/Store Architecture
+
+Each `Toaster` component creates its own `ToastRuntime`. This runtime manages:
+1. **Toast Store**: A central state containing `ToastItem` records.
+2. **Overlay Store**: An instance of `@ilokesto/overlay` used only to manage the mount lifecycle of the toast bars.
+3. **Timers**: Individual `setTimeout` calls for each toast's duration.
+
+## Timers and Pause Logic
+
+When a toast is added, a timer is started based on its `duration`.
+- If the user hovers over the `Toaster`, `handlers.startPause()` is called, which clears all active timers and records the time remaining for each toast.
+- When the mouse leaves, `handlers.endPause()` restarts the timers with the remaining durations.
+
+## Overlay Presence Mirror
+
+The `ToastStore` and `OverlayStore` are kept in sync. When a toast is added to the `ToastStore`, an equivalent item is "opened" in the `OverlayStore`. When a toast is dismissed, it's "closed" in the `OverlayStore`. This allows us to use `@ilokesto/overlay`'s existing promise-based lifecycle for animations and cleanups.
+
+## Visibility Filtering
+
+The `limit` prop on `<Toaster />` doesn't remove older toasts from the store. Instead, it filters the `toasts` list returned by `useToaster()` to only show the most recent `N` items.
+
+## Top-layer Transport
+
+When `transport="top-layer"` is used, the `Toaster` container is marked as a popover. This ensures the toasts are rendered in the browser's "top layer," appearing above all other elements regardless of their `z-index`.

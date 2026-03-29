@@ -1,0 +1,80 @@
+# API 레퍼런스 (API Reference)
+
+`@ilokesto/toast`에서 제공하는 클래스, 컴포넌트, 훅에 대한 자세한 정보입니다.
+
+## `toast` (퍼사드)
+
+알림을 표시하는 데 사용하는 기본 객체입니다. 사용자 명령을 등록된 `Toaster` 런타임으로 전달합니다.
+
+```ts
+import { toast } from '@ilokesto/toast';
+
+toast('안녕하세요!'); // 기본
+toast.success('저장되었습니다!'); // 성공 아이콘
+toast.error('문제가 발생했습니다.'); // 오류 아이콘
+toast.loading('저장 중...'); // 로딩 아이콘, duration = Infinity
+toast.custom(<div>커스텀 토스트</div>); // 커스텀 콘텐츠
+```
+
+### 메서드 (Methods)
+
+- `toast(message, options?)`: 기본(blank) 토스트를 표시합니다.
+- `toast.success(message, options?)`: 성공 토스트를 표시합니다.
+- `toast.error(message, options?)`: 오류 토스트를 표시합니다.
+- `toast.loading(message, options?)`: 무한 지속 시간을 가진 로딩 토스트를 표시합니다.
+- `toast.custom(message, options?)`: 커스텀 토스트를 표시합니다.
+- `toast.promise(promise, messages, options?)`: 프로미스를 처리하고 로딩, 성공, 오류 토스트를 자동으로 표시합니다.
+- `toast.dismiss(id?)`: 토스트를 닫습니다 (소프트 닫기). ID를 제공하지 않으면 모든 토스트를 닫습니다.
+- `toast.remove(id?)`: 토스트를 제거합니다 (하드 삭제). ID를 제공하지 않으면 모든 토스트를 제거합니다.
+
+## `createToastRuntime`
+
+새로운 토스트 런타임을 생성합니다. 주로 `Toaster` 컴포넌트 내부에서 사용됩니다.
+
+```ts
+const runtime = createToastRuntime(toasterId, defaultOptions);
+```
+
+## `Toaster`
+
+특정 런타임에 대한 토스트를 렌더링하는 React 컴포넌트입니다.
+
+```tsx
+<Toaster 
+  position="top-right" 
+  limit={20} 
+  gutter={8}
+  reverseOrder={false}
+  toastOptions={{ ... }}
+/>
+```
+
+- 자세한 정보는 [Toaster 레퍼런스](./toaster)를 참조하세요.
+
+## `ToastBar`
+
+각 토스트의 메시지와 아이콘을 렌더링하는 데 사용하는 기본 컴포넌트입니다.
+
+- 자세한 정보는 [ToastBar 레퍼런스](./toast-bar)를 참조하세요.
+
+## `useToaster`
+
+자신만의 커스텀 토스트 UI를 빌드하기 위한 상태와 핸들러를 제공하는 훅입니다.
+
+- 자세한 정보는 [헤드리스 사용](./headless)를 참조하세요.
+
+## `useToastItems`
+
+스토어에서 현재 토스트 항목 목록을 반환합니다.
+
+```ts
+const items = useToastItems(toasterId?);
+```
+
+## 내보낸 타입 (Exported Types)
+
+- `ToastItem`: 스토어에 있는 단일 토스트의 형태입니다.
+- `ToastOptions`: 단일 토스트에 대한 옵션입니다.
+- `ToasterProps`: `Toaster` 컴포넌트의 props입니다.
+- `ToastType`: `'success' | 'error' | 'loading' | 'blank' | 'custom'`.
+- `ToastStatus`: `'open' | 'closing'`.

@@ -1,0 +1,90 @@
+---
+title: 빠른 시작
+description: 가장 짧은 경로로 동작하는 overlay runtime을 만듭니다.
+---
+
+# 빠른 시작
+
+이 페이지의 목표는 overlay 하나를 최대한 빨리 동작시키는 것입니다. adapter 하나를 정의하고, provider를 하나 마운트하고, `display()`를 호출해 보고, 어떤 값이 돌아오는지만 먼저 이해하면 됩니다.
+
+```package-install
+@ilokesto/overlay
+```
+
+## 1. adapter 하나 정의하기
+
+adapter는 `type` 문자열에 매핑되는 React component입니다.
+
+```tsx
+import type { OverlayAdapterMap } from '@ilokesto/overlay';
+
+const adapters: OverlayAdapterMap = {
+  confirm: ({ close, props }) => {
+    const title = String((props as { title?: string }).title ?? 'Confirm');
+
+    return (
+      <div role="dialog" aria-modal="true">
+        <h1>{title}</h1>
+        <button onClick={() => close(true)}>확인</button>
+        <button onClick={() => close(false)}>취소</button>
+      </div>
+    );
+  },
+};
+```
+
+## 2. provider 마운트하기
+
+`OverlayProvider`는 store context를 소유하고, children 뒤에 `OverlayHost`를 자동으로 마운트합니다.
+
+```tsx
+import { OverlayProvider } from '@ilokesto/overlay';
+
+function App() {
+  return (
+    <OverlayProvider adapters={adapters}>
+      <Page />
+    </OverlayProvider>
+  );
+}
+```
+
+## 3. 오버레이를 열고 결과를 기다리기
+
+`display()`는 가장 단순한 명령입니다. 반환값은 promise 하나뿐입니다.
+
+```tsx
+import { useOverlay } from '@ilokesto/overlay';
+
+function Page() {
+  const { display } = useOverlay();
+
+  const handleDelete = async () => {
+    const confirmed = await display<boolean>({
+      type: 'confirm',
+      props: { title: '정말 삭제할까요?' },
+    });
+
+    if (confirmed) {
+      // 삭제 수행
+    }
+  };
+
+  return <button onClick={handleDelete}>삭제</button>;
+}
+```
+
+## 4. `close()`가 의미하는 것
+
+adapter가 `close(result)`를 호출하면 두 가지가 일어납니다.
+
+- item status가 `closing`으로 바뀌고
+- 대기 중이던 promise가 `result`로 resolve됩니다
+
+즉, 제거되기 전까지 store에 남아 있더라도 호출한 쪽 로직은 이미 계속 진행될 수 있습니다.
+
+## 다음으로 읽을 페이지
+
+- provider / adapter / runtime 분리가 아직 추상적으로 느껴진다면 [멘탈 모델](./mental-model)
+- 정확한 prop 계약이 궁금하다면 [어댑터](./adapters)
+- 다음 사용 사례가 confirmation dialog나 custom store라면 [패턴](./patterns)

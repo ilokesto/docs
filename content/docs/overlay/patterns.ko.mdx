@@ -1,0 +1,92 @@
+---
+title: 패턴
+description: confirmation, adapter 조합, custom-store의 실전 패턴.
+---
+
+# 패턴
+
+`@ilokesto/overlay`는 “modal 패키지”라고 생각할 때보다, “상호작용 흐름을 위한 generic runtime”이라고 생각할 때 더 유용해집니다.
+
+## confirmation dialog 패턴
+
+promise 기반 API가 가장 자연스럽게 빛나는 경우입니다.
+
+```tsx
+const confirmed = await display<boolean>({
+  type: 'confirm',
+  props: { title: '정말 삭제할까요?' },
+});
+
+if (confirmed) {
+  // 삭제 수행
+}
+```
+
+호출하는 쪽 코드를 선형적으로 유지할 수 있다는 점이 핵심 가치입니다.
+
+## 여러 adapter family 함께 두기
+
+하나의 provider 안에서도 `type` 값만 다르면 여러 overlay 의미를 같이 둘 수 있습니다.
+
+```ts
+const adapters = {
+  confirm: ConfirmDialog,
+  drawer: SettingsDrawer,
+  popover: HelpPopover,
+};
+```
+
+하나의 overlay runtime 위에 여러 presentation family를 얹고 싶을 때 잘 맞습니다.
+
+## overlay item을 직접 읽기
+
+디버깅 패널이나 custom host가 필요하다면 `useOverlayItems()`가 raw list를 그대로 줍니다.
+
+```tsx
+import { useOverlayItems } from '@ilokesto/overlay';
+
+function OverlayDebugPanel() {
+  const items = useOverlayItems();
+
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item.id}>
+          {item.type} - {item.status}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 직접 만든 store 주입하기
+
+`OverlayProvider`는 미리 만든 store를 받을 수 있습니다.
+
+```tsx
+import { createOverlayStore, OverlayProvider } from '@ilokesto/overlay';
+
+const overlayStore = createOverlayStore();
+
+function App() {
+  return (
+    <OverlayProvider store={overlayStore} adapters={adapters}>
+      <Page />
+    </OverlayProvider>
+  );
+}
+```
+
+runtime 인스턴스의 소유권을 앱이 명시적으로 가져가고 싶을 때 유용합니다.
+
+## 먼저 soft-close, 나중에 hard-remove
+
+흔한 overlay 패턴은 다음과 같습니다.
+
+1. adapter가 `close(result)`를 호출하고
+2. promise는 즉시 resolve되며
+3. UI는 `closing` 상태로 애니메이션하고
+4. 나중에 adapter나 앱이 `remove()`를 호출합니다
+
+`close()`에서 바로 삭제하지 않고 `status`를 두는 이유가 여기에 있습니다.

@@ -1,0 +1,37 @@
+# ToastBar (토스트바)
+
+`ToastBar`는 `Toaster`에서 항목을 렌더링하는 데 사용하는 기본 컴포넌트입니다. 아이콘, 메시지 및 닫기 버튼의 렌더링을 처리합니다.
+
+## Props
+
+### `toast` (`ToastItem`, 필수 사항)
+렌더링할 토스트 항목 객체입니다.
+
+### `position` (`ToastPosition`, 선택 사항)
+`Toaster`의 현재 위치입니다.
+
+### `style` (React.CSSProperties, 선택 사항)
+토스트바의 커스텀 스타일입니다.
+
+### `className` (string, 선택 사항)
+토스트바의 커스텀 CSS 클래스입니다.
+
+### `children` (RenderProp, 선택 사항)
+`{ icon, message }`를 인수로 받아 React 노드를 반환하는 함수입니다. `ToastBar`의 레이아웃을 커스터마이징할 때 사용합니다.
+
+```tsx
+<ToastBar toast={t}>
+  {({ icon, message }) => (
+    <>
+      {icon}
+      <div className="custom-message">{message}</div>
+      <button onClick={() => toast.dismiss(t.id)}>X</button>
+    </>
+  )}
+</ToastBar>
+```
+
+## `ToastBar` 사용 시점 vs 커스텀 행 (Custom Rows)
+
+- **`ToastBar` 사용**: 기본 배경, 패딩, 애니메이션을 그대로 유지하면서 아이콘과 메시지의 레이아웃을 재배열하거나 추가하고 싶을 때 사용합니다.
+- **커스텀 행 사용**: `toast.custom()` 또는 `useToaster()` 훅을 사용하여 배경과 컨테이너를 포함한 토스트 항목의 전체 렌더링을 대체하고 싶을 때 사용합니다.

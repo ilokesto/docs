@@ -1,0 +1,80 @@
+# API Reference
+
+Detailed information on the classes, components, and hooks provided by `@ilokesto/toast`.
+
+## `toast` (Facade)
+
+The main object used to show notifications. It routes your commands to the registered `Toaster` runtime.
+
+```ts
+import { toast } from '@ilokesto/toast';
+
+toast('Hello World'); // default
+toast.success('Saved successfully!'); // success icon
+toast.error('Something went wrong.'); // error icon
+toast.loading('Saving...'); // loading icon, duration = Infinity
+toast.custom(<div>Custom toast</div>); // custom content
+```
+
+### Methods
+
+- `toast(message, options?)`: Shows a default (blank) toast.
+- `toast.success(message, options?)`: Shows a success toast.
+- `toast.error(message, options?)`: Shows an error toast.
+- `toast.loading(message, options?)`: Shows a loading toast with infinite duration.
+- `toast.custom(message, options?)`: Shows a custom toast.
+- `toast.promise(promise, messages, options?)`: Handles a promise and shows loading, success, and error toasts automatically.
+- `toast.dismiss(id?)`: Dismisses a toast (soft close). If no ID is provided, it dismisses all toasts.
+- `toast.remove(id?)`: Removes a toast (hard delete). If no ID is provided, it removes all toasts.
+
+## `createToastRuntime`
+
+Creates a new toast runtime. This is primarily used by the `Toaster` component internally.
+
+```ts
+const runtime = createToastRuntime(toasterId, defaultOptions);
+```
+
+## `Toaster`
+
+The React component that renders the toasts for a specific runtime.
+
+```tsx
+<Toaster 
+  position="top-right" 
+  limit={20} 
+  gutter={8}
+  reverseOrder={false}
+  toastOptions={{ ... }}
+/>
+```
+
+- See [Toaster Reference](./toaster) for more details.
+
+## `ToastBar`
+
+The default component used to render each toast's message and icon.
+
+- See [ToastBar Reference](./toast-bar) for more details.
+
+## `useToaster`
+
+A hook that provides the state and handlers for building your own custom toast UI.
+
+- See [Headless Usage](./headless) for more details.
+
+## `useToastItems`
+
+Returns the current list of toast items from the store.
+
+```ts
+const items = useToastItems(toasterId?);
+```
+
+## Exported Types
+
+- `ToastItem`: The shape of a single toast in the store.
+- `ToastOptions`: Options for a single toast.
+- `ToasterProps`: Props for the `Toaster` component.
+- `ToastType`: `'success' | 'error' | 'loading' | 'blank' | 'custom'`.
+- `ToastStatus`: `'open' | 'closing'`.

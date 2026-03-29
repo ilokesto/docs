@@ -1,0 +1,40 @@
+# Toaster
+
+The `<Toaster />` component is the main rendering area for your toasts. It registers a runtime and listens for any `toast()` calls.
+
+## Props
+
+### `toasterId` (string, optional)
+Defaults to `"default"`. Used to link `toast()` calls to this specific renderer.
+
+### `position` (`ToastPosition`, optional)
+Defaults to `"top-right"`. Possible values:
+- `top-left`, `top-center`, `top-right`
+- `bottom-left`, `bottom-center`, `bottom-right`
+
+### `limit` (number, optional)
+Defaults to `20`. The maximum number of toasts visible at once.
+
+### `reverseOrder` (boolean, optional)
+Defaults to `false`. If `true`, new toasts appear at the bottom of the stack.
+
+### `gutter` (number, optional)
+Defaults to `8`. The spacing between toasts in pixels.
+
+### `containerStyle` (React.CSSProperties, optional)
+Styles for the container that holds all toasts.
+
+### `containerClassName` (string, optional)
+CSS class for the toast container.
+
+### `toastOptions` (`DefaultToastOptions`, optional)
+Global options applied to all toasts shown by this renderer. This is where you set durations, themes, and styles globally.
+
+### `transport` (`ToastTransport`, optional)
+Defaults to `"inline"`. 
+- `"inline"`: Renders toasts in the normal React tree.
+- `"top-layer"`: Renders toasts using the `popover` API to ensure they appear above all other elements.
+
+## Hover Pause
+
+By default, toasts will pause their dismiss timers when the user hovers over the `Toaster` container. This allows users to read long messages without them disappearing too quickly.

@@ -1,0 +1,61 @@
+---
+title: 구현 노트
+description: 내부 lifecycle, snapshot, promise settlement 세부 사항.
+---
+
+# 구현 노트
+
+이 페이지는 power user에게 중요한 현재 구현 세부 사항을 다룹니다.
+
+## store 형태
+
+내부적으로 runtime은 다음 형태의 `Store<OverlayState>`를 사용합니다.
+
+```ts
+{ items: OverlayItem[] }
+```
+
+각 item은 다음을 가집니다.
+
+- `id`
+- `type`
+- `props`
+- `status`
+- `createdAt`
+
+## promise settlement 경로
+
+`createOverlayStore()`는 overlay id를 키로 하는 `pendingResolvers` 맵을 유지합니다.
+
+- `open()`은 item과 pending promise를 만들고
+- `close()`는 전달된 result로 그 promise를 settle하며
+- `remove()`는 item이 아직 closing이 아니었다면 `undefined`로 settle하고
+- `clear()`는 모든 pending promise를 `undefined`로 settle합니다
+
+즉 promise settlement는 단순 렌더링이 아니라 item lifecycle과 연결되어 있습니다.
+
+## lifecycle 경로
+
+현재 item 흐름은 다음과 같습니다.
+
+1. `open()`이 `{ status: 'open' }` item을 추가하고
+2. `close()`가 status를 `closing`으로 바꾸고
+3. `remove()`가 item을 store에서 삭제합니다
+
+`close()`와 `remove()`를 분리해 둔 이유가 여기에 있습니다.
+
+## provider와 host wiring
+
+`OverlayProvider`는 store를 전달받지 않으면 새로 만들고, `{ store, adapters }`를 context로 제공한 다음, `children` 뒤에 `OverlayHost`를 자동으로 마운트합니다.
+
+그래서 일반적인 앱에서는 `OverlayHost`를 따로 수동 렌더링할 필요가 없습니다.
+
+## snapshot 경로
+
+`useOverlayItems()`는 `useSyncExternalStore`를 다음 세 값과 함께 사용합니다.
+
+- `store.subscribe`
+- `store.getSnapshot`
+- `store.getInitialSnapshot`
+
+즉 low-level read path는 이미 React external-store subscription 모델에 맞춰져 있습니다.

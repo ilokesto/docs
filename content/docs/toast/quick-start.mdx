@@ -1,0 +1,42 @@
+# Quick Start
+
+Get `@ilokesto/toast` up and running in minutes.
+
+## Installation
+
+<package-install names={['@ilokesto/toast']} />
+
+## 1. Setup Toaster
+
+Mount the `<Toaster />` component at the root of your application (or near your main content).
+
+```tsx
+import { Toaster } from '@ilokesto/toast';
+
+function App() {
+  return (
+    <div>
+      {/* ... your content ... */}
+      <Toaster />
+    </div>
+  );
+}
+```
+
+## 2. Show a Toast
+
+Import the `toast` object and call any of its methods to show a notification.
+
+```tsx
+import { toast } from '@ilokesto/toast';
+
+function MyButton() {
+  const handleClick = () => {
+    toast.success('Successfully saved!');
+  };
+
+  return <button onClick={handleClick}>Save</button>;
+}
+```
+
+That's it! By default, the toast will appear in the top-right corner of your screen and auto-dismiss after a few seconds.

@@ -1,0 +1,32 @@
+# Mental Model
+
+Understanding the architecture of `@ilokesto/toast`.
+
+## 1. Runtime Registry by `toasterId`
+
+Toasts are not managed by a single global store. Instead, each `Toaster` component registers its own **runtime** in a registry. When you call `toast.success()`, the library looks up the correct runtime based on a `toasterId` (which defaults to `"default"`).
+
+This allows you to have multiple, independent toast areas in your application.
+
+## 2. Facade/Runtime Split
+
+The `toast` object you import is a **facade**. It doesn't hold any state itself. It simply routes your commands to the appropriate runtime. The runtime is responsible for managing the state of toasts for a specific `Toaster`.
+
+## 3. Store + Overlay Presence Split
+
+Internally, each runtime uses two different stores:
+- A **Toast Store**: Manages the content, timers, and specific options for each toast.
+- An **Overlay Store**: Uses `@ilokesto/overlay` to manage the presence (mounting/unmounting) and lifecycle of the toast items.
+
+## 4. Options Merge Order
+
+Toast options are merged in the following order:
+1. **Global Defaults**: Built-in defaults in the library.
+2. **Toaster Props**: Options passed to the `<Toaster toastOptions={...} />` component.
+3. **Type Defaults**: Options specific to the type of toast (e.g., `toastOptions.success`).
+4. **Per-toast Options**: Options passed directly to the `toast()` call.
+
+## 5. Dismiss vs Remove
+
+- **Dismiss**: A "soft" close. It marks the toast as `closing`, stops timers, and triggers exit animations. The toast remains in the store for a short period (default 1000ms) before being hard-removed.
+- **Remove**: A "hard" delete. The toast is immediately removed from the store and the UI.

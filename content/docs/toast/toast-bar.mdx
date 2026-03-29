@@ -1,0 +1,37 @@
+# ToastBar
+
+`ToastBar` is the default component used by the `Toaster` for rendering its items. It handles the rendering of icons, messages, and any close buttons.
+
+## Props
+
+### `toast` (`ToastItem`, required)
+The toast item object to be rendered.
+
+### `position` (`ToastPosition`, optional)
+The current position of the `Toaster`.
+
+### `style` (React.CSSProperties, optional)
+Custom styles for the toast bar.
+
+### `className` (string, optional)
+Custom CSS class for the toast bar.
+
+### `children` (RenderProp, optional)
+A function that receives `{ icon, message }` and returns a React node. Use this to customize the layout of the `ToastBar`.
+
+```tsx
+<ToastBar toast={t}>
+  {({ icon, message }) => (
+    <>
+      {icon}
+      <div className="custom-message">{message}</div>
+      <button onClick={() => toast.dismiss(t.id)}>X</button>
+    </>
+  )}
+</ToastBar>
+```
+
+## When to use it vs Custom Rows
+
+- **Use `ToastBar`** if you want to keep the default background, padding, and animations but just want to rearrange or add to the icon and message.
+- **Use a custom row** by using `toast.custom()` or the `useToaster()` hook if you want to replace the entire rendering of a toast item, including the background and container.

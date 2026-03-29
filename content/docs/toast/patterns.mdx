@@ -1,0 +1,62 @@
+# Patterns
+
+Advanced usage patterns for `@ilokesto/toast`.
+
+## Promise Toasts
+
+Handle any `Promise` or a function that returns a `Promise`. The same toast will be updated automatically through loading, success, and error states.
+
+```ts
+const myPromise = fetchData();
+
+toast.promise(myPromise, {
+  loading: 'Fetching data...',
+  success: (data) => `Loaded ${data.name}!`,
+  error: 'Could not fetch data.',
+});
+```
+
+## Custom Row Rendering
+
+You can replace the default `ToastBar` logic by passing a custom component to `toast.custom()`, or by using the `children` render prop on `ToastBar`.
+
+```tsx
+toast.custom((t) => (
+  <div style={{ background: '#333', color: '#fff', padding: '16px' }}>
+    This is a fully custom toast!
+    <button onClick={() => toast.dismiss(t.id)}>Close</button>
+  </div>
+));
+```
+
+## Per-toast Styling and Themes
+
+Every toast call can accept its own `style`, `className`, and `iconTheme`.
+
+```ts
+toast.success('Deleted!', {
+  style: { background: 'red', color: 'white' },
+  iconTheme: { primary: 'white', secondary: 'red' },
+});
+```
+
+## Multiple Toasters
+
+Link a `toast()` call to a specific `Toaster` using the `toasterId`.
+
+```tsx
+// In your layout
+<Toaster toasterId="workspace-alerts" />
+
+// Somewhere else
+toast.success('Update ready', { toasterId: 'workspace-alerts' });
+```
+
+## Dismiss and Remove All
+
+If you omit the ID, `dismiss()` and `remove()` will affect every active toast in the target runtime.
+
+```ts
+toast.dismiss(); // Dismiss all
+toast.remove();  // Remove all immediately
+```

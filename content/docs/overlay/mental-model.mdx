@@ -1,0 +1,59 @@
+---
+title: Mental Model
+description: The conceptual model behind overlay runtime, adapters, and promises.
+---
+
+# Mental Model
+
+`@ilokesto/overlay` makes the most sense once you separate three things in your head:
+
+- the **runtime**,
+- the **adapter**,
+- and the **result promise**.
+
+## Provider-scoped runtime
+
+The runtime is not global. It belongs to the nearest `OverlayProvider`.
+
+That means you can have multiple independent overlay systems in the same app if you really want to.
+
+## Headless semantics
+
+The core package knows nothing about “modal” or “toast” behavior. It only knows that an overlay item has:
+
+- a `type`
+- some `props`
+- a `status`
+- and a lifecycle managed by the store
+
+Everything visual is pushed into adapters.
+
+## Promise-based opening
+
+The most important behavior is that opening an overlay can produce a promise.
+
+- `open()` returns `{ id, promise }`
+- `display()` returns only the promise
+
+That is what makes confirmation-style flows feel natural.
+
+## Core owns lifecycle, adapters own presentation
+
+The runtime decides when an item is `open`, when it becomes `closing`, and when it is removed.
+
+The adapter decides how that state looks on screen.
+
+## `closing` is meaningful
+
+`close()` does not immediately delete an item. It marks the item as `closing` and resolves its promise.
+
+That gives the adapter a useful transition window before `remove()` happens.
+
+## Why this package stays generic
+
+Because the core is generic, higher-level packages can build different semantics on top of the same runtime.
+
+- a modal layer can own focus trap and backdrop behavior
+- a toast layer can own timers and stacking behavior
+
+If you want the exact public surface next, read [API Reference](./api). If you want adapter mechanics, go to [Adapters](./adapters).

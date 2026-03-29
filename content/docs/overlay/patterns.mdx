@@ -1,0 +1,92 @@
+---
+title: Patterns
+description: Practical confirmation, adapter, and custom-store patterns.
+---
+
+# Patterns
+
+`@ilokesto/overlay` becomes most useful when you stop thinking of it as “a modal package” and start thinking of it as “a generic runtime for interaction flows.”
+
+## Confirmation dialog pattern
+
+This is the most natural fit for the promise-based API.
+
+```tsx
+const confirmed = await display<boolean>({
+  type: 'confirm',
+  props: { title: 'Delete this item?' },
+});
+
+if (confirmed) {
+  // perform delete
+}
+```
+
+The key value here is that the calling code can stay linear.
+
+## Multiple adapter families
+
+One provider can host several overlay semantics as long as they are just different `type` values.
+
+```ts
+const adapters = {
+  confirm: ConfirmDialog,
+  drawer: SettingsDrawer,
+  popover: HelpPopover,
+};
+```
+
+This works well when you want one overlay runtime but several presentation families.
+
+## Reading overlay items directly
+
+If you need a debugging panel or a custom host, `useOverlayItems()` gives you the raw current list.
+
+```tsx
+import { useOverlayItems } from '@ilokesto/overlay';
+
+function OverlayDebugPanel() {
+  const items = useOverlayItems();
+
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item.id}>
+          {item.type} - {item.status}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## Injecting your own store
+
+`OverlayProvider` can accept a prebuilt store.
+
+```tsx
+import { createOverlayStore, OverlayProvider } from '@ilokesto/overlay';
+
+const overlayStore = createOverlayStore();
+
+function App() {
+  return (
+    <OverlayProvider store={overlayStore} adapters={adapters}>
+      <Page />
+    </OverlayProvider>
+  );
+}
+```
+
+That is useful when the app wants explicit ownership over the runtime instance.
+
+## Soft-close first, hard-remove later
+
+A common overlay pattern is:
+
+1. adapter calls `close(result)`
+2. promise resolves immediately
+3. UI animates through `closing`
+4. adapter or app later calls `remove()`
+
+This pattern is why `status` exists instead of immediately deleting the item on close.

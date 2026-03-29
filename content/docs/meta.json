@@ -1,1 +1,1 @@
-{ "pages": ["store", "state", "utilinent"] }
+{ "pages": ["store", "state", "utilinent", "overlay", "toast"] }

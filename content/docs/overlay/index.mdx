@@ -1,0 +1,66 @@
+---
+title: Introduction
+description: A headless provider-scoped overlay runtime for React.
+---
+
+# @ilokesto/overlay
+
+`@ilokesto/overlay` is a small React overlay runtime built on top of `@ilokesto/store`. It owns overlay presence, lifecycle, and result resolution, while leaving actual presentation to adapter components.
+
+## What this package gives you
+
+- A provider-scoped overlay runtime instead of a global singleton.
+- A promise-based flow for user interactions.
+- A built-in host that renders active overlay items through adapters.
+- A small command API for opening, closing, removing, and observing overlays.
+
+## What it intentionally does not give you
+
+- No built-in modal, drawer, or popover UI.
+- No baked-in semantics such as focus trap, scroll lock, or animation policy.
+- No direct dependency on higher-level packages like toast or modal.
+
+## Quick Look
+
+```tsx
+import { OverlayProvider, useOverlay, type OverlayAdapterMap } from '@ilokesto/overlay';
+
+const adapters: OverlayAdapterMap = {
+  confirm: ({ close, props }) => null,
+};
+
+function Page() {
+  const { display } = useOverlay();
+
+  const handleClick = async () => {
+    const result = await display<boolean>({
+      type: 'confirm',
+      props: { title: 'Delete this item?' },
+    });
+
+    console.log(result);
+  };
+
+  return <button onClick={handleClick}>Open Overlay</button>;
+}
+
+export function App() {
+  return (
+    <OverlayProvider adapters={adapters}>
+      <Page />
+    </OverlayProvider>
+  );
+}
+```
+
+## Start Here
+
+- [Quick Start](./quick-start): the shortest path from install to a working overlay.
+- [Mental Model](./mental-model): why the package is provider-scoped and headless.
+- [API Reference](./api): the exact public surface.
+
+## Go Deeper
+
+- [Adapters](./adapters): how `type` maps to a component and how props flow.
+- [Patterns](./patterns): common confirmation, multi-adapter, and custom-store patterns.
+- [Implementation Notes](./implementation-notes): lifecycle and promise-settlement details.

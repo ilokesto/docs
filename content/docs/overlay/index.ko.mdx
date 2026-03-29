@@ -1,0 +1,66 @@
+---
+title: 소개
+description: React를 위한 headless provider-scoped overlay runtime.
+---
+
+# @ilokesto/overlay
+
+`@ilokesto/overlay`는 `@ilokesto/store` 위에 놓이는 작은 React overlay runtime입니다. 오버레이의 presence, lifecycle, result resolution은 코어가 맡고, 실제 표현은 adapter component가 맡습니다.
+
+## 이 패키지가 제공하는 것
+
+- 전역 싱글턴이 아닌 provider-scoped overlay runtime
+- 사용자 상호작용을 자연스럽게 연결하는 promise 기반 흐름
+- active overlay item을 adapter를 통해 렌더링하는 built-in host
+- 오버레이를 열고, 닫고, 제거하고, 관찰하는 작은 명령형 API
+
+## 의도적으로 제공하지 않는 것
+
+- 내장 modal, drawer, popover UI
+- focus trap, scroll lock, animation policy 같은 정책
+- toast나 modal 같은 상위 패키지에 대한 직접 의존성
+
+## 훑어보기
+
+```tsx
+import { OverlayProvider, useOverlay, type OverlayAdapterMap } from '@ilokesto/overlay';
+
+const adapters: OverlayAdapterMap = {
+  confirm: ({ close, props }) => null,
+};
+
+function Page() {
+  const { display } = useOverlay();
+
+  const handleClick = async () => {
+    const result = await display<boolean>({
+      type: 'confirm',
+      props: { title: '정말 삭제할까요?' },
+    });
+
+    console.log(result);
+  };
+
+  return <button onClick={handleClick}>오버레이 열기</button>;
+}
+
+export function App() {
+  return (
+    <OverlayProvider adapters={adapters}>
+      <Page />
+    </OverlayProvider>
+  );
+}
+```
+
+## 여기서 시작하기
+
+- [빠른 시작](./quick-start): 설치부터 동작하는 overlay 하나까지 가장 짧은 경로
+- [멘탈 모델](./mental-model): 왜 이 패키지가 provider-scoped이고 headless인지
+- [API 레퍼런스](./api): 정확한 공개 표면
+
+## 더 깊게 읽기
+
+- [어댑터](./adapters): `type`이 어떻게 component로 이어지고 props가 어떻게 흐르는지
+- [패턴](./patterns): confirmation, multi-adapter, custom-store 패턴
+- [구현 노트](./implementation-notes): lifecycle과 promise settlement 세부 사항

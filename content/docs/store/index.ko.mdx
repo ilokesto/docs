@@ -1,68 +1,62 @@
 ---
 title: 개요
-description: 예측 가능한 상태 관리를 위한 프레임워크 독립적인 기초 스토어입니다.
+description: 프레임워크에 묶이지 않는 Store 패키지를 위한 경로 안내입니다.
 ---
 
-`@ilokesto/store`는 ilokesto 에코시스템의 핵심 프리미티브 중 하나입니다. 신뢰성과 성능을 위해 설계된 최소한의, 동기식이며 프레임워크 독립적인 스토어 구현을 제공합니다.
+# Store
 
-에코시스템의 다른 패키지들이 프레임워크 바인딩이나 복잡한 상태 관리 패턴을 제공하는 것과 달리, `store`는 상태의 보관, 업데이트, 그리고 알림이라는 기본 계약에 집중하는 가벼운 기반으로 남습니다.
+`@ilokesto/store`는 Store 문서의 중심에 있는 작은 상태 컨테이너입니다. 하나의 상태 값을 보관하고, `setState`로 그 값을 교체하며, 교체가 성공하면 리스너에게 알립니다.
 
-### 설치
+React, Vue, Svelte, Angular 또는 다른 프레임워크에 의존하지 않는 plain TypeScript 상태 계약이 필요할 때 이 패키지를 사용하세요.
+
+## 패키지 경계
+
+이 패키지는 `@ilokesto/store`에서 `Store<T>`를 내보냅니다.
+
+다루는 범위는 다음과 같습니다.
+
+- 하나의 상태 값 저장,
+- 현재 상태와 초기 상태 읽기,
+- 값 또는 업데이트 함수로 상태 교체,
+- 성공한 상태 변경 구독,
+- 현재 공개 메서드 이름을 쓰는 소스 기반 미들웨어 추가.
+
+프레임워크 hook, selector, reducer, persistence, data fetching, devtools, 비동기 스케줄링은 제공하지 않습니다. 그런 기능은 어댑터나 더 높은 수준의 패키지가 맡습니다.
+
+## 설치
 
 ```package-install
 @ilokesto/store
 ```
 
-### 특징
+## 여기서 시작하기
 
-- **기초적(Foundational)**: 상태 저장을 위한 최소한의 프리미티브 세트입니다.
-- **프레임워크 독립적(Framework-agnostic)**: 모든 자바스크립트 환경(Node.js, Browser, Deno 등)에서 작동합니다.
-- **동기식(Synchronous)**: 상태 업데이트와 알림이 즉시 발생합니다.
-- **예측 가능함(Predictable)**: 표준 `Object.is` 체크와 불변성 패턴을 사용합니다.
+- [빠른 시작](./quick-start): 패키지를 설치하고, 스토어를 만들고, 업데이트하고, 구독한 뒤 정리합니다.
+- [핵심 개념](./core-concepts): 스냅샷, 교체 업데이트, 구독, 베일아웃, mutation 주의사항 뒤의 계약을 배웁니다.
+- [API 레퍼런스](./api): `Store<T>`의 소스 기반 공개 표면을 확인합니다.
 
-### 무엇이 아닌가
+## 작업별 페이지 이어서 보기
 
-- **프레임워크 바인딩이 아님**: React hook이나 Vue composable을 포함하지 않습니다.
-- **데이터 페칭 라이브러리가 아님**: 서버 캐시나 로딩 상태를 관리하지 않습니다.
-- **멀티 스토어 오케스트레이터가 아님**: 단일 상태 원자(atom)를 관리합니다.
+- [프레임워크 사용](./framework-usage): 어댑터를 통해 스토어를 프레임워크 생명주기에 연결합니다.
+- [공통 패턴](./patterns): plain `Store` 인스턴스를 둘러싼 실전 레시피를 적용합니다.
+- [고급 시맨틱](./advanced-semantics): 업데이트와 알림 뒤의 자세한 동작 규칙을 읽습니다.
+- [Store 기반 구축하기](./building-on-store): 최소 계약 위에 라이브러리나 어댑터를 만듭니다.
+- [문제 해결](./troubleshooting): 흔한 Store 사용 실수를 진단합니다.
 
-### 빠른 예제
+## 작은 예제
 
-```typescript
+```ts
 import { Store } from "@ilokesto/store";
 
-const store = new Store({ count: 0 });
+const counterStore = new Store({ count: 0 });
 
-// 변경 구독
-const unsubscribe = store.subscribe(() => {
-  console.log("상태 변경됨:", store.getState());
+const unsubscribe = counterStore.subscribe(() => {
+  console.log(counterStore.getState());
 });
 
-// 상태 업데이트
-store.setState({ count: 1 });
+counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 
-// 정리
 unsubscribe();
 ```
 
-### 언제 사용하나
-
-- 사용자에게 프레임워크 의존성을 강요하지 않고 내부 상태 관리가 필요한 라이브러리를 구축할 때.
-- 바닐라 자바스크립트 또는 타입스크립트 프로젝트를 위한 단순하고 신뢰할 수 있는 상태 컨테이너가 필요할 때.
-- 더 높은 수준의 라이브러리, 어댑터, 도메인 전용 상태 계층을 구축하는 기반으로 사용할 때.
-
-### 여기서 시작하기
-
-- [빠른 시작](./quick-start): 설치부터 유용한 store 하나를 빠르게 만드는 경로
-- [멘탈 모델](./mental-model): 왜 이 패키지가 작고 동기적으로 유지되는지 설명
-- [API 레퍼런스](./api): `Store` 클래스의 정확한 공개 표면
-
-### 더 깊게 읽기
-
-- [업데이트 시맨틱](./updates): 상태 업데이트 작동 방식과 베일아웃 규칙
-- [구독](./subscriptions): 옵저버 생명주기 관리
-- [공통 패턴](./patterns): 실전 활용을 위한 패턴들
-- [스토어 기반 구축하기](./building-on-store): 어댑터 및 라이브러리 작성자를 위한 가이드
-- [통합](./integrations): `@ilokesto/store` 위에 있는 생태계 개요
-- [시맨틱](./semantics): 엄격한 동작 사양
-- [구현 노트](./implementation-notes): 내부 메커니즘 심층 분석
+이 예제는 의도적으로 단순합니다. 스토어 하나를 만들고, 스냅샷을 읽고, 상태를 교체하고, 변경을 듣고, 더 필요 없을 때 리스너를 제거하는 패키지의 전체 모양을 보여줍니다.

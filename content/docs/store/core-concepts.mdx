@@ -1,0 +1,129 @@
+---
+title: Core Concepts
+description: The state, update, and subscription contract behind Store.
+---
+
+# Core Concepts
+
+`@ilokesto/store` is easiest to understand as one synchronous value container. It holds a state value, replaces that value, and notifies listeners after successful replacements.
+
+## Store as a contract
+
+`Store<T>` is a contract for a single state atom. The public contract is small: create a store, read its current or initial value, replace the value, add middleware, and subscribe to change notifications.
+
+The contract does not include framework rendering, selectors, reducers, persistence, data fetching, devtools, or async batching. Those features can be built around a store, but they are not part of the package itself.
+
+## State snapshot
+
+`getState()` returns the current state reference. `getInitialState()` returns the value that was passed to the constructor.
+
+Both methods are typed as `Readonly<T>`. That is a TypeScript signal to treat the value as a snapshot. The source does not freeze, clone, or proxy the state at runtime.
+
+```ts
+const store = new Store({ count: 0 });
+
+const current = store.getState();
+const initial = store.getInitialState();
+```
+
+## Reading
+
+Reading is direct and synchronous. There is no derived read system and no property level tracking.
+
+If a consumer needs a derived value, calculate it outside the store or in a higher level adapter:
+
+```ts
+const count = store.getState().count;
+const isEmpty = count === 0;
+```
+
+## Updating
+
+`setState` accepts either the next value or an updater function.
+
+```ts
+store.setState({ count: 1 });
+
+store.setState((prev) => ({
+  ...prev,
+  count: prev.count + 1,
+}));
+```
+
+Use the updater form when the next state depends on the previous state.
+
+## Replacement semantics
+
+Updates replace the whole state value. Object state is not merged.
+
+```ts
+const store = new Store({ a: 1, b: 2 });
+
+store.setState({ a: 10 });
+// Current state is { a: 10 }. The b field was not preserved.
+```
+
+Preserve fields yourself when you want to keep them:
+
+```ts
+store.setState((prev) => ({ ...prev, a: 10 }));
+```
+
+## Subscription lifecycle
+
+`subscribe` registers a listener and returns an unsubscribe function.
+
+```ts
+const unsubscribe = store.subscribe(() => {
+  console.log(store.getState());
+});
+
+unsubscribe();
+```
+
+Listeners run synchronously after a successful replacement. The listener set is snapshotted for notification, so removing a listener during notification does not mutate the active iteration array.
+
+Store keeps listener references in a `Set`. Registering the same function reference more than once stores it once.
+
+## Equality and bailout behavior
+
+Before replacing state, Store compares the previous and resolved next value with `Object.is`.
+
+If `Object.is(prevState, nextState)` is `true`, Store returns without replacing state and without notifying listeners.
+
+```ts
+store.setState((prev) => {
+  if (prev.count >= 10) return prev;
+
+  return { ...prev, count: prev.count + 1 };
+});
+```
+
+For objects and arrays, a new reference is the normal way to represent a change.
+
+## Mutation caveats
+
+Do not mutate the value returned by `getState()`.
+
+```ts
+const state = store.getState();
+
+state.items.push("new item");
+```
+
+That direct mutation does not call `setState`, so listeners are not notified. It can also make later `Object.is` checks harder to reason about because the same object reference has already changed.
+
+Use an immutable replacement instead:
+
+```ts
+store.setState((prev) => ({
+  ...prev,
+  items: [...prev.items, "new item"],
+}));
+```
+
+## Framework adapter relationship
+
+Framework adapters should treat Store as the state and subscription primitive. The adapter owns framework specific concerns: rendering, lifecycle cleanup, selectors, scheduling, and any memoization rules.
+
+That separation keeps `@ilokesto/store` usable in plain TypeScript while still giving framework packages a stable base to build on.

@@ -7,13 +7,23 @@ description: A provider-scoped toast runtime and facade for React.
 
 `@ilokesto/toast` is a React toast package built around a provider-scoped runtime and a familiar `toast.*` facade. Internally it uses `@ilokesto/overlay` only for presence lifecycle, while toast policy and rendering stay inside this package.
 
-## What this package gives you
+It is designed for the path most teams actually care about: mount a toaster once, call `toast.*` from application code, keep the default renderer polished, and only drop lower when your product really needs custom rows or multiple runtimes.
 
-- A familiar facade: `toast()`, `toast.success()`, `toast.error()`, `toast.loading()`, `toast.custom()`, `toast.promise()`
-- Independent runtimes separated by `toasterId`
-- A default `Toaster` with built-in row rendering
-- Headless hooks for custom rendering
-- Optional `transport="top-layer"`
+The package feels close to `react-hot-toast` on the common path, but it is more explicit about runtime ownership and gives you a top-layer transport option when you want overlay behavior that is not tied to the normal DOM stacking context.
+
+## Try it live
+
+The fastest way to judge a toast package is to fire real toasts. This demo runs the actual package, including promise transitions, custom content, and per-position behavior.
+
+<ToastDemo locale="en" />
+
+## Why teams reach for it
+
+- **Fast common path**: `toast()`, `toast.success()`, `toast.error()`, `toast.loading()`, `toast.custom()`, and `toast.promise()` are all there.
+- **Runtime ownership is explicit**: each `Toaster` owns one runtime, and `toasterId` gives you deliberate separation instead of accidental global coupling.
+- **Polished default renderer**: the stock row renderer already includes status icons, loading states, motion, and sensible defaults.
+- **Headless escape hatch**: if the stock UI stops being enough, `useToaster()` and `ToastBar` let you keep the state model and replace the presentation.
+- **Extra transport mode**: `transport="top-layer"` gives you a rendering option that `react-hot-toast` does not expose.
 
 ## What it intentionally does not give you
 
@@ -21,7 +31,9 @@ description: A provider-scoped toast runtime and facade for React.
 - No notification center or inbox model
 - No attempt to hide that a runtime registry exists behind the facade
 
-## Quick Look
+Those boundaries matter. They keep the package focused on transient notifications instead of quietly growing into a broader message center abstraction.
+
+## Quick look
 
 ```tsx
 import { Toaster, toast } from '@ilokesto/toast';
@@ -35,6 +47,8 @@ function App() {
   );
 }
 ```
+
+That is enough to get the default stack on screen. The rest of the package is about controlling where that runtime lives, how rows render, and how much of the stack you want to own yourself.
 
 ## Start Here
 

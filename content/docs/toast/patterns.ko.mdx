@@ -5,6 +5,8 @@ description: promise, styling, multi-toaster의 실전 패턴.
 
 # 패턴
 
+API 수는 작지만, 실제 제품에서 중요한 것은 이들을 어떻게 조합하느냐입니다. 이 페이지는 첫 구현 이후에도 남는 패턴을 정리합니다.
+
 ## promise toast
 
 가장 흔한 상위 패턴은 `toast.promise()`입니다.
@@ -19,6 +21,8 @@ toast.promise(fetchData(), {
 
 runtime은 loading -> success/error 동안 같은 toast id를 재사용합니다.
 
+이 덕분에 스택이 조용하게 유지됩니다. “시작”, “완료”, “실패”를 각각 다른 토스트로 쌓기보다, 하나의 알림이 상태를 바꾸는 편이 사용자에게 훨씬 자연스럽습니다.
+
 ## 개별 토스트 스타일링
 
 ```ts
@@ -29,6 +33,8 @@ toast.success('삭제됨!', {
 ```
 
 하나의 토스트만 다른 모양이 필요할 때 적당한 수준입니다.
+
+반복해서 같은 설정을 여러 곳에 쓰게 된다면, 각 호출 지점에서 스타일을 복사하기보다 `toastOptions` 쪽으로 기본값을 올리는 편이 낫습니다.
 
 ## 여러 toaster 함께 쓰기
 
@@ -43,6 +49,8 @@ toast.success('저장됨', { toasterId: 'editor' });
 
 각 `toasterId`는 독립적인 runtime을 가집니다.
 
+이 분리는 특정 UI 영역이 다른 곳과 알림을 섞지 않아야 할 때 특히 유용합니다. 예를 들어 에디터 하단 상태 영역은 앱 전체 스택과 분리된 알림 표면을 가질 수 있습니다.
+
 ## 모두 dismiss vs 모두 remove
 
 ```ts
@@ -51,6 +59,8 @@ toast.remove();
 ```
 
 id를 생략하면 해당 runtime의 active toast 전체에 적용됩니다.
+
+퇴장 모션까지 살리고 싶다면 `dismiss()`를, 즉시 잘라내고 싶다면 `remove()`를 선택하면 됩니다.
 
 ## `Toaster`를 통한 custom row
 
@@ -63,3 +73,10 @@ id를 생략하면 해당 runtime의 active toast 전체에 적용됩니다.
 ```
 
 기본 presentation보다 row 제어가 더 중요할 때 이 경로가 맞습니다.
+
+## 실전에서의 기준선
+
+- 제품 요구가 생기기 전까지는 기본 렌더러를 유지합니다.
+- 여러 토스트가 공유하는 기본값은 `toastOptions`에 둡니다.
+- 드물고 국소적인 변형만 per-toast `style`, `iconTheme`로 처리합니다.
+- 실제로 분리된 알림 표면이 필요한 경우에만 여러 `toasterId`를 도입합니다.

@@ -1,52 +1,75 @@
 ---
 title: 빠른 시작
-description: 가장 짧은 경로로 유용한 vanilla store를 만듭니다.
+description: 유용한 Store 인스턴스까지 가는 가장 짧은 경로입니다.
 ---
 
 # 빠른 시작
 
-이 페이지의 목표는 `Store` 인스턴스 하나를 빠르게 만들고, 올바르게 갱신하고, 다음에 무엇을 읽어야 하는지 연결하는 것입니다. 모든 동작을 다 설명하기보다는 가장 짧은 성공 경로를 보여주는 데 집중합니다.
+이 페이지는 `Store` 하나를 실행 가능한 상태로 만듭니다. 일부러 짧게 유지합니다. 설치하고, 만들고, 읽고, 업데이트하고, 구독하고, 구독을 취소합니다.
+
+## 1. 설치
 
 ```package-install
 @ilokesto/store
 ```
 
-## 1. 스토어 만들기
+## 2. 만들기
 
 ```ts
-import { Store } from '@ilokesto/store';
+import { Store } from "@ilokesto/store";
 
 const counterStore = new Store({ count: 0 });
 ```
 
-## 2. 현재 값 읽기
+생성자는 초기 상태 값을 받습니다. 이 값은 나중에 `getInitialState()`가 반환하는 값이기도 합니다.
+
+## 3. 읽기
 
 ```ts
 const current = counterStore.getState();
+
+console.log(current.count);
 ```
 
-`Store`는 동기적으로 동작합니다. 별도의 비동기 스냅샷 계층은 없습니다.
+읽기는 동기적으로 이뤄집니다. `getState()`는 현재 상태 참조를 `Readonly<T>` 타입으로 반환합니다.
 
-## 3. 전체 상태 값을 갱신하기
+## 4. 업데이트
 
 ```ts
-counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+counterStore.setState((prev) => ({
+  ...prev,
+  count: prev.count + 1,
+}));
 ```
 
-상태가 객체여도 `Store`는 전체 값을 교체합니다. 다른 필드를 유지하려면 직접 유지해야 합니다.
+`setState`는 전체 상태 값을 교체합니다. 상태가 객체라면 유지하고 싶은 필드를 직접 복사하세요.
 
-## 4. 변경 구독하기
+다음 값을 바로 넘길 수도 있습니다.
+
+```ts
+counterStore.setState({ count: 10 });
+```
+
+## 5. 구독
 
 ```ts
 const unsubscribe = counterStore.subscribe(() => {
-  console.log(counterStore.getState());
+  console.log("New count:", counterStore.getState().count);
 });
+```
 
+리스너는 성공한 상태 교체 뒤에 실행됩니다. `Object.is`가 다음 값이 현재 값과 같다고 판단하면 스토어는 베일아웃하고 리스너에게 알리지 않습니다.
+
+## 6. 구독 취소
+
+```ts
 unsubscribe();
 ```
 
-## 다음으로 읽을 페이지
+리스너가 더 필요 없을 때 반환된 함수를 호출하세요. 어댑터, 컴포넌트, 오래 실행되는 서비스에서는 특히 중요합니다.
 
-- 왜 이 패키지가 이렇게 작게 유지되는지 이해하고 싶다면 [멘탈 모델](./mental-model)
-- 교체 semantics와 bailout 규칙이 아직 낯설다면 [업데이트 시맨틱](./updates)
-- 리스너 동작이 중요하다면 [구독](./subscriptions)
+## 다음 단계
+
+- 스냅샷, 업데이트, 구독, mutation 주의사항 뒤의 멘탈 모델은 [핵심 개념](./core-concepts)을 읽으세요.
+- 정확한 메서드 이름과 시그니처가 필요하면 [API 레퍼런스](./api)를 읽으세요.
+- 프레임워크 생명주기가 구독 정리를 맡는 경우에는 [프레임워크 사용](./framework-usage)을 읽으세요.

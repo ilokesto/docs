@@ -1,88 +1,258 @@
 ---
 title: 공통 패턴
-description: 실전 활용을 위한 패턴들입니다.
+description: 애플리케이션 코드에서 바로 쓰는 Store 레시피입니다.
 ---
 
-`@ilokesto/store`로 상태를 관리할 때 효과적인 패턴들을 살펴봅니다.
+# 공통 패턴
 
-### 모듈 범위 스토어 (Module-scope Store)
+`@ilokesto/store`로 앱 코드를 작성할 때 이 페이지를 사용하세요. 스토어를 만들고, 안전하게 업데이트하고, 상태를 테스트하기 쉽게 유지하는 작은 레시피를 모았습니다.
 
-공유되는 전역 상태의 경우, 모듈 수준에서 스토어를 생성하고 이를 내보낼 수 있습니다.
+`Store` 위에 프레임워크 어댑터나 라이브러리를 만드는 중이라면 [스토어 기반 구축하기](./building-on-store)를 먼저 읽으세요. 정확한 교체, 구독, 베일아웃 규칙은 [고급 시맨틱](./advanced-semantics)에 있고, 전체 메서드 목록은 [API 레퍼런스](./api)에 있습니다.
 
-```typescript
-// store.ts
-export const authStore = new Store({ user: null, isAuthenticated: false });
-```
+## 모듈 수준 스토어
 
-### 액션과 유사한 래퍼 (Action-like Wrappers)
+앱의 여러 부분이 공유해야 하는 상태에는 모듈 수준 스토어가 잘 맞습니다. 상태 모양은 좁게 유지하고, 허용되는 업데이트를 설명하는 작은 함수를 함께 내보내세요.
 
-모든 곳에서 직접 `setState`를 호출하는 대신, 업데이트를 의미론적인 함수(액션)로 감싸서 관리하십시오.
+```ts
+import { Store } from "@ilokesto/store";
 
-```typescript
-export const login = (user: User) => {
-  authStore.setState({ user, isAuthenticated: true });
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
 };
 
-export const logout = () => {
-  authStore.setState({ user: null, isAuthenticated: false });
+const initialAuthState: AuthState = {
+  user: null,
+  status: "anonymous",
 };
+
+export const authStore = new Store<AuthState>(initialAuthState);
+
+export function signIn(user: { id: string; name: string }) {
+  authStore.setState({ user, status: "signed-in" });
+}
+
+export function signOut() {
+  authStore.setState(initialAuthState);
+}
 ```
 
-### 읽기/쓰기 분리 (Read/Write Separation)
+auth, theme, feature flag, 현재 workspace처럼 앱 전체에서 공유되는 작은 값에 이 패턴을 사용하세요.
 
-접근 제어를 위해 스토어의 다른 부분들을 개별적으로 내보낼 수 있습니다.
+## 스토어 팩토리
 
-```typescript
-// 읽기 전용 뷰와 액션만 내보냄
-export const getAuthState = () => authStore.getState();
-export const subscribeToAuth = (listener: () => void) =>
-  authStore.subscribe(listener);
-```
+팩토리는 기능 인스턴스마다 새 스토어를 만듭니다. 화면, 탭, 테스트, 서버 요청 범위처럼 사용자나 실행 사이에 상태가 새면 안 되는 곳에 유용합니다.
 
-### 재설정 패턴 (Reset Pattern)
+```ts
+import { Store } from "@ilokesto/store";
 
-`getInitialState()`를 사용하여 스토어를 초기 상태로 쉽게 재설정하십시오.
-
-```typescript
-const resetStore = () => {
-  store.setState(store.getInitialState());
+type CounterState = {
+  count: number;
 };
+
+export function createCounterStore(initialCount = 0) {
+  const store = new Store<CounterState>({ count: initialCount });
+
+  return {
+    store,
+    increment() {
+      store.setState((prev) => ({ count: prev.count + 1 }));
+    },
+    decrement() {
+      store.setState((prev) => ({ count: prev.count - 1 }));
+    },
+  };
+}
 ```
 
-### 파생된 값 (Derived Values)
+모듈 수준 상태 때문에 테스트 순서가 결과에 영향을 주거나, 앱 인스턴스 사이에 데이터가 의도치 않게 공유될 수 있다면 팩토리를 선택하세요.
 
-`Store`는 원시 원자(raw atom)만을 관리하므로, 필요할 때마다 파생된 상태를 계산할 수 있습니다.
+## 초기화 패턴
 
-```typescript
-const getFullName = () => {
-  const { firstName, lastName } = userStore.getState();
-  return `${firstName} ${lastName}`;
+`getInitialState()`는 생성자에 전달한 값을 반환합니다. 그래서 reset helper를 단순하게 만들 수 있지만, `Store`는 런타임에서 그 값을 복제하거나 동결하지 않는다는 점을 기억해야 합니다.
+
+```ts
+import { Store } from "@ilokesto/store";
+
+type FormState = {
+  name: string;
+  email: string;
+  submitted: boolean;
 };
+
+const formStore = new Store<FormState>({
+  name: "",
+  email: "",
+  submitted: false,
+});
+
+export function resetForm() {
+  formStore.setState(formStore.getInitialState());
+}
 ```
 
-### 스토어 분리 (Splitting Stores)
+초기값에 앱 코드가 바꿀 수 있는 중첩 객체가 있다면, 같은 참조를 다시 쓰기보다 팩토리로 새 초기값을 만드세요.
 
-모든 것을 하나의 거대한 스토어에 담을 필요는 없습니다. 관심사별로 여러 스토어를 분리하여 관리하십시오.
+```ts
+function createInitialFormState(): FormState {
+  return { name: "", email: "", submitted: false };
+}
 
-```typescript
-const themeStore = new Store("light");
-const userStore = new Store({ id: 1, name: "Alice" });
+const formStore = new Store<FormState>(createInitialFormState());
+
+export function resetForm() {
+  formStore.setState(createInitialFormState());
+}
 ```
 
-### 테스트 패턴 (Testing Patterns)
+## 파생 값
 
-스토어 로직은 프레임워크 의존성이 없기 때문에 테스트하기가 매우 간단합니다.
+`Store`는 하나의 소스 값을 보관합니다. 부가 값은 일반 함수로 파생하면 항상 최신 스냅샷을 기준으로 계산됩니다.
 
-```typescript
-test("increments count", () => {
-  const store = new Store({ count: 0 });
-  store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
-  expect(store.getState().count).toBe(1);
+```ts
+type CartState = {
+  items: Array<{ id: string; price: number; quantity: number }>;
+};
+
+const cartStore = new Store<CartState>({ items: [] });
+
+export function getCartTotal() {
+  return cartStore
+    .getState()
+    .items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+export function hasItems() {
+  return cartStore.getState().items.length > 0;
+}
+```
+
+사용자 입력으로 보존해야 하는 값이 아니라면 파생 데이터를 저장된 상태 밖에 두세요. 이렇게 하면 업데이트 뒤에 오래된 캐시 필드가 남는 일을 피할 수 있습니다.
+
+## 비동기 흐름
+
+비동기 작업은 스토어 업데이트 주변에서 처리하세요. 요청을 시작하고 loading 상태를 업데이트한 다음, 요청이 끝나면 전체 상태를 교체합니다.
+
+```ts
+type ProfileState = {
+  profile: { id: string; name: string } | null;
+  loading: boolean;
+  error: string | null;
+};
+
+const profileStore = new Store<ProfileState>({
+  profile: null,
+  loading: false,
+  error: null,
+});
+
+export async function loadProfile(userId: string) {
+  profileStore.setState((prev) => ({
+    ...prev,
+    loading: true,
+    error: null,
+  }));
+
+  try {
+    const profile = await fetchProfile(userId);
+
+    profileStore.setState({
+      profile,
+      loading: false,
+      error: null,
+    });
+  } catch (error) {
+    profileStore.setState((prev) => ({
+      ...prev,
+      loading: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }));
+  }
+}
+```
+
+`setState` 자체는 동기식입니다. 비동기 부분은 Store 알림 모델이 아니라 그 주변의 사용자 함수에 있습니다.
+
+## 스토어 나누기
+
+서로 관련 없는 소비자가 같은 알림 흐름을 공유하면 안 될 때는 책임별로 스토어를 나누세요.
+
+```ts
+import { Store } from "@ilokesto/store";
+
+export const themeStore = new Store<"light" | "dark">("light");
+
+export const sessionStore = new Store({
+  userId: null as string | null,
+  activeWorkspaceId: null as string | null,
+  tokenExpiresAt: null as number | null,
+});
+
+export const draftStore = new Store({
+  title: "",
+  body: "",
 });
 ```
 
-### 안티 패턴
+분리된 스토어는 소유권을 더 분명하게 만듭니다. 각 스토어가 하나의 일을 맡기 때문에 초기화와 테스트도 작아집니다.
 
-- **깊은 수정(Deep mutation)**: 새로운 객체를 반환하는 대신 상태 속성을 직접 수정하는 것.
-- **동기식 루프(Sync loops)**: 스토어를 구독하고 리스너 내부에서 동일한 스토어의 `setState`를 호출하는 것.
-- **모든 것을 하나의 스토어에 담기**: 단일 원자가 강력하기는 하지만, 관련 없는 상태를 과도하게 중앙 집중화하면 컨슈머에게 불필요한 알림이 발생할 수 있습니다.
+## 하나의 거대한 스토어 피하기
+
+앱 전체를 담는 단일 객체는 편해 보이지만, 시간이 지나면 안전하게 바꾸기 어려워지는 경우가 많습니다.
+
+다음 신호를 살펴보세요.
+
+- 관련 없는 업데이트에도 많은 필드를 spread해야 합니다.
+- 작은 동작을 테스트하려고 큰 fixture가 필요합니다.
+- 구독자가 관심 없는 변경에도 깨어납니다.
+- reset 로직이 모든 기능을 알아야 합니다.
+
+대신 domain마다 스토어를 두세요. 두 domain이 함께 움직여야 한다면, 각 스토어를 명시적으로 업데이트하는 앱 수준 함수를 작성합니다.
+
+```ts
+export function clearWorkspace() {
+  sessionStore.setState((prev) => ({ ...prev, activeWorkspaceId: null }));
+  draftStore.setState({ title: "", body: "" });
+}
+```
+
+이렇게 하면 모든 기능을 하나의 공유 상태 객체로 합치지 않고도 조정 지점을 코드에 드러낼 수 있습니다.
+
+## 격리된 스토어로 테스트하기
+
+테스트는 각 테스트가 팩토리를 통해 자기 스토어를 만들 때 가장 쉽습니다.
+
+```ts
+import { expect, test } from "vitest";
+
+test("increments count", () => {
+  const { store, increment } = createCounterStore();
+
+  increment();
+
+  expect(store.getState().count).toBe(1);
+});
+
+test("notifies subscribers after a change", () => {
+  const { store, increment } = createCounterStore();
+  let calls = 0;
+
+  const unsubscribe = store.subscribe(() => {
+    calls += 1;
+  });
+
+  increment();
+  unsubscribe();
+
+  expect(calls).toBe(1);
+});
+```
+
+테스트가 구독을 만들었다면 테스트가 끝나기 전에 항상 unsubscribe 함수를 호출하세요. 프레임워크 어댑터에서 사용하는 생명주기 정리 규칙과 같은 습관입니다.
+
+## 흔한 실수
+
+- `getState()`에서 받은 객체를 직접 바꾸고, 새 값으로 상태를 교체하지 않는 것.
+- 객체 업데이트가 필드를 병합하지 않고 전체 상태를 교체한다는 점을 잊는 것.
+- guard 없이 subscriber 안에서 `setState`를 호출해 동기식 루프를 만드는 것.
+- 격리된 상태를 기대하는 테스트 사이에서 하나의 모듈 수준 스토어를 공유하는 것.

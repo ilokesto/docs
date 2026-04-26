@@ -5,6 +5,8 @@ description: Practical promise, styling, and multi-toaster patterns.
 
 # Patterns
 
+The APIs are small, but the way they compose matters. This page covers the patterns that tend to survive first contact with a real product.
+
 ## Promise toasts
 
 The most common higher-level pattern is `toast.promise()`.
@@ -19,6 +21,8 @@ toast.promise(fetchData(), {
 
 The runtime reuses the same toast id across loading -> success/error.
 
+That keeps the stack quiet. Users do not need one toast for “starting”, another for “done”, and a third for failure; they need one evolving status surface.
+
 ## Per-toast styling
 
 ```ts
@@ -29,6 +33,8 @@ toast.success('Deleted!', {
 ```
 
 This is the right level when only one toast needs a custom look.
+
+If you find yourself repeating this setup for a whole feature, move the defaults up into `toastOptions` instead of styling each call site independently.
 
 ## Multiple toasters
 
@@ -43,6 +49,8 @@ toast.success('Saved', { toasterId: 'editor' });
 
 Each `toasterId` gets an independent runtime.
 
+That separation is useful when one part of the UI should not compete with another. An editor footer, for example, can keep its own notifications without being swallowed by an app-wide stack.
+
 ## Dismiss all vs remove all
 
 ```ts
@@ -51,6 +59,8 @@ toast.remove();
 ```
 
 Omitting the id applies the action to all active toasts for that runtime.
+
+Use `dismiss()` when you want the exit motion to play. Use `remove()` when you intentionally want a hard cut.
 
 ## Custom rows through `Toaster`
 
@@ -63,3 +73,10 @@ Omitting the id applies the action to all active toasts for that runtime.
 ```
 
 Use this when row-level control matters more than the default presentation.
+
+## A practical rule of thumb
+
+- Stay with the default renderer until a product requirement forces a different row layout.
+- Use `toastOptions` for shared defaults.
+- Use per-toast `style` and `iconTheme` when the variation is rare and local.
+- Introduce multiple `toasterId` values only when the UI truly has separate notification surfaces.

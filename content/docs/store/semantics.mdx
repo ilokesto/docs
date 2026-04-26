@@ -1,48 +1,10 @@
 ---
-title: Semantics
-description: Strict behavioral specification for @ilokesto/store.
+title: Semantics moved
+description: Legacy route for Store behavior semantics.
 ---
 
-This page serves as the formal behavioral specification for the `Store` class.
+# Semantics moved
 
-### Readonly\<T\> Meaning
+This page is deprecated and kept as a legacy route for older links.
 
-The `Store` class uses `Readonly<T>` in its method signatures (like `getState` and `getInitialState`).
-
-- **Compile-time safety**: It prevents accidental direct mutation in TypeScript.
-- **Contractual intent**: It signals to consumers that the returned state is a static snapshot and should not be modified.
-- **No Runtime Freeze**: For performance reasons, the store does **not** call `Object.freeze()` on the state at runtime.
-
-### Synchronous Model
-
-The store operates on a strictly synchronous model.
-
-- `setState` completes only after the current update flow finishes and all listeners for that update have been notified.
-- There is no internal batching or scheduling. If you need asynchronous behavior, it must be managed at a higher level (e.g., in an adapter).
-
-### Equality and Bailout
-
-`Store` uses `Object.is` for state comparison.
-
-- **Bailout**: If `Object.is(prevState, nextState)` is `true`, no update occurs.
-- **Reference Awareness**: To trigger an update for objects or arrays, you **must** provide a new reference.
-
-### What the Store Does Not Do
-
-To remain a "foundational" package, `Store` intentionally avoids the following:
-
-- **Shallow Merging**: `setState` always replaces the entire state.
-- **Deep Observability**: It does not use Proxies or track property-level access.
-- **Action Dispatching**: There is no built-in `dispatch` or reducer logic.
-- **Dependency Tracking**: It does not know which parts of the state a listener cares about; it notifies for every change.
-
-### Immutable Snapshot Mindset
-
-The primary philosophy of `@ilokesto/store` is that the state at any point in time is an immutable snapshot. Transitions between snapshots are explicit, atomic, and synchronous.
-
-### Summary Rules
-
-1. **Always return a new reference** to trigger an update for non-primitives.
-2. **Never mutate** the object returned by `getState()`.
-3. **Assume notifications are immediate** and synchronous.
-4. **Use updater functions** for logic that depends on the previous state.
+The formal Store behavior rules now live in [Advanced Semantics](./advanced-semantics).

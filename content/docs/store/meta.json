@@ -3,19 +3,15 @@
   "root": true,
   "pages": [
     "index",
-    "---Introduction---",
     "quick-start",
-    "mental-model",
-    "---Reference---",
+    "core-concepts",
     "api",
-    "updates",
-    "subscriptions",
-    "semantics",
-    "---Guides---",
+    "---",
+    "framework-usage",
     "patterns",
     "building-on-store",
-    "integrations",
-    "---Advanced---",
-    "implementation-notes"
+    "---",
+    "advanced-semantics",
+    "troubleshooting"
   ]
 }

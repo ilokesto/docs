@@ -19,10 +19,16 @@ export default async function Layout({
       }}
       i18n={{
         locale: resolvedParams.lang,
-        locales: [
-          { locale: 'en', name: 'English' },
-          { locale: 'ko', name: '한국어' },
-        ],
+        locales:
+          resolvedParams.lang === 'ko'
+            ? [
+                { locale: 'en', name: '영어' },
+                { locale: 'ko', name: '한국어' },
+              ]
+            : [
+                { locale: 'en', name: 'English' },
+                { locale: 'ko', name: 'Korean' },
+              ],
         translations:
           resolvedParams.lang === 'ko'
             ? {

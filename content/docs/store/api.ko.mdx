@@ -1,77 +1,148 @@
 ---
 title: API 레퍼런스
-description: Store 클래스의 공개 인터페이스입니다.
+description: Store의 소스 기반 공개 표면입니다.
 ---
 
-`@ilokesto/store` 패키지는 단일 클래스인 `Store<T>`를 내보냅니다.
+# API 레퍼런스
 
-### 생성자 (Constructor)
+`@ilokesto/store` 패키지는 하나의 공개 클래스인 `Store<T>`를 내보냅니다.
 
-#### `new Store<T>(initialState: T)`
+```ts
+import { Store } from "@ilokesto/store";
+```
 
-제공된 초기 상태로 새로운 스토어 인스턴스를 생성합니다.
+이 페이지는 현재 소스 증거로 확인한 공개 API 심볼만 문서화합니다. `setMiddleware()`는 패키지 README에 남아 있는 오래된 이름이고 검증된 소스 API에는 없으므로 현재 API로 문서화하지 않습니다.
 
-```typescript
+## import 경로와 export
+
+### `Store<T>`
+
+`Store<T>`는 `@ilokesto/store`에서 내보내는 유일한 심볼입니다.
+
+```ts
 const store = new Store({ count: 0 });
 ```
 
-- **`initialState`**: 스토어의 시작 값입니다.
+## 생성자
 
----
+### `new Store<T>(initialState: T)`
 
-### 메서드 (Methods)
+초기 상태 값으로 스토어를 만듭니다. 업데이트가 성공하기 전까지 스토어는 그 값을 초기 상태이자 현재 상태로 보관합니다.
 
-#### `store.getState(): Readonly<T>`
-
-스토어의 현재 상태를 반환합니다.
-
-```typescript
-const state = store.getState();
+```ts
+const store = new Store({ count: 0 });
 ```
 
-반환된 상태는 직접적인 수정을 방지하기 위해 `Readonly<T>` 타입으로 지정됩니다. `Readonly<T>`의 의미에 대해서는 [시맨틱](./semantics)을 참조하십시오.
+## 메서드
 
-#### `store.getInitialState(): Readonly<T>`
+### `getState()`
 
-생성자에 원래 전달되었던 상태를 반환합니다. 이는 스토어를 원래 값으로 재설정할 때 유용합니다.
-
-```typescript
-const initial = store.getInitialState();
+```ts
+getState(): Readonly<T>
 ```
 
-#### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
+현재 상태 참조를 `Readonly<T>` 타입으로 반환합니다.
 
-스토어 상태를 업데이트합니다. 새 상태 값이나 업데이트 함수를 인자로 받습니다.
+`Readonly<T>`는 TypeScript 신호일 뿐입니다. 소스는 런타임에 상태 값을 동결, 복제, 프록시 처리하지 않습니다.
 
-```typescript
-// 값 교체
+### `getInitialState()`
+
+```ts
+getInitialState(): Readonly<T>
+```
+
+생성자에 전달했던 값의 참조를 `Readonly<T>` 타입으로 반환합니다.
+
+원래 값과 비교하거나 원래 값으로 직접 reset할 때 유용합니다.
+
+### `setState(nextState)`
+
+```ts
+setState(nextState: T | ((prevState: T) => T)): void
+```
+
+현재 상태를 값 또는 업데이트 함수의 결과로 교체합니다.
+
+```ts
 store.setState({ count: 1 });
 
-// 업데이트 함수
-store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+store.setState((prev) => ({
+  ...prev,
+  count: prev.count + 1,
+}));
 ```
 
-베일아웃(bailout) 규칙 및 불변성 패턴을 포함한 업데이트 동작에 대한 자세한 내용은 [업데이트 시맨틱](./updates)을 참조하십시오.
+해결된 다음 값은 전체 상태를 교체합니다. Store는 객체를 병합하지 않습니다.
 
-#### `store.subscribe(listener: () => void): () => void`
+`setState`에 전달된 런타임 값이 함수이면 Store는 이를 업데이트 함수로 다룹니다. 따라서 함수가 루트 상태 값인 경우 `setState`로 직접 설정할 수 없습니다.
 
-상태가 변경될 때마다 동기적으로 실행될 콜백을 등록합니다.
+### `pushMiddleware(middleware)`
 
-```typescript
+```ts
+pushMiddleware(
+  middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
+): void
+```
+
+`setState`가 사용하는 미들웨어 배열의 뒤에 미들웨어를 추가합니다.
+
+미들웨어는 대기 중인 상태 action과 `next` 함수를 받습니다. 업데이트를 계속 진행하려면 `next(nextState)`를 호출해야 합니다.
+
+`setState`는 `reduceRight`로 runner를 만들기 때문에 앞쪽 미들웨어 항목이 뒤쪽 항목을 감쌉니다.
+
+### `unshiftMiddleware(middleware)`
+
+```ts
+unshiftMiddleware(
+  middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
+): void
+```
+
+`setState`가 사용하는 미들웨어 배열의 앞에 미들웨어를 추가합니다.
+
+앞에 추가된 미들웨어는 더 이른 미들웨어 항목이 되어 체인의 뒤쪽 항목을 감쌉니다.
+
+### `subscribe(listener)`
+
+```ts
+subscribe(listener: () => void): () => void
+```
+
+리스너를 등록하고 같은 리스너 참조를 제거하는 구독 취소 콜백을 반환합니다.
+
+```ts
 const unsubscribe = store.subscribe(() => {
-  console.log("새 상태:", store.getState());
+  console.log(store.getState());
 });
 
-// 구독 중단 시:
 unsubscribe();
 ```
 
-구독 생명주기 및 알림 보장에 대한 자세한 내용은 [구독](./subscriptions)을 참조하십시오.
+리스너는 성공한 상태 교체 뒤에 동기적으로 실행됩니다.
 
----
+## 보장하는 것
 
-### 공개 export 요약
+- `@ilokesto/store`는 패키지 루트에서 `Store<T>`를 내보냅니다.
+- `getState()`와 `getInitialState()`는 현재 상태와 초기 상태 참조를 `Readonly<T>` 타입으로 반환합니다.
+- `setState`는 전체 상태 값을 교체합니다. 객체를 병합하지 않습니다.
+- 업데이트 함수는 이전 상태를 인자로 호출됩니다.
+- `Object.is`가 동등성 베일아웃을 제어합니다. `true`를 반환하면 상태는 교체되지 않고 리스너에게 알리지 않습니다.
+- 성공한 교체는 같은 호출 흐름 안에서 리스너에게 동기적으로 알립니다.
+- 알림은 리스너 집합의 스냅샷을 사용하므로 알림 중 구독 취소가 현재 순회 중인 배열을 바꾸지 않습니다.
+- 리스너는 `Set`에 보관되므로 중복된 리스너 함수 참조는 한 번만 저장됩니다.
+- `pushMiddleware` 또는 `unshiftMiddleware`로 등록한 미들웨어는 `setState` 체인에 참여하며, 업데이트를 계속하려면 `next`를 호출해야 합니다.
 
-이 패키지는 하나의 공개 클래스인 `Store<T>`를 내보내며, 생성자와 메서드는 위에서 설명한 내용이 전부입니다.
+## Non-guarantees, 보장하지 않는 것
 
-현재 소스 코드에는 미들웨어 관련 구현도 존재하지만, 여기서는 주된 공개 계약으로 다루지 않고 [구현 노트](./implementation-notes)에서 설명합니다.
+- 상태는 런타임에 동결, 복제, 프록시 처리되거나 깊은 불변 값이 되지 않습니다.
+- Store는 객체 업데이트를 얕게 병합하지 않습니다.
+- Store는 selector, reducer, action dispatching, persistence, data fetching, devtools, framework hook을 제공하지 않습니다.
+- Store는 알림을 batch, schedule, defer하지 않습니다.
+- Store는 리스너가 어떤 상태 속성을 읽는지 추적하지 않습니다.
+- Store는 검증된 현재 API에서 `setMiddleware()`를 노출하지 않습니다.
+
+## 관련 페이지
+
+- [핵심 개념](./core-concepts)은 상태와 구독 모델을 설명합니다.
+- [고급 시맨틱](./advanced-semantics)은 자세한 동작 규칙을 다룹니다.
+- [Store 기반 구축하기](./building-on-store)는 이 계약 위에 어댑터와 라이브러리를 만드는 방법을 설명합니다.

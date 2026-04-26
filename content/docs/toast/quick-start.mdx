@@ -7,6 +7,8 @@ description: The shortest path to a working toaster and first notification.
 
 This page gets a working toast stack on screen with the minimum mental overhead.
 
+If you only have ninety seconds, do these two things: mount `<Toaster />`, then call `toast.success(...)`. Everything else in this package builds on that one runtime registration step.
+
 ```package-install
 @ilokesto/toast
 ```
@@ -23,6 +25,8 @@ function App() {
 }
 ```
 
+Put it near the top of the app shell. The package does not fake a hidden global runtime for you, so the mount point is the moment the facade becomes real.
+
 ## 2. Call the facade
 
 ```tsx
@@ -33,6 +37,8 @@ toast.success('Saved successfully');
 
 That is enough to show a toast in the default runtime.
 
+If you are migrating from `react-hot-toast`, this is intentionally the familiar part. The important mental shift comes later: the runtime is provider-scoped instead of implicitly global.
+
 ## 3. Use other built-in variants
 
 ```tsx
@@ -42,6 +48,8 @@ toast.loading('Saving...');
 ```
 
 `toast.loading()` uses infinite duration until something else updates or dismisses it.
+
+That makes loading toasts a good fit for actions where you want the UI to stay honest about work that has not completed yet.
 
 ## 4. Promise toasts stay close to the common path
 
@@ -54,6 +62,27 @@ toast.promise(fetch('/api/save'), {
 ```
 
 The same toast id is reused across loading -> success/error transitions.
+
+That reuse matters because the user experiences one evolving notification, not a noisy pile of separate toasts.
+
+## A good first setup
+
+For most apps, this is the default shape worth starting from:
+
+```tsx
+import { Toaster } from '@ilokesto/toast';
+
+export function AppShell() {
+  return (
+    <>
+      {/* app routes / layout */}
+      <Toaster position="top-right" />
+    </>
+  );
+}
+```
+
+You can stop here for a while. Only reach for `toasterId`, headless rendering, or custom rows when the product actually needs more than a single global notification surface.
 
 ## What to read next
 

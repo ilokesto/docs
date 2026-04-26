@@ -1,0 +1,160 @@
+---
+title: Advanced Semantics
+description: Verified Store behavior for updates, notifications, and implementation boundaries.
+---
+
+# Advanced Semantics
+
+This page collects the precise behavior of `@ilokesto/store` that matters when you build serious state flows or adapters on top of `Store<T>`.
+
+For method signatures, start with [API Reference](./api). For beginner concepts, read [Core Concepts](./core-concepts). For adapter boundaries, read [Building on Store](./building-on-store).
+
+## Public contract boundary
+
+The public contract is the behavior consumers can rely on from the documented `Store<T>` methods: reading state, setting state, and subscribing to changes.
+
+Some sections below mention current implementation details because they explain observable behavior. Treat those notes as implementation notes, not as a promise to preserve private fields or exact internal code shape.
+
+## Update replacement and ordering
+
+`setState` replaces the whole state value. It does not merge objects.
+
+```ts
+const store = new Store({ a: 1, b: 2 });
+
+store.setState({ a: 10 });
+// Current state: { a: 10 }
+```
+
+When the next value depends on the previous value, use the updater form so the update is based on the current state at the moment `setState` runs.
+
+```ts
+store.setState((prev) => ({ ...prev, b: prev.b + 1 }));
+```
+
+Ordering is synchronous. One `setState` call runs its update flow before the next line of user code continues. If you call `setState` twice in a row, the second call sees the state produced by the first successful call.
+
+## Equality bailout
+
+The store uses `Object.is(prevState, nextState)` after resolving the next value. If `Object.is` returns `true`, the state is not replaced and subscribers are not notified.
+
+```ts
+store.setState((prev) => prev);
+// No replacement, no notification.
+```
+
+For objects and arrays, returning the same reference is a bailout. To publish a change, create a new reference.
+
+## Nested object semantics
+
+Nested values are not tracked. The store compares only the root state value with `Object.is`.
+
+```ts
+const state = store.getState();
+
+state.profile.name = "Ada";
+// This mutates the object directly. It does not call setState and does not notify subscribers.
+```
+
+Use immutable updates for nested data.
+
+```ts
+store.setState((prev) => ({
+  ...prev,
+  profile: {
+    ...prev.profile,
+    name: "Ada",
+  },
+}));
+```
+
+`Readonly<T>` is a TypeScript signal only. The current source does not freeze, clone, or proxy state at runtime.
+
+## Notification timing
+
+Notifications are synchronous. After a successful replacement, subscribers run immediately within the same `setState` call flow.
+
+Subscribers read the state that was just applied.
+
+```ts
+store.subscribe(() => {
+  console.log(store.getState());
+});
+
+store.setState({ count: 1 });
+// The subscriber runs before this call returns.
+```
+
+There is no documented batching, async scheduling, timer, promise boundary, or framework render queue inside `@ilokesto/store`.
+
+## Subscriber ordering
+
+Subscribers are stored as listener functions. The current implementation keeps them in a `Set` and builds a snapshot array before notification.
+
+Observable result: listeners in the snapshot run in subscription insertion order for that notification.
+
+Registering the same function reference more than once does not create multiple entries, because a `Set` stores a unique reference once.
+
+## Unsubscribe during notification
+
+Calling an unsubscribe function during notification is safe.
+
+```ts
+const unsubscribe = store.subscribe(() => {
+  unsubscribe();
+});
+```
+
+The current implementation snapshots listeners with `Array.from(this.listeners)` before iterating. That means removing a listener during notification does not mutate the active notification snapshot.
+
+This describes current behavior. Do not depend on private field names or the exact snapshot implementation when writing public adapters.
+
+## Re-entrant updates
+
+A subscriber can call `setState` while a notification is running. That starts another synchronous update flow immediately.
+
+```ts
+store.subscribe(() => {
+  const { count } = store.getState();
+
+  if (count < 3) {
+    store.setState({ count: count + 1 });
+  }
+});
+```
+
+Use guards when doing this. Without a condition that eventually stops, re-entrant updates can create an infinite loop.
+
+## Error behavior
+
+Subscriber errors are not caught by the store contract. If a subscriber throws, expect the error to escape the current `setState` call.
+
+Keep subscribers small, predictable, and guarded by your own error handling when failures should not interrupt the caller.
+
+## Function-valued root state
+
+`setState` treats a function argument as an updater. A function root value cannot be set directly through `setState` because it will be called with the previous state.
+
+Wrap function values in an object when you need to store them.
+
+```ts
+store.setState({ handler: () => console.log("run") });
+```
+
+## Implementation notes
+
+These facts explain the current implementation. They are useful for debugging, but they should not become dependencies in application code.
+
+- State application resolves a value or updater result, checks `Object.is`, replaces state, then notifies.
+- Listener notification currently snapshots with `Array.from(this.listeners)`.
+- `Readonly<T>` is type-only. The current source does not freeze, clone, or proxy the state value.
+- Current source contains middleware support through source-backed methods, but this page does not define middleware as the main Store contract. Check [API Reference](./api) for documented public methods before using middleware in published examples.
+
+## Summary
+
+- Updates replace the root state value.
+- `Object.is` controls bailout behavior.
+- Notifications are synchronous after successful replacement.
+- Nested mutation is invisible unless you call `setState` with a new root reference.
+- Listener snapshotting makes unsubscribe during notification safe in the current implementation.
+- Public docs describe observable behavior, not private implementation stability.

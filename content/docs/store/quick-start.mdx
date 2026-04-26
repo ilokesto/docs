@@ -1,52 +1,75 @@
 ---
 title: Quick Start
-description: The shortest path to a useful vanilla store.
+description: The shortest path to a useful Store instance.
 ---
 
 # Quick Start
 
-This page is the shortest path from installation to a useful `Store` instance. The goal is not to cover every behavior. It is to get one store working, update it correctly, and point you to the next concept before the API looks more abstract than it really is.
+This page gets one `Store` running. It stays short on purpose: install, create, read, update, subscribe, and unsubscribe.
+
+## 1. Install
 
 ```package-install
 @ilokesto/store
 ```
 
-## 1. Create a store
+## 2. Create
 
 ```ts
-import { Store } from '@ilokesto/store';
+import { Store } from "@ilokesto/store";
 
 const counterStore = new Store({ count: 0 });
 ```
 
-## 2. Read the current value
+The constructor receives the initial state value. That value is also what `getInitialState()` returns later.
+
+## 3. Read
 
 ```ts
 const current = counterStore.getState();
+
+console.log(current.count);
 ```
 
-`Store` is synchronous. There is no async snapshot layer here.
+Reads are synchronous. `getState()` returns the current state reference typed as `Readonly<T>`.
 
-## 3. Update the whole state value
+## 4. Update
 
 ```ts
-counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+counterStore.setState((prev) => ({
+  ...prev,
+  count: prev.count + 1,
+}));
 ```
 
-Even when your state is an object, `Store` replaces the full value. If you want to preserve other fields, you preserve them yourself.
+`setState` replaces the whole state value. When your state is an object, copy the fields you want to keep.
 
-## 4. Subscribe to changes
+You can also pass the next value directly:
+
+```ts
+counterStore.setState({ count: 10 });
+```
+
+## 5. Subscribe
 
 ```ts
 const unsubscribe = counterStore.subscribe(() => {
-  console.log(counterStore.getState());
+  console.log("New count:", counterStore.getState().count);
 });
+```
 
+The listener runs after a successful state replacement. If `Object.is` says the next value is the same as the current value, the store bails out and does not notify listeners.
+
+## 6. Unsubscribe
+
+```ts
 unsubscribe();
 ```
 
-## What to read next
+Call the returned function when the listener is no longer needed. This is especially important in adapters, components, and long running services.
 
-- Read [Mental Model](./mental-model) if you want to understand why this package stays so small.
-- Read [Update Semantics](./updates) if replacement semantics or bailouts still feel unclear.
-- Read [Subscriptions](./subscriptions) if listener behavior matters to your integration.
+## Next steps
+
+- Read [Core Concepts](./core-concepts) for the mental model behind snapshots, updates, subscriptions, and mutation caveats.
+- Read [API Reference](./api) when you need exact method names and signatures.
+- Read [Framework Usage](./framework-usage) when a framework lifecycle owns the subscription cleanup.

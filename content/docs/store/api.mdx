@@ -1,77 +1,148 @@
 ---
 title: API Reference
-description: The public surface of the Store class.
+description: The source backed public surface of Store.
 ---
 
-The `@ilokesto/store` package exports a single class: `Store<T>`.
+# API Reference
 
-### Constructor
+The `@ilokesto/store` package exports one public class: `Store<T>`.
 
-#### `new Store<T>(initialState: T)`
+```ts
+import { Store } from "@ilokesto/store";
+```
 
-Creates a new store instance with the provided initial state.
+This page documents the public API symbols verified from the current source evidence. It does not document `setMiddleware()` because that name is stale in the package README and is not present in the verified source API.
 
-```typescript
+## Import path and export
+
+### `Store<T>`
+
+`Store<T>` is the only exported symbol from `@ilokesto/store`.
+
+```ts
 const store = new Store({ count: 0 });
 ```
 
-- **`initialState`**: The starting value for the store.
+## Constructor
 
----
+### `new Store<T>(initialState: T)`
 
-### Methods
+Creates a store with an initial state value. The store keeps that value as both the initial state and the current state until an update succeeds.
 
-#### `store.getState(): Readonly<T>`
-
-Returns the current state of the store.
-
-```typescript
-const state = store.getState();
+```ts
+const store = new Store({ count: 0 });
 ```
 
-The returned state is typed as `Readonly<T>` to discourage direct mutation. See [Semantics](./semantics) for more on the meaning of `Readonly<T>`.
+## Methods
 
-#### `store.getInitialState(): Readonly<T>`
+### `getState()`
 
-Returns the state originally passed to the constructor. This is useful for resetting the store to its original value.
-
-```typescript
-const initial = store.getInitialState();
+```ts
+getState(): Readonly<T>
 ```
 
-#### `store.setState(nextState: T | ((prevState: Readonly<T>) => T)): void`
+Returns the current state reference typed as `Readonly<T>`.
 
-Updates the store state. It accepts either a new state value or an updater function.
+`Readonly<T>` is a TypeScript signal only. The source does not freeze, clone, or proxy the state value at runtime.
 
-```typescript
-// Replacement
+### `getInitialState()`
+
+```ts
+getInitialState(): Readonly<T>
+```
+
+Returns the constructor value reference typed as `Readonly<T>`.
+
+This is useful when you need to compare against, or reset back to, the original value yourself.
+
+### `setState(nextState)`
+
+```ts
+setState(nextState: T | ((prevState: T) => T)): void
+```
+
+Replaces the current state with a value or with the result of an updater function.
+
+```ts
 store.setState({ count: 1 });
 
-// Updater function
-store.setState((prev) => ({ ...prev, count: prev.count + 1 }));
+store.setState((prev) => ({
+  ...prev,
+  count: prev.count + 1,
+}));
 ```
 
-For detailed behavior on updates, including bailout rules and immutable patterns, see [Update Semantics](./updates).
+The resolved next value replaces the whole state. Store does not merge objects.
 
-#### `store.subscribe(listener: () => void): () => void`
+If the runtime value passed to `setState` is a function, Store treats it as an updater. This means a function root state value cannot be set directly through `setState`.
 
-Registers a callback that will be executed synchronously whenever the state changes.
+### `pushMiddleware(middleware)`
 
-```typescript
+```ts
+pushMiddleware(
+  middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
+): void
+```
+
+Appends middleware to the middleware array used by `setState`.
+
+Middleware receives the pending state action and a `next` function. It must call `next(nextState)` for the update to continue.
+
+Because `setState` builds the runner with `reduceRight`, earlier middleware entries wrap later entries.
+
+### `unshiftMiddleware(middleware)`
+
+```ts
+unshiftMiddleware(
+  middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
+): void
+```
+
+Prepends middleware to the middleware array used by `setState`.
+
+Prepended middleware becomes an earlier middleware entry and wraps later entries in the chain.
+
+### `subscribe(listener)`
+
+```ts
+subscribe(listener: () => void): () => void
+```
+
+Registers a listener and returns an unsubscribe callback that removes the same listener reference.
+
+```ts
 const unsubscribe = store.subscribe(() => {
-  console.log("New state:", store.getState());
+  console.log(store.getState());
 });
 
-// To stop listening:
 unsubscribe();
 ```
 
-See [Subscriptions](./subscriptions) for more on the subscription lifecycle and notification guarantees.
+Listeners run synchronously after a successful state replacement.
 
----
+## Guarantees
 
-### Public Export Summary
+- `@ilokesto/store` exports `Store<T>` from the package root.
+- `getState()` and `getInitialState()` return the current and initial state references typed as `Readonly<T>`.
+- `setState` replaces the whole state value. It does not merge objects.
+- Updater functions are called with the previous state.
+- `Object.is` controls equality bailouts. When it returns `true`, state is not replaced and listeners are not notified.
+- Successful replacements notify listeners synchronously in the same call flow.
+- Notification uses a snapshot of the listener set, so unsubscribe calls during notification do not mutate the active iteration array.
+- Duplicate listener function references are stored once because listeners are kept in a `Set`.
+- Middleware registered with `pushMiddleware` or `unshiftMiddleware` participates in the `setState` chain and must call `next` for the update to continue.
 
-The package exposes one public class, `Store<T>`, with the constructor and methods documented above.
+## Non-guarantees
 
-Current source code also contains middleware-related internals, but they are documented in [Implementation Notes](./implementation-notes) rather than treated as the main public contract here.
+- State is not frozen, cloned, proxied, or deeply immutable at runtime.
+- Store does not shallow merge object updates.
+- Store does not provide selectors, reducers, action dispatching, persistence, data fetching, devtools, or framework hooks.
+- Store does not batch, schedule, or defer notifications.
+- Store does not track which state properties a listener reads.
+- Store does not expose `setMiddleware()` in the verified current API.
+
+## Related pages
+
+- [Core Concepts](./core-concepts) explains the state and subscription model.
+- [Advanced Semantics](./advanced-semantics) covers detailed behavior rules.
+- [Building on Store](./building-on-store) explains how to build adapters and libraries on this contract.

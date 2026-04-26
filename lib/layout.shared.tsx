@@ -74,40 +74,54 @@ export function baseOptions(): BaseLayoutProps {
 }
 
 export function getPackageTabs(lang: string): LayoutTab[] {
+  const isKorean = lang === 'ko';
+
   return [
     {
       title: 'Store',
-      description: 'Minimal vanilla state container',
+      description: isKorean
+        ? '작고 명확한 vanilla 상태 컨테이너'
+        : 'Minimal vanilla state container',
       url: `/${lang}/store`,
       icon: <PackageIcon pkg="store" />,
     },
     {
       title: 'State',
-      description: 'React state hooks on top of @ilokesto/store',
+      description: isKorean
+        ? '@ilokesto/store 위에 얹는 React 상태 훅'
+        : 'React state hooks on top of @ilokesto/store',
       url: `/${lang}/state`,
       icon: <PackageIcon pkg="state" />,
     },
     {
       title: 'Overlay',
-      description: 'Accessible overlay primitives',
+      description: isKorean
+        ? '접근성 있는 headless overlay primitive'
+        : 'Accessible overlay primitives',
       url: `/${lang}/overlay`,
       icon: <PackageIcon pkg="overlay" />,
     },
     {
       title: 'Modal',
-      description: 'Promise-based dialogs with smooth motion',
+      description: isKorean
+        ? '부드러운 모션의 promise 기반 다이얼로그'
+        : 'Promise-based dialogs with smooth motion',
       url: `/${lang}/modal`,
       icon: <PackageIcon pkg="modal" />,
     },
     {
       title: 'Toast',
-      description: 'Lightweight toast notifications',
+      description: isKorean
+        ? '가벼운 토스트 알림 런타임'
+        : 'Lightweight toast notifications',
       url: `/${lang}/toast`,
       icon: <PackageIcon pkg="toast" />,
     },
     {
       title: 'Form',
-      description: 'Type-safe form primitives coming soon',
+      description: isKorean
+        ? '타입 안전 form primitive 준비 중'
+        : 'Type-safe form primitives coming soon',
       url: '#',
       icon: <PackageIcon pkg="form" />,
       props: {
@@ -119,7 +133,9 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     },
     {
       title: 'Utilinent',
-      description: 'Declarative rendering and composition helpers',
+      description: isKorean
+        ? '선언적 렌더링과 composition helper'
+        : 'Declarative rendering and composition helpers',
       url: `/${lang}/utilinent`,
       icon: <PackageIcon pkg="utilinent" />,
     },

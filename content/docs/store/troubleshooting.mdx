@@ -1,0 +1,110 @@
+---
+title: Troubleshooting
+description: Common Store problems, causes, and fixes.
+---
+
+# Troubleshooting
+
+Use this page when `@ilokesto/store` behaves differently than expected. Each answer stays inside the verified Store contract and points to the main docs for more detail.
+
+## My UI is not updating
+
+Most UI issues come from one of three causes:
+
+1. The UI is reading `store.getState()` once and never subscribing.
+2. The update returned the same root reference, so `Object.is` bailed out.
+3. A framework adapter did not connect the Store notification to the framework render lifecycle.
+
+Check the basic read, write, and subscribe flow in [Core Concepts](./core-concepts), then review framework cleanup and render wiring in [Framework Usage](./framework-usage).
+
+## My Subscriber is not firing
+
+Subscribers fire only after a successful state replacement. They do not fire when `Object.is(prevState, nextState)` is `true`.
+
+```ts
+store.setState((prev) => prev);
+// Subscriber does not fire.
+```
+
+If you mutated an object and passed the same reference back, create a new root value instead. See [Advanced Semantics](./advanced-semantics) for the bailout and notification rules.
+
+## My Subscriber fires too often
+
+`Store` does not track which field a subscriber cares about. A subscriber runs after every successful root state replacement.
+
+If a consumer only cares about one field, compare the previous selected value in your own layer and skip work when it has not changed. Keep that as adapter or application logic, not as a Store feature.
+
+Patterns for wrapping Store behavior belong in [Patterns](./patterns) and [Building on Store](./building-on-store).
+
+## My React value is stale
+
+A stale React value usually means the component captured a Store value without subscribing through React state or an external-store bridge.
+
+Read the value during render from framework state that is updated by a Store subscription. Do not expect a one-time `const value = store.getState()` outside render to stay current in the UI.
+
+For framework-level wiring, see [Framework Usage](./framework-usage). For the raw subscription method, see [API Reference](./api).
+
+## How do I clean up in Vue, Svelte, or Angular?
+
+`store.subscribe(listener)` returns an unsubscribe function. Call that function when the framework scope is destroyed.
+
+The exact lifecycle hook belongs to the framework layer, not the Store package. The Store contract is only that calling the returned function removes that listener reference.
+
+See [Framework Usage](./framework-usage) for framework examples and [API Reference](./api) for the raw subscription API.
+
+## I changed a nested object, but nothing happened
+
+Direct mutation does not notify subscribers.
+
+```ts
+store.getState().profile.name = "Ada";
+// No setState call, no notification.
+```
+
+Use an immutable update and return a new root state value.
+
+```ts
+store.setState((prev) => ({
+  ...prev,
+  profile: {
+    ...prev.profile,
+    name: "Ada",
+  },
+}));
+```
+
+Nested mutation and `Readonly<T>` behavior are covered in [Advanced Semantics](./advanced-semantics).
+
+## Does Store replace Redux, Zustand, Pinia, or NgRx?
+
+No. `@ilokesto/store` is a small state primitive. It stores one value, replaces that value, and notifies subscribers.
+
+It does not provide reducer dispatch, a selector system, devtools, effects, modules, actions, or ready-made framework bindings. You can build higher-level patterns on top of it when that is useful.
+
+For the package boundary, read [Core Concepts](./core-concepts). For wrapper guidance, read [Building on Store](./building-on-store).
+
+## Does Store manage server cache or data fetching?
+
+No. Store does not manage server cache, request status, refetching, invalidation, retries, or persistence.
+
+You can store any value you choose, including data that came from a server, but server-cache behavior must come from your application or another library.
+
+See [Core Concepts](./core-concepts) for what Store is and is not.
+
+## How do I debug an adapter?
+
+Debug the adapter around the raw Store contract.
+
+1. Confirm the adapter subscribes once for each live consumer scope.
+2. Confirm it calls the unsubscribe function when that scope is destroyed.
+3. Confirm the listener reads `store.getState()` after notification.
+4. Confirm framework state is updated with a new value or signal that causes the UI to render.
+5. Confirm the Store update returns a new root state reference when a change should publish.
+
+The authoritative Store rules are in [API Reference](./api) and [Advanced Semantics](./advanced-semantics). Adapter boundaries are covered in [Building on Store](./building-on-store).
+
+## I saw middleware mentioned somewhere. Should I use `setMiddleware()`?
+
+No current Store docs should use `setMiddleware()`. The verified source export is `Store<T>`, and `setMiddleware()` is not a verified current method.
+
+Use only methods documented in [API Reference](./api). If you build on current implementation details, keep them clearly separated from the stable public contract.

@@ -3,48 +3,146 @@ title: Building on Store
 description: Guidelines for adapter and library authors.
 ---
 
-`@ilokesto/store` is intended to be the foundation for higher-level abstractions. If you are building a framework adapter, a form library, an overlay controller, or another state-oriented package, this page outlines the stable contract you can build on.
+# Building on Store
 
-### The Minimal Contract
+Use this page when you are building a framework adapter, reusable library, controller, or integration layer on top of `@ilokesto/store`.
 
-The `Store<T>` class provides the minimum surface needed for external tools to interact with state:
+This is author guidance, not app copy-paste usage. App developers should start with [Framework Usage](./framework-usage) for React, Vue, Svelte, and Angular examples, or [Common Patterns](./patterns) for application recipes. This page focuses on the stable boundary an adapter can build on.
 
-- `getState()` for reading.
-- `setState(next)` for writing.
-- `subscribe(listener)` for observing changes.
+For exact method signatures, read the [API Reference](./api). For replacement, equality, notification, and listener rules, read [Advanced Semantics](./advanced-semantics).
 
-### Higher-layer Responsibilities
+## Adapter design principles
 
-When building on top of `Store`, higher layers usually add responsibilities that the core package intentionally does not own:
+Build the thinnest bridge that fits your target runtime.
 
-1. **Map state into another runtime model**: for example, a framework reactivity system or a domain-specific controller.
-2. **Own lifecycle cleanup**: remove listeners when the consumer is disposed.
-3. **Add higher-level ergonomics**: selectors, actions, reducers, validation, persistence, or tooling.
+Most adapters need to do four things:
 
-### Adapter Lifecycle
+1. Read the current value with `store.getState()`.
+2. Subscribe with `store.subscribe(listener)`.
+3. Forward writes with `store.setState(next)` or your own action layer.
+4. Call the unsubscribe function when the owning runtime scope ends.
 
-Most adapters follow the same shape:
+Keep `Store` as the source of truth. Let the framework or library layer own framework-specific concepts such as hooks, refs, signals, effects, selectors, validation, persistence, or devtools.
 
-1. Read the current snapshot with `getState()`.
-2. Subscribe to future changes with `subscribe(listener)`.
-3. Forward writes through `setState(next)` or wrapper actions.
-4. Clean up the subscription when the consumer goes away.
+## Public contract boundaries
 
-### Public Contract Boundaries
+Treat these methods as the boundary for adapter code:
 
-When exposing a higher-level library based on `Store`, you should decide whether to:
+- `getState()` reads the current snapshot.
+- `setState(next)` replaces state with a value or updater result.
+- `subscribe(listener)` observes successful state replacements and returns cleanup.
+- `getInitialState()` reads the constructor value when your abstraction needs reset or bootstrap behavior.
 
-- **Expose the Store instance directly**: Good for power users who want to use the vanilla API.
-- **Wrap the Store**: Provide a more restricted or specialized API (e.g., hide `setState` and only expose specific actions).
+Do not couple an adapter to private fields, listener storage, middleware arrays, or implementation helper names. If your library exposes `Store` directly, document that consumers are using the vanilla `@ilokesto/store` API. If your library wraps `Store`, expose only the methods and actions your abstraction can support over time.
 
-### Stable Boundaries First
+```ts
+import { Store } from "@ilokesto/store";
 
-Build against the stable surface first: `getState()`, `setState(next)`, and `subscribe(listener)`.
+type ReadonlyStore<T> = {
+  getState(): Readonly<T>;
+  subscribe(listener: () => void): () => void;
+};
 
-If you choose to rely on deeper implementation details, treat them as opt-in internals rather than as a long-term compatibility guarantee.
+export function readonlyView<T>(store: Store<T>): ReadonlyStore<T> {
+  return {
+    getState: () => store.getState(),
+    subscribe: (listener) => store.subscribe(listener),
+  };
+}
+```
 
-### Avoid Deep Coupling
+This kind of wrapper lets a library hide writes without depending on internals.
 
-- **Don't depend on internal fields**: Only use the public methods.
-- **Keep it generic**: Try not to restrict the state shape unless necessary for your library's purpose.
-- **Support multiple instances**: Ensure your library works correctly when multiple stores are present in the same application.
+## Lifecycle mapping
+
+Map each subscription to one owner in the target runtime. The owner might be a component, request, controller, test harness, or long-lived service.
+
+```ts
+import { Store } from "@ilokesto/store";
+
+type StoreConnection<T> = {
+  getSnapshot(): Readonly<T>;
+  setState(nextState: T | ((prevState: Readonly<T>) => T)): void;
+  destroy(): void;
+};
+
+export function connectStore<T>(store: Store<T>): StoreConnection<T> {
+  let snapshot = store.getState();
+
+  const unsubscribe = store.subscribe(() => {
+    snapshot = store.getState();
+  });
+
+  return {
+    getSnapshot: () => snapshot,
+    setState: (nextState) => {
+      store.setState(nextState);
+    },
+    destroy: unsubscribe,
+  };
+}
+```
+
+The framework-specific version of this shape belongs in [Framework Usage](./framework-usage). The author rule is the same in every runtime: create the subscription when the owner starts, then clean it up when the owner stops.
+
+## Snapshot consistency
+
+`getState()` is the authoritative snapshot reader. A subscription listener should read a fresh snapshot inside the listener instead of trusting a cached value.
+
+Store notifications are synchronous after a successful replacement. If your target runtime batches or schedules updates, that scheduling belongs to the adapter layer. Do not describe Store itself as batched or async.
+
+```ts
+const unsubscribe = store.subscribe(() => {
+  const nextSnapshot = store.getState();
+  publishToRuntime(nextSnapshot);
+});
+```
+
+If you add selectors, document where equality checks happen. `Store` only applies its own `Object.is` bailout to the root state value. Selector memoization is part of your adapter contract, not the core Store contract.
+
+## Cleanup guarantees
+
+`subscribe(listener)` returns an unsubscribe function. Your abstraction should make that cleanup hard to forget.
+
+Good adapter APIs usually do one of these:
+
+- return a `destroy()` or `dispose()` method,
+- register cleanup with the target runtime lifecycle,
+- scope the subscription to a controller that owns its teardown.
+
+```ts
+const connection = connectStore(store);
+
+try {
+  runWithConnection(connection);
+} finally {
+  connection.destroy();
+}
+```
+
+Calling cleanup should stop future notifications for that listener. It should also be safe for consumers to call cleanup when the owner is done, even if no further updates happen.
+
+## Replacement-aware writes
+
+`setState` replaces the whole state value. If your library exposes partial updates, the library must merge fields before calling `setState`.
+
+```ts
+function setPartial<T extends object>(store: Store<T>, partial: Partial<T>) {
+  store.setState((prev) => ({ ...prev, ...partial }));
+}
+```
+
+Make this choice explicit. Some libraries should expose replacement writes because that matches Store exactly. Others should expose domain actions or patch helpers because that is safer for their users.
+
+## Compatibility checklist
+
+Before publishing an adapter or library, check that it follows the public contract.
+
+- Adapter reads snapshots through `getState()`.
+- Public contract does not expose private fields or depend on internal listener storage.
+- Lifecycle ownership is clear for every subscription.
+- Snapshot updates read fresh state inside the listener.
+- Cleanup is returned, registered, or otherwise guaranteed.
+- Compatibility notes say whether writes are full replacements, action-only, or library-merged partial updates.
+- Tests cover multiple store instances so state does not leak across consumers.
+- Docs link app users to [Framework Usage](./framework-usage) and [Common Patterns](./patterns), while keeping this page focused on adapter authors.

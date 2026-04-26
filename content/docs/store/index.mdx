@@ -1,68 +1,62 @@
 ---
 title: Introduction
-description: A framework-agnostic foundational store for predictable state management.
+description: A routing guide for the framework neutral Store package.
 ---
 
-`@ilokesto/store` is a core primitive in the ilokesto ecosystem. It provides a minimal, synchronous, and framework-agnostic store implementation designed for reliability and performance.
+# Store
 
-While other packages in the ecosystem provide framework bindings or complex state management patterns, `store` remains a lean foundation that focuses on the basic contract of state: storage, updates, and notifications.
+`@ilokesto/store` is the small state container at the center of the Store docs. It holds one state value, replaces that value through `setState`, and notifies listeners when a replacement succeeds.
 
-### Installation
+Use this package when you need a plain TypeScript state contract that does not depend on React, Vue, Svelte, Angular, or any other framework.
+
+## Package boundary
+
+The package exports `Store<T>` from `@ilokesto/store`.
+
+It covers:
+
+- storing one state value,
+- reading the current and initial state,
+- replacing state with a value or updater function,
+- subscribing to successful state changes,
+- adding source backed middleware with the current public method names.
+
+It does not provide framework hooks, selectors, reducers, persistence, data fetching, devtools, or async scheduling. Those belong in adapters or higher level packages.
+
+## Install
 
 ```package-install
 @ilokesto/store
 ```
 
-### What it is
+## Start here
 
-- **Foundational**: A minimal set of primitives for state storage.
-- **Framework-agnostic**: Works in any JavaScript environment (Node.js, Browser, Deno, etc.).
-- **Synchronous**: State updates and notifications happen immediately.
-- **Predictable**: Uses standard `Object.is` checks and immutable patterns.
+- [Quick Start](./quick-start): Install the package, create a store, update it, subscribe, and clean up.
+- [Core Concepts](./core-concepts): Learn the contract behind snapshots, replacement updates, subscriptions, bailouts, and mutation caveats.
+- [API Reference](./api): Check the source backed public surface for `Store<T>`.
 
-### What it is not
+## Continue with task focused pages
 
-- **A Framework Binding**: It does not contain React hooks or Vue composables.
-- **A Data Fetching Library**: It does not manage server cache or loading states.
-- **A Multi-store Orchestrator**: It manages a single state atom.
+- [Framework Usage](./framework-usage): Connect a store to framework lifecycles through adapters.
+- [Common Patterns](./patterns): Apply practical recipes around a plain `Store` instance.
+- [Advanced Semantics](./advanced-semantics): Read the detailed behavior rules behind updates and notifications.
+- [Building on Store](./building-on-store): Build libraries or adapters on the minimal contract.
+- [Troubleshooting](./troubleshooting): Diagnose common Store usage mistakes.
 
-### Quick Example
+## Small example
 
-```typescript
+```ts
 import { Store } from "@ilokesto/store";
 
-const store = new Store({ count: 0 });
+const counterStore = new Store({ count: 0 });
 
-// Subscribe to changes
-const unsubscribe = store.subscribe(() => {
-  console.log("State changed:", store.getState());
+const unsubscribe = counterStore.subscribe(() => {
+  console.log(counterStore.getState());
 });
 
-// Update state
-store.setState({ count: 1 });
+counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 
-// Clean up
 unsubscribe();
 ```
 
-### When to Use
-
-- When building a library that needs internal state management without forcing a framework dependency on users.
-- When you need a simple, reliable state container for vanilla JavaScript or TypeScript projects.
-- As a base for building higher-level libraries, adapters, or domain-specific state layers.
-
-### Start Here
-
-- [Quick Start](./quick-start): The shortest path from install to a useful store.
-- [Mental Model](./mental-model): Why the package stays small and synchronous.
-- [API Reference](./api): The exact public surface of the `Store` class.
-
-### Go Deeper
-
-- [Update Semantics](./updates): How state updates work and the bailout rules.
-- [Subscriptions](./subscriptions): Managing the observer lifecycle.
-- [Common Patterns](./patterns): Practical recipes for real-world usage.
-- [Building on Store](./building-on-store): Guidelines for adapter and library authors.
-- [Integrations](./integrations): The ecosystem around `@ilokesto/store`.
-- [Semantics](./semantics): The strict behavioral specification.
-- [Implementation Notes](./implementation-notes): Deep dive into internal mechanics.
+This example is intentionally plain. It shows the whole package shape: create one store, read a snapshot, replace state, listen for changes, and remove the listener when it is no longer needed.

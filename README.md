@@ -13,14 +13,14 @@ Official bilingual documentation for the ilokesto package family.
 
 ## Development
 
-```bash
+```bash lineNumbers
 pnpm install
 pnpm dev
 ```
 
 ## Build
 
-```bash
+```bash lineNumbers
 pnpm build
 ```
 

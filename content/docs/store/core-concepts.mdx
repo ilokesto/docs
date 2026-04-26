@@ -19,7 +19,7 @@ The contract does not include framework rendering, selectors, reducers, persiste
 
 Both methods are typed as `Readonly<T>`. That is a TypeScript signal to treat the value as a snapshot. The source does not freeze, clone, or proxy the state at runtime.
 
-```ts
+```ts lineNumbers
 const store = new Store({ count: 0 });
 
 const current = store.getState();
@@ -32,7 +32,7 @@ Reading is direct and synchronous. There is no derived read system and no proper
 
 If a consumer needs a derived value, calculate it outside the store or in a higher level adapter:
 
-```ts
+```ts lineNumbers
 const count = store.getState().count;
 const isEmpty = count === 0;
 ```
@@ -41,7 +41,7 @@ const isEmpty = count === 0;
 
 `setState` accepts either the next value or an updater function.
 
-```ts
+```ts lineNumbers
 store.setState({ count: 1 });
 
 store.setState((prev) => ({
@@ -56,7 +56,7 @@ Use the updater form when the next state depends on the previous state.
 
 Updates replace the whole state value. Object state is not merged.
 
-```ts
+```ts lineNumbers
 const store = new Store({ a: 1, b: 2 });
 
 store.setState({ a: 10 });
@@ -65,7 +65,7 @@ store.setState({ a: 10 });
 
 Preserve fields yourself when you want to keep them:
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({ ...prev, a: 10 }));
 ```
 
@@ -73,7 +73,7 @@ store.setState((prev) => ({ ...prev, a: 10 }));
 
 `subscribe` registers a listener and returns an unsubscribe function.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   console.log(store.getState());
 });
@@ -91,7 +91,7 @@ Before replacing state, Store compares the previous and resolved next value with
 
 If `Object.is(prevState, nextState)` is `true`, Store returns without replacing state and without notifying listeners.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => {
   if (prev.count >= 10) return prev;
 
@@ -105,7 +105,7 @@ For objects and arrays, a new reference is the normal way to represent a change.
 
 Do not mutate the value returned by `getState()`.
 
-```ts
+```ts lineNumbers
 const state = store.getState();
 
 state.items.push("new item");
@@ -115,7 +115,7 @@ That direct mutation does not call `setState`, so listeners are not notified. It
 
 Use an immutable replacement instead:
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({
   ...prev,
   items: [...prev.items, "new item"],

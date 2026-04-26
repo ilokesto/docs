@@ -15,7 +15,7 @@ The `create` function is overloaded to support two primary modes of operation.
 
 In state mode, you provide the initial state directly. The returned hook provides a `setState` function similar to React's `useState`.
 
-```ts
+```ts lineNumbers
 import { create } from '@ilokesto/state';
 
 // 1. With initial state value
@@ -33,7 +33,7 @@ If the second form is your real use case, read [Existing Store](./existing-store
 
 In reducer mode, you provide a reducer function and an initial state (or store). The returned hook provides a `dispatch` function.
 
-```ts
+```ts lineNumbers
 type State = { count: number };
 type Action = { type: 'increment' } | { type: 'decrement' };
 
@@ -52,7 +52,7 @@ const useCounter = create(reducer, { count: 0 });
 
 The hook returned by `create` accepts a selector function.
 
-```tsx
+```tsx lineNumbers
 function Counter() {
   // Returns [selectedState, updater]
   const [count, setCountOrDispatch] = useCounter(state => state.count);

@@ -21,7 +21,7 @@ Check the basic read, write, and subscribe flow in [Core Concepts](./core-concep
 
 Subscribers fire only after a successful state replacement. They do not fire when `Object.is(prevState, nextState)` is `true`.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => prev);
 // Subscriber does not fire.
 ```
@@ -56,14 +56,14 @@ See [Framework Usage](./framework-usage) for framework examples and [API Referen
 
 Direct mutation does not notify subscribers.
 
-```ts
+```ts lineNumbers
 store.getState().profile.name = "Ada";
 // No setState call, no notification.
 ```
 
 Use an immutable update and return a new root state value.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({
   ...prev,
   profile: {

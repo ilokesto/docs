@@ -19,7 +19,7 @@ description: 업데이트, 알림, 구현 경계에 대해 검증된 Store 동�
 
 `setState`는 전체 상태 값을 교체합니다. 객체를 병합하지 않습니다.
 
-```ts
+```ts lineNumbers
 const store = new Store({ a: 1, b: 2 });
 
 store.setState({ a: 10 });
@@ -28,7 +28,7 @@ store.setState({ a: 10 });
 
 다음 값이 이전 값에 의존한다면 업데이트 함수 형태를 사용하십시오. 그래야 `setState`가 실행되는 순간의 현재 상태를 기준으로 업데이트됩니다.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({ ...prev, b: prev.b + 1 }));
 ```
 
@@ -38,7 +38,7 @@ store.setState((prev) => ({ ...prev, b: prev.b + 1 }));
 
 스토어는 다음 값을 해석한 뒤 `Object.is(prevState, nextState)`를 사용합니다. `Object.is`가 `true`를 반환하면 상태를 교체하지 않고 구독자에게 알림도 보내지 않습니다.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => prev);
 // 교체 없음, 알림 없음.
 ```
@@ -49,7 +49,7 @@ store.setState((prev) => prev);
 
 중첩 값은 추적되지 않습니다. 스토어는 루트 상태 값만 `Object.is`로 비교합니다.
 
-```ts
+```ts lineNumbers
 const state = store.getState();
 
 state.profile.name = "Ada";
@@ -58,7 +58,7 @@ state.profile.name = "Ada";
 
 중첩 데이터에는 불변 업데이트를 사용하십시오.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({
   ...prev,
   profile: {
@@ -76,7 +76,7 @@ store.setState((prev) => ({
 
 구독자는 방금 적용된 상태를 읽습니다.
 
-```ts
+```ts lineNumbers
 store.subscribe(() => {
   console.log(store.getState());
 });
@@ -99,7 +99,7 @@ store.setState({ count: 1 });
 
 알림 중에 unsubscribe 함수를 호출해도 안전합니다.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   unsubscribe();
 });
@@ -113,7 +113,7 @@ const unsubscribe = store.subscribe(() => {
 
 구독자는 알림이 실행되는 동안 `setState`를 호출할 수 있습니다. 그러면 또 다른 동기식 업데이트 흐름이 즉시 시작됩니다.
 
-```ts
+```ts lineNumbers
 store.subscribe(() => {
   const { count } = store.getState();
 
@@ -137,7 +137,7 @@ store.subscribe(() => {
 
 함수를 저장해야 한다면 객체로 감싸십시오.
 
-```ts
+```ts lineNumbers
 store.setState({ handler: () => console.log("run") });
 ```
 

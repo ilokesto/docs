@@ -17,7 +17,7 @@ Install the package using your preferred package manager:
 
 The smallest useful `@ilokesto/state` store starts from plain initial state.
 
-```tsx
+```tsx lineNumbers
 import { create } from '@ilokesto/state';
 
 const useCounter = create({ count: 0 });
@@ -27,7 +27,7 @@ const useCounter = create({ count: 0 });
 
 Selectors decide what your component reads. The returned writer still updates the full store state.
 
-```tsx
+```tsx lineNumbers
 function Counter() {
   const [count, setState] = useCounter((state) => state.count);
 
@@ -48,7 +48,7 @@ That distinction is easy to miss at first. Even though the selector returns only
 
 Once update logic starts to feel like an action rather than a button handler, move it behind `writeOnly()`.
 
-```ts
+```ts lineNumbers
 const useCounter = create({ count: 0 });
 
 export const increment = () => {

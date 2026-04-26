@@ -35,7 +35,7 @@ description: 어댑터 및 라이브러리 작성자를 위한 가이드입니�
 
 어댑터를 private 필드, 리스너 저장소, 미들웨어 배열, 구현 helper 이름에 결합하지 마세요. 라이브러리가 `Store`를 직접 노출한다면 소비자가 vanilla `@ilokesto/store` API를 사용한다는 점을 문서화하세요. 라이브러리가 `Store`를 감싼다면 시간이 지나도 지원할 수 있는 메서드와 action만 노출하세요.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type ReadonlyStore<T> = {
@@ -57,7 +57,7 @@ export function readonlyView<T>(store: Store<T>): ReadonlyStore<T> {
 
 각 구독을 대상 런타임의 한 소유자에 매핑하세요. 그 소유자는 component, request, controller, test harness, 오래 사는 service일 수 있습니다.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type StoreConnection<T> = {
@@ -91,7 +91,7 @@ export function connectStore<T>(store: Store<T>): StoreConnection<T> {
 
 Store 알림은 성공한 교체 뒤에 동기적으로 발생합니다. 대상 런타임이 업데이트를 batch하거나 schedule한다면, 그 scheduling은 어댑터 계층의 책임입니다. Store 자체를 batched 또는 async라고 설명하지 마세요.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   const nextSnapshot = store.getState();
   publishToRuntime(nextSnapshot);
@@ -110,7 +110,7 @@ selector를 추가한다면 동등성 검사가 어디에서 일어나는지 문
 - 대상 런타임 생명주기에 cleanup을 등록합니다.
 - teardown을 소유하는 controller에 구독 범위를 묶습니다.
 
-```ts
+```ts lineNumbers
 const connection = connectStore(store);
 
 try {
@@ -126,7 +126,7 @@ cleanup을 호출하면 해당 리스너의 이후 알림이 멈춰야 합니다
 
 `setState`는 전체 상태 값을 교체합니다. 라이브러리가 partial update를 노출한다면, 라이브러리가 `setState`를 호출하기 전에 필드를 병합해야 합니다.
 
-```ts
+```ts lineNumbers
 function setPartial<T extends object>(store: Store<T>, partial: Partial<T>) {
   store.setState((prev) => ({ ...prev, ...partial }));
 }

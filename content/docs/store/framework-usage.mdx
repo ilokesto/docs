@@ -25,7 +25,7 @@ Keep the vanilla store as the source of truth. The adapter should translate snap
 
 React has a built-in bridge for external stores: `useSyncExternalStore`. Use it so React controls subscription cleanup and reads a consistent snapshot during render.
 
-```tsx
+```tsx lineNumbers
 import { useSyncExternalStore } from "react";
 import { Store } from "@ilokesto/store";
 
@@ -60,7 +60,7 @@ The hook does not add selectors or batching. It only connects `subscribe` and `g
 
 In Vue, mirror the store snapshot into a `shallowRef` and register lifecycle cleanup with `onUnmounted`.
 
-```ts
+```ts lineNumbers
 import { onUnmounted, shallowRef } from "vue";
 import { Store } from "@ilokesto/store";
 
@@ -93,7 +93,7 @@ Use `shallowRef` when the store replaces whole snapshots. Avoid mutating `state.
 
 Svelte's store contract is also subscription based. A small adapter can expose a readable store for snapshots and separate action helpers for writes.
 
-```ts
+```ts lineNumbers
 import { readable } from "svelte/store";
 import { Store } from "@ilokesto/store";
 
@@ -124,7 +124,7 @@ Returning `unsubscribe` from the readable setup function gives Svelte the cleanu
 
 Angular can bridge the store into a service-owned signal. The service owns the subscription, exposes a read model for components, and provides an explicit cleanup method for the scope that creates it.
 
-```ts
+```ts lineNumbers
 import { Injectable, OnDestroy, signal } from "@angular/core";
 import { Store } from "@ilokesto/store";
 

@@ -11,7 +11,7 @@ For complex state transitions, `@ilokesto/state` supports a reducer-based mode s
 
 A reducer is a pure function that takes the current state and an action, and returns the next state.
 
-```ts
+```ts lineNumbers
 import { create } from '@ilokesto/state';
 
 type State = { count: number };
@@ -33,7 +33,7 @@ const useCounter = create(counterReducer, { count: 0 });
 
 In reducer mode, the hook returns a `dispatch` function instead of `setState`.
 
-```tsx
+```tsx lineNumbers
 function Counter() {
   const [count, dispatch] = useCounter(state => state.count);
 
@@ -51,7 +51,7 @@ function Counter() {
 
 You can also use the `writeOnly` accessor to get the `dispatch` function outside of React.
 
-```ts
+```ts lineNumbers
 export const incrementCount = () => {
   const dispatch = useCounter.writeOnly();
   dispatch({ type: 'increment' });

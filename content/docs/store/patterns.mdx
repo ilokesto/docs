@@ -13,7 +13,7 @@ If you are writing a framework adapter or library on top of `Store`, read [Build
 
 A module-level store works well for state that should be shared by many parts of an app. Keep the state shape focused, then export small functions that describe the allowed updates.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type AuthState = {
@@ -43,7 +43,7 @@ Use this pattern for app-wide state such as auth, theme, feature flags, or a sma
 
 A factory creates a fresh store for each feature instance. This is useful for screens, tabs, tests, or server request scopes where state must not leak across users or runs.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type CounterState = {
@@ -71,7 +71,7 @@ Prefer a factory when module-level state would make tests order-dependent or wou
 
 `getInitialState()` returns the value passed to the constructor. That makes reset helpers simple, but remember that `Store` does not clone or freeze the value at runtime.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type FormState = {
@@ -93,7 +93,7 @@ export function resetForm() {
 
 If the initial value contains nested objects that app code might mutate, create a fresh initial value through a factory instead.
 
-```ts
+```ts lineNumbers
 function createInitialFormState(): FormState {
   return { name: "", email: "", submitted: false };
 }
@@ -109,7 +109,7 @@ export function resetForm() {
 
 `Store` keeps one source value. Derive secondary values with plain functions so they are always based on the latest snapshot.
 
-```ts
+```ts lineNumbers
 type CartState = {
   items: Array<{ id: string; price: number; quantity: number }>;
 };
@@ -133,7 +133,7 @@ Keep derived data outside the stored value unless you need to preserve it as use
 
 Async work should happen around store updates. Start the request, update a loading state, then replace the full state when the request settles.
 
-```ts
+```ts lineNumbers
 type ProfileState = {
   profile: { id: string; name: string } | null;
   loading: boolean;
@@ -177,7 +177,7 @@ export async function loadProfile(userId: string) {
 
 Split stores by responsibility when unrelated consumers should not share the same notification stream.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 export const themeStore = new Store<"light" | "dark">("light");
@@ -209,7 +209,7 @@ Watch for these signals:
 
 Use a store per domain instead. If two domains need to coordinate, write an app-level function that updates each store explicitly.
 
-```ts
+```ts lineNumbers
 export function clearWorkspace() {
   sessionStore.setState((prev) => ({ ...prev, activeWorkspaceId: null }));
   draftStore.setState({ title: "", body: "" });
@@ -222,7 +222,7 @@ This keeps coordination visible without turning every feature into one shared st
 
 Tests are easiest when each test creates its own store through a factory.
 
-```ts
+```ts lineNumbers
 import { expect, test } from "vitest";
 
 test("increments count", () => {

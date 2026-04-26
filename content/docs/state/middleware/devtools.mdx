@@ -11,7 +11,7 @@ The `devtools` middleware connects your `@ilokesto/state` store to the Redux Dev
 
 You can use `devtools` either directly on a store or as part of a middleware factory.
 
-```ts
+```ts lineNumbers
 import { devtools } from '@ilokesto/state/middleware';
 
 const store = devtools('CounterStore')({ count: 0 });
@@ -32,7 +32,7 @@ DevTools updates are sent with descriptive labels following the `${storeName}:${
 ### 1. Plain State Updates
 If you use a plain `setState` call, the middleware defaults to an "anonymous action" label.
 
-```ts
+```ts lineNumbers
 // Label: CounterStore:anonymous action
 setState({ count: 10 });
 ```
@@ -40,7 +40,7 @@ setState({ count: 10 });
 ### 2. Reducer Dispatch
 If your store uses a reducer, the middleware captures the action type and uses it as the label.
 
-```ts
+```ts lineNumbers
 // Label: CounterStore:increment
 dispatch({ type: 'increment' });
 ```

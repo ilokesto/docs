@@ -11,7 +11,7 @@ description: Redux DevTools 확장 프로그램을 지원합니다.
 
 `devtools`는 스토어에 직접 적용하거나 미들웨어 팩토리의 일부로 사용할 수 있습니다.
 
-```ts
+```ts lineNumbers
 import { devtools } from '@ilokesto/state/middleware';
 
 const store = devtools('CounterStore')({ count: 0 });
@@ -32,7 +32,7 @@ DevTools 업데이트는 `${storeName}:${actionName}` 패턴의 설명 라벨과
 ### 1. 일반 상태 업데이트 (Plain State Updates)
 일반적인 `setState` 호출을 사용하면 미들웨어는 기본적으로 "anonymous action" 라벨을 부여합니다.
 
-```ts
+```ts lineNumbers
 // 라벨: CounterStore:anonymous action
 setState({ count: 10 });
 ```
@@ -40,7 +40,7 @@ setState({ count: 10 });
 ### 2. 리듀서 디스패치 (Reducer Dispatch)
 스토어가 리듀서를 사용하는 경우, 미들웨어는 액션 타입을 캡처하여 이를 라벨로 사용합니다.
 
-```ts
+```ts lineNumbers
 // 라벨: CounterStore:increment
 dispatch({ type: 'increment' });
 ```

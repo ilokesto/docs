@@ -11,7 +11,7 @@ This part of Utilinent is for branch logic that deserves to be visible in the JS
 
 `Show` is the direct replacement for “render this when that is truthy.”
 
-```tsx
+```tsx lineNumbers
 import { Show } from '@ilokesto/utilinent';
 
 function Welcome({ user }: { user: { name: string } | null }) {
@@ -27,7 +27,7 @@ Important detail: if `when` is an array, the shared `resolveWhen()` helper treat
 
 That means this renders only when both values pass:
 
-```tsx
+```tsx lineNumbers
 <Show when={[isLoggedIn, isAdmin]}>
   <button>Admin Console</button>
 </Show>
@@ -37,7 +37,7 @@ That means this renders only when both values pass:
 
 Use `Switch` when you have several mutually exclusive branches and want the first matching one.
 
-```tsx
+```tsx lineNumbers
 import { Match, Switch } from '@ilokesto/utilinent';
 
 function Status({ status }: { status: 'loading' | 'done' | 'error' }) {
@@ -57,7 +57,7 @@ Under the hood, `Switch` flattens fragments and ignores non-`Match` children. It
 
 `OptionalWrapper` is for the awkward case where you want to wrap children only when a condition is met.
 
-```tsx
+```tsx lineNumbers
 import { OptionalWrapper } from '@ilokesto/utilinent';
 
 function ProfileLink({ href, children }: { href?: string; children: React.ReactNode }) {

@@ -18,7 +18,7 @@ description: Show.div 같은 proxy-backed component family를 직접 만드는 �
 
 실제 시그니처는 다음과 같습니다.
 
-```ts
+```ts lineNumbers
 createProxy(base, renderForTag, category)
 ```
 
@@ -38,7 +38,7 @@ createProxy(base, renderForTag, category)
 
 예를 들어 `Show`의 base form은:
 
-```tsx
+```tsx lineNumbers
 <Show when={user}>...</Show>
 ```
 
@@ -74,7 +74,7 @@ plugin lookup이 먼저 보는 bucket입니다. 사용자가 알 수 없는 속�
 
 타입 얘기를 하기 전에, 먼저 runtime에서 어떤 모양을 만들고 있는지부터 보면 이해가 쉽습니다.
 
-```tsx
+```tsx lineNumbers
 import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
 import { createProxy } from '@ilokesto/utilinent';
 
@@ -121,7 +121,7 @@ const Clickable = createProxy(BaseClickable, renderForTag, 'clickable');
 
 먼저 모든 variant가 공유할 기본 동작부터 잡습니다.
 
-```tsx
+```tsx lineNumbers
 type ClickableProps = {
   active?: boolean;
   children?: React.ReactNode;
@@ -138,7 +138,7 @@ function BaseClickable({ children }: ClickableProps) {
 
 `renderForTag`는 family-wide behavior를 각 intrinsic element에 붙이는 곳입니다.
 
-```tsx
+```tsx lineNumbers
 import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
 
 const renderForTag =
@@ -159,13 +159,13 @@ const renderForTag =
 
 ### 3단계: proxy 만들기
 
-```tsx
+```tsx lineNumbers
 const Clickable = createProxy(BaseClickable, renderForTag, 'clickable');
 ```
 
 runtime에서는 이 한 줄로 다음이 가능해집니다.
 
-```tsx
+```tsx lineNumbers
 <Clickable>Plain base form</Clickable>
 <Clickable.button active>Save</Clickable.button>
 <Clickable.a href="/docs">Read docs</Clickable.a>
@@ -175,7 +175,7 @@ runtime에서는 이 한 줄로 다음이 가능해집니다.
 
 runtime만 놓고 보면 여기서 이미 동작하지만, TypeScript가 전체 surface를 이해하려면 `BaseTypeHelperFn`, `ProxyType`가 필요합니다.
 
-```tsx
+```tsx lineNumbers
 import { BaseTypeHelperFn, ProxyType } from '@ilokesto/utilinent';
 
 type BaseClickableType<X = object> = {
@@ -195,7 +195,7 @@ export const Clickable: ClickableType = createProxy(BaseClickable, renderForTag,
 
 family가 준비된 뒤에 plugin 등록은 별도의 문제로 다룹니다.
 
-```tsx
+```tsx lineNumbers
 import Link from 'next/link';
 import { PluginManager } from '@ilokesto/utilinent';
 
@@ -215,7 +215,7 @@ PluginManager.register({
 
 ### 6단계: TypeScript에도 plugin variant를 알려준다
 
-```ts
+```ts lineNumbers
 declare module '@ilokesto/utilinent' {
   interface UtilinentRegister {
     clickable: {
@@ -233,7 +233,7 @@ declare module '@ilokesto/utilinent' {
 
 패키지 내부 컴포넌트들도 같은 패턴을 따릅니다.
 
-```tsx
+```tsx lineNumbers
 import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
 import { BaseTypeHelperFn, ProxyType, createProxy } from '@ilokesto/utilinent';
 
@@ -284,7 +284,7 @@ proxy가 준비되면 `PluginManager`로 새 속성을 붙일 수 있습니다.
 
 이 단계는 intrinsic tag 생성과는 다릅니다. HTML tag variant는 `renderForTag`를 통해 미리 만들어지지만, plugin-backed variant는 나중에 `PluginManager`에서 이름으로 해석됩니다.
 
-```tsx
+```tsx lineNumbers
 import Link from 'next/link';
 import { PluginManager } from '@ilokesto/utilinent';
 
@@ -297,7 +297,7 @@ PluginManager.register({
 
 그러면 runtime에서는 다음처럼 plugin-backed property lookup이 가능해집니다.
 
-```tsx
+```tsx lineNumbers
 <Clickable.Link href="/login">
   Login
 </Clickable.Link>
@@ -309,7 +309,7 @@ PluginManager.register({
 
 runtime 등록만으로는 충분하지 않습니다. TypeScript가 `Clickable.Link`를 이해하려면 `UtilinentRegister` 확장이 필요합니다.
 
-```ts
+```ts lineNumbers
 import Link from 'next/link';
 
 declare module '@ilokesto/utilinent' {

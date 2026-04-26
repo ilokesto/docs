@@ -13,7 +13,7 @@ Utilinent의 컴포지션 유틸리티는 하나의 구체적인 아키텍처 �
 
 `Slot`은 이 패턴의 핵심 도구입니다. 새로운 요소를 렌더링하는 대신, 자신의 자식을 복제(clone)하고 자신의 prop을 그 자식에 병합합니다.
 
-```tsx
+```tsx lineNumbers
 import { Slot } from '@ilokesto/utilinent';
 
 function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -31,7 +31,7 @@ function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLA
 
 컴포넌트가 아이콘과 라벨 같은 고정된 구조를 가지고 있으면서도 `asChild`를 지원해야 한다면, `Slottable`을 사용하여 자식 중 어느 부분이 "메인" 요소로서 병합 대상이 되어야 하는지 표시하십시오.
 
-```tsx
+```tsx lineNumbers
 import { Slot, Slottable } from '@ilokesto/utilinent';
 
 function ButtonWithIcon({ children, asChild }: { children: React.ReactNode, asChild?: boolean }) {

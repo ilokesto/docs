@@ -18,7 +18,7 @@ The easiest way to understand it is to learn the runtime shape first and the typ
 
 The real signature is:
 
-```ts
+```ts lineNumbers
 createProxy(base, renderForTag, category)
 ```
 
@@ -38,7 +38,7 @@ This is the default component you want people to use when they call the proxy di
 
 For example, with `Show`, the base form is:
 
-```tsx
+```tsx lineNumbers
 <Show when={user}>...</Show>
 ```
 
@@ -74,7 +74,7 @@ So the effective rule is: **built-ins win first, then category plugins, then bas
 
 Before worrying about advanced types, this is the runtime shape you are building:
 
-```tsx
+```tsx lineNumbers
 import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
 import { createProxy } from '@ilokesto/utilinent';
 
@@ -121,7 +121,7 @@ If you want the shortest complete tutorial, this is the one to follow. The idea 
 
 Start with the behavior you want every variant to share.
 
-```tsx
+```tsx lineNumbers
 type ClickableProps = {
   active?: boolean;
   children?: React.ReactNode;
@@ -138,7 +138,7 @@ In this example, the base form does almost nothing by itself. That is normal. Th
 
 `renderForTag` is where family-wide behavior gets attached to each intrinsic element.
 
-```tsx
+```tsx lineNumbers
 import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
 
 const renderForTag =
@@ -159,13 +159,13 @@ This is the piece that makes `Clickable.button` and `Clickable.a` feel like one 
 
 ### Step 3: create the proxy
 
-```tsx
+```tsx lineNumbers
 const Clickable = createProxy(BaseClickable, renderForTag, 'clickable');
 ```
 
 At runtime, that one line gives you:
 
-```tsx
+```tsx lineNumbers
 <Clickable>Plain base form</Clickable>
 <Clickable.button active>Save</Clickable.button>
 <Clickable.a href="/docs">Read docs</Clickable.a>
@@ -175,7 +175,7 @@ At runtime, that one line gives you:
 
 If you stop at runtime behavior, the proxy works but TypeScript cannot describe the full surface well. This is where `BaseTypeHelperFn` and `ProxyType` come in.
 
-```tsx
+```tsx lineNumbers
 import { BaseTypeHelperFn, ProxyType } from '@ilokesto/utilinent';
 
 type BaseClickableType<X = object> = {
@@ -195,7 +195,7 @@ export const Clickable: ClickableType = createProxy(BaseClickable, renderForTag,
 
 Once the family exists, plugin registration becomes a separate concern.
 
-```tsx
+```tsx lineNumbers
 import Link from 'next/link';
 import { PluginManager } from '@ilokesto/utilinent';
 
@@ -215,7 +215,7 @@ That separation is worth remembering:
 
 ### Step 6: make plugin variants visible to TypeScript
 
-```ts
+```ts lineNumbers
 declare module '@ilokesto/utilinent' {
   interface UtilinentRegister {
     clickable: {
@@ -233,7 +233,7 @@ The runtime proxy above works, but TypeScript will not know the shape you want u
 
 This is what the package's own components do.
 
-```tsx
+```tsx lineNumbers
 import { ComponentPropsWithRef, createElement, forwardRef } from 'react';
 import { BaseTypeHelperFn, ProxyType, createProxy } from '@ilokesto/utilinent';
 
@@ -284,7 +284,7 @@ Once your proxy exists, you can teach it new property names through `PluginManag
 
 This is a different step from intrinsic tag generation. HTML tags are eagerly generated through `renderForTag`, but plugin-backed variants are resolved later by name from `PluginManager`.
 
-```tsx
+```tsx lineNumbers
 import Link from 'next/link';
 import { PluginManager } from '@ilokesto/utilinent';
 
@@ -297,7 +297,7 @@ PluginManager.register({
 
 Now the runtime can resolve a plugin-backed property lookup such as:
 
-```tsx
+```tsx lineNumbers
 <Clickable.Link href="/login">
   Login
 </Clickable.Link>
@@ -311,7 +311,7 @@ Runtime registration alone is not enough if you want TypeScript to know that `Cl
 
 For that you augment `UtilinentRegister`.
 
-```ts
+```ts lineNumbers
 import Link from 'next/link';
 
 declare module '@ilokesto/utilinent' {

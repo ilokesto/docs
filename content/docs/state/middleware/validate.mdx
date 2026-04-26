@@ -7,7 +7,7 @@ description: Validate state changes using Standard Schema v1.
 
 The `validate` middleware checks the next state against a Standard Schema v1 validator before committing the update.
 
-```ts
+```ts lineNumbers
 import { validate } from '@ilokesto/state/middleware';
 import { z } from 'zod'; // Zod supports Standard Schema v1
 

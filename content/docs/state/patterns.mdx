@@ -11,7 +11,7 @@ The API is small, but the way you organize it matters a lot. Most real projects 
 
 A common pattern is to keep the hook in one module and export actions from a sibling module. That keeps `create()` small while still letting you build a real state API.
 
-```ts
+```ts lineNumbers
 // stores/counter.ts
 export const useCounter = create({ count: 0 });
 
@@ -29,7 +29,7 @@ This pattern works especially well when several components need to trigger the s
 
 The first choice for derived state should usually be a selector, not another store field.
 
-```ts
+```ts lineNumbers
 const useStore = create({ items: [] });
 
 // Simple derived state
@@ -48,7 +48,7 @@ If a calculation is genuinely expensive, make the selector reusable and keep the
 
 `@ilokesto/state` does not force a single global state tree. In many apps, smaller focused stores are easier to evolve than one oversized store with unrelated concerns.
 
-```ts
+```ts lineNumbers
 // auth.ts
 export const useAuth = create({ user: null });
 
@@ -62,7 +62,7 @@ The split becomes worth it when domains change at different rates or belong to d
 
 Because `writeOnly()` is available outside components, you can keep effectful workflows near the action that causes them instead of mixing effect state into the store definition itself.
 
-```ts
+```ts lineNumbers
 // Action with side effect
 export const fetchUser = async (id: string) => {
   const user = await api.getUser(id);

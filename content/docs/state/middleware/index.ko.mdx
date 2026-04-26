@@ -9,7 +9,7 @@ description: 로깅, 영속화, 검증, 디버깅을 위한 store-level 확장.
 
 모든 내장 미들웨어는 `@ilokesto/state/middleware` 엔트리포인트에서 가져올 수 있고, `pipe()`와 함께 자연스럽게 조합되도록 설계되어 있습니다.
 
-```ts
+```ts lineNumbers
 import { create } from '@ilokesto/state';
 import { logger, persist } from '@ilokesto/state/middleware';
 import { pipe } from '@ilokesto/state/utils';

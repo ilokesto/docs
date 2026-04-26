@@ -17,7 +17,7 @@ description: 설치부터 첫 store hook까지 가장 짧은 경로.
 
 가장 작은 `@ilokesto/state` 사용 예제는 초기 상태 객체에서 시작합니다.
 
-```tsx
+```tsx lineNumbers
 import { create } from '@ilokesto/state';
 
 const useCounter = create({ count: 0 });
@@ -27,7 +27,7 @@ const useCounter = create({ count: 0 });
 
 셀렉터는 컴포넌트가 무엇을 읽을지를 정합니다. 하지만 반환되는 쓰기 함수는 여전히 전체 스토어 상태를 갱신합니다.
 
-```tsx
+```tsx lineNumbers
 function Counter() {
   const [count, setState] = useCounter((state) => state.count);
 
@@ -48,7 +48,7 @@ function Counter() {
 
 업데이트 로직이 버튼 핸들러를 넘어서 “액션”처럼 느껴지기 시작하면 `writeOnly()` 뒤로 빼는 편이 좋습니다.
 
-```ts
+```ts lineNumbers
 const useCounter = create({ count: 0 });
 
 export const increment = () => {

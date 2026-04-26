@@ -13,7 +13,7 @@ This pattern, often called "asChild", allows you to build flexible component lib
 
 `Slot` is the primary tool for this pattern. Instead of rendering a new element, it clones its child and merges its own props into that child.
 
-```tsx
+```tsx lineNumbers
 import { Slot } from '@ilokesto/utilinent';
 
 function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -31,7 +31,7 @@ function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLA
 
 If your component has a fixed structure (like an icon plus a label) but still needs to support `asChild`, use `Slottable` to mark which part of the children should be considered the "main" element to be merged.
 
-```tsx
+```tsx lineNumbers
 import { Slot, Slottable } from '@ilokesto/utilinent';
 
 function ButtonWithIcon({ children, asChild }: { children: React.ReactNode, asChild?: boolean }) {

@@ -18,7 +18,7 @@ It is important to recognize that these accessors are not symmetric in their imp
 
 Each `writeOnly()` call returns a bound store writer. The important stability is behavioral, not referential: it always points at the same underlying store.
 
-```ts
+```ts lineNumbers
 const useCounter = create({ count: 0 });
 
 // Ideal for standalone action files
@@ -36,7 +36,7 @@ At runtime, `readOnly()` reaches through the same React hook path used by normal
 1. **React-side only**: It is best treated as a React-side convenience for components that need to read state without subscribing to updates.
 2. **Not for arbitrary code**: Do not call `readOnly()` inside plain utility functions or background workers where React context or hooks are unavailable.
 
-```tsx
+```tsx lineNumbers
 function CounterSummary() {
   const count = useCounter.readOnly((state) => state.count);
 
@@ -50,7 +50,7 @@ If you need a truly safe, imperative read outside of React (e.g., in a WebSocket
 
 The pattern for this is to create the store separately and pass it to `create()`:
 
-```ts
+```ts lineNumbers
 import { Store } from '@ilokesto/store';
 import { create } from '@ilokesto/state';
 
@@ -70,7 +70,7 @@ export const checkCount = () => {
 
 A common architectural pattern is to keep stores and actions separate. Accessors make this clean:
 
-```ts
+```ts lineNumbers
 // stores/auth.ts
 export const useAuth = create({ user: null, loading: false });
 

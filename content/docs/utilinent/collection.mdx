@@ -14,7 +14,7 @@ Utilinent has two primitives for repeated rendering, but they solve different pr
 
 `For` is the “map with a fallback” primitive.
 
-```tsx
+```tsx lineNumbers
 import { For } from '@ilokesto/utilinent';
 
 function ProductList({ products }: { products: Array<{ id: string; name: string }> | null }) {
@@ -38,7 +38,7 @@ Important behavior:
 
 `Repeat` is for count-based rendering.
 
-```tsx
+```tsx lineNumbers
 import { Repeat } from '@ilokesto/utilinent';
 
 function SkeletonRows() {

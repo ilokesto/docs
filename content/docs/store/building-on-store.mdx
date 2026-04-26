@@ -35,7 +35,7 @@ Treat these methods as the boundary for adapter code:
 
 Do not couple an adapter to private fields, listener storage, middleware arrays, or implementation helper names. If your library exposes `Store` directly, document that consumers are using the vanilla `@ilokesto/store` API. If your library wraps `Store`, expose only the methods and actions your abstraction can support over time.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type ReadonlyStore<T> = {
@@ -57,7 +57,7 @@ This kind of wrapper lets a library hide writes without depending on internals.
 
 Map each subscription to one owner in the target runtime. The owner might be a component, request, controller, test harness, or long-lived service.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type StoreConnection<T> = {
@@ -91,7 +91,7 @@ The framework-specific version of this shape belongs in [Framework Usage](./fram
 
 Store notifications are synchronous after a successful replacement. If your target runtime batches or schedules updates, that scheduling belongs to the adapter layer. Do not describe Store itself as batched or async.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   const nextSnapshot = store.getState();
   publishToRuntime(nextSnapshot);
@@ -110,7 +110,7 @@ Good adapter APIs usually do one of these:
 - register cleanup with the target runtime lifecycle,
 - scope the subscription to a controller that owns its teardown.
 
-```ts
+```ts lineNumbers
 const connection = connectStore(store);
 
 try {
@@ -126,7 +126,7 @@ Calling cleanup should stop future notifications for that listener. It should al
 
 `setState` replaces the whole state value. If your library exposes partial updates, the library must merge fields before calling `setState`.
 
-```ts
+```ts lineNumbers
 function setPartial<T extends object>(store: Store<T>, partial: Partial<T>) {
   store.setState((prev) => ({ ...prev, ...partial }));
 }

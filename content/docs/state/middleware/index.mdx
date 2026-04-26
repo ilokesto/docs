@@ -9,7 +9,7 @@ description: Store-level extensions for logging, persistence, validation, and de
 
 All built-in middleware are available from the `@ilokesto/state/middleware` entry point, and they are designed to compose cleanly with `pipe()`.
 
-```ts
+```ts lineNumbers
 import { create } from '@ilokesto/state';
 import { logger, persist } from '@ilokesto/state/middleware';
 import { pipe } from '@ilokesto/state/utils';

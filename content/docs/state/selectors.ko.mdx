@@ -13,7 +13,7 @@ description: "@ilokesto/state에서 상태 조각을 효율적으로 구독하�
 
 `create`로 생성된 훅은 첫 번째 인자로 셀렉터 함수를 받습니다.
 
-```tsx
+```tsx lineNumbers
 const [count, setCount] = useCounter(state => state.count);
 
 // 'count'만 읽었지만, setCount는 여전히 전체 상태를 받고 갱신합니다.
@@ -35,7 +35,7 @@ const increment = () => setCount(prev => ({ ...prev, count: prev.count + 1 }));
 
 셀렉터 없이 훅을 호출하면 **전체 스토어 구독** 모드로 동작합니다.
 
-```tsx
+```tsx lineNumbers
 // 모든 상태 변화를 구독합니다. 스토어의 어떤 값이든 바뀌면 컴포넌트가 리렌더링됩니다.
 const [state, setState] = useStore();
 ```
@@ -58,7 +58,7 @@ Server-Side Rendering (SSR) 환경에서 셀렉터는 `getInitialState()`와 상
 
 셀렉터 내부에서 직접 파생된 값을 계산할 수 있습니다.
 
-```tsx
+```tsx lineNumbers
 const [isOverLimit] = useCounter(state => state.count > 100);
 ```
 

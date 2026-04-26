@@ -15,7 +15,7 @@ This page is the shortest path to something real. The goal is not to cover every
 
 `Show` is the smallest useful entry point. It makes “render this when that is truthy” explicit and gives you a first-class fallback.
 
-```tsx
+```tsx lineNumbers
 import { Show } from '@ilokesto/utilinent';
 
 function Profile({ user }: { user: { name: string } | null }) {
@@ -33,7 +33,7 @@ If `when` is an array, Utilinent treats it as “all values must be truthy.”
 
 `For` turns the common “map when present, fallback when empty” pattern into one JSX primitive.
 
-```tsx
+```tsx lineNumbers
 import { For } from '@ilokesto/utilinent';
 
 function TodoList({ items }: { items: Array<{ id: string; text: string }> | null }) {
@@ -49,7 +49,7 @@ function TodoList({ items }: { items: Array<{ id: string; text: string }> | null
 
 `Mount` accepts regular children or a function that returns a node or a promise.
 
-```tsx
+```tsx lineNumbers
 import { Mount } from '@ilokesto/utilinent';
 
 function AsyncPanel() {
@@ -67,7 +67,7 @@ If the function throws or rejects, `fallback` stays visible and `onError` can ob
 
 `Slot` is for as-child composition patterns where the parent wants to merge props into a child element instead of adding another wrapper.
 
-```tsx
+```tsx lineNumbers
 import { Slot } from '@ilokesto/utilinent';
 
 function Button({ asChild, ...props }: { asChild?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {

@@ -7,7 +7,7 @@ description: Immer 기반 객체 updater를 만듭니다.
 
 `adaptor`는 Immer의 `produce()`를 얇게 감싼 헬퍼입니다. draft 스타일의 객체 업데이트를 작성하면, 그 결과를 순수 updater 함수로 돌려줍니다.
 
-```ts
+```ts lineNumbers
 import { adaptor } from '@ilokesto/state/utils';
 
 type State = { user: { profile: { name: string } } };

@@ -13,7 +13,7 @@ It is important to understand that **selectors narrow reads, not writes.** Even 
 
 The hook returned by `create` accepts a selector function as its first argument.
 
-```tsx
+```tsx lineNumbers
 const [count, setCount] = useCounter(state => state.count);
 
 // Even though we only read 'count', setCount still receives full state
@@ -35,7 +35,7 @@ The hook returns a tuple:
 
 If you call the hook without a selector, you are opting into a **whole-store subscription**.
 
-```tsx
+```tsx lineNumbers
 // Subscribes to EVERYTHING. The component re-renders on every single store update.
 const [state, setState] = useStore();
 ```
@@ -58,7 +58,7 @@ When using Server-Side Rendering (SSR), selectors interact with `getInitialState
 
 You can compute derived values directly within a selector.
 
-```tsx
+```tsx lineNumbers
 const [isOverLimit] = useCounter(state => state.count > 100);
 ```
 

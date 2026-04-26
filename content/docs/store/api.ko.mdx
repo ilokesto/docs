@@ -7,7 +7,7 @@ description: Store의 소스 기반 공개 표면입니다.
 
 `@ilokesto/store` 패키지는 하나의 공개 클래스인 `Store<T>`를 내보냅니다.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 ```
 
@@ -19,7 +19,7 @@ import { Store } from "@ilokesto/store";
 
 `Store<T>`는 `@ilokesto/store`에서 내보내는 유일한 심볼입니다.
 
-```ts
+```ts lineNumbers
 const store = new Store({ count: 0 });
 ```
 
@@ -29,7 +29,7 @@ const store = new Store({ count: 0 });
 
 초기 상태 값으로 스토어를 만듭니다. 업데이트가 성공하기 전까지 스토어는 그 값을 초기 상태이자 현재 상태로 보관합니다.
 
-```ts
+```ts lineNumbers
 const store = new Store({ count: 0 });
 ```
 
@@ -37,7 +37,7 @@ const store = new Store({ count: 0 });
 
 ### `getState()`
 
-```ts
+```ts lineNumbers
 getState(): Readonly<T>
 ```
 
@@ -47,7 +47,7 @@ getState(): Readonly<T>
 
 ### `getInitialState()`
 
-```ts
+```ts lineNumbers
 getInitialState(): Readonly<T>
 ```
 
@@ -57,13 +57,13 @@ getInitialState(): Readonly<T>
 
 ### `setState(nextState)`
 
-```ts
+```ts lineNumbers
 setState(nextState: T | ((prevState: T) => T)): void
 ```
 
 현재 상태를 값 또는 업데이트 함수의 결과로 교체합니다.
 
-```ts
+```ts lineNumbers
 store.setState({ count: 1 });
 
 store.setState((prev) => ({
@@ -78,7 +78,7 @@ store.setState((prev) => ({
 
 ### `pushMiddleware(middleware)`
 
-```ts
+```ts lineNumbers
 pushMiddleware(
   middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
 ): void
@@ -92,7 +92,7 @@ pushMiddleware(
 
 ### `unshiftMiddleware(middleware)`
 
-```ts
+```ts lineNumbers
 unshiftMiddleware(
   middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
 ): void
@@ -104,13 +104,13 @@ unshiftMiddleware(
 
 ### `subscribe(listener)`
 
-```ts
+```ts lineNumbers
 subscribe(listener: () => void): () => void
 ```
 
 리스너를 등록하고 같은 리스너 참조를 제거하는 구독 취소 콜백을 반환합니다.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   console.log(store.getState());
 });

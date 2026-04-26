@@ -13,7 +13,7 @@ description: 애플리케이션 코드에서 바로 쓰는 Store 레시피입니
 
 앱의 여러 부분이 공유해야 하는 상태에는 모듈 수준 스토어가 잘 맞습니다. 상태 모양은 좁게 유지하고, 허용되는 업데이트를 설명하는 작은 함수를 함께 내보내세요.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type AuthState = {
@@ -43,7 +43,7 @@ auth, theme, feature flag, 현재 workspace처럼 앱 전체에서 공유되는 
 
 팩토리는 기능 인스턴스마다 새 스토어를 만듭니다. 화면, 탭, 테스트, 서버 요청 범위처럼 사용자나 실행 사이에 상태가 새면 안 되는 곳에 유용합니다.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type CounterState = {
@@ -71,7 +71,7 @@ export function createCounterStore(initialCount = 0) {
 
 `getInitialState()`는 생성자에 전달한 값을 반환합니다. 그래서 reset helper를 단순하게 만들 수 있지만, `Store`는 런타임에서 그 값을 복제하거나 동결하지 않는다는 점을 기억해야 합니다.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 type FormState = {
@@ -93,7 +93,7 @@ export function resetForm() {
 
 초기값에 앱 코드가 바꿀 수 있는 중첩 객체가 있다면, 같은 참조를 다시 쓰기보다 팩토리로 새 초기값을 만드세요.
 
-```ts
+```ts lineNumbers
 function createInitialFormState(): FormState {
   return { name: "", email: "", submitted: false };
 }
@@ -109,7 +109,7 @@ export function resetForm() {
 
 `Store`는 하나의 소스 값을 보관합니다. 부가 값은 일반 함수로 파생하면 항상 최신 스냅샷을 기준으로 계산됩니다.
 
-```ts
+```ts lineNumbers
 type CartState = {
   items: Array<{ id: string; price: number; quantity: number }>;
 };
@@ -133,7 +133,7 @@ export function hasItems() {
 
 비동기 작업은 스토어 업데이트 주변에서 처리하세요. 요청을 시작하고 loading 상태를 업데이트한 다음, 요청이 끝나면 전체 상태를 교체합니다.
 
-```ts
+```ts lineNumbers
 type ProfileState = {
   profile: { id: string; name: string } | null;
   loading: boolean;
@@ -177,7 +177,7 @@ export async function loadProfile(userId: string) {
 
 서로 관련 없는 소비자가 같은 알림 흐름을 공유하면 안 될 때는 책임별로 스토어를 나누세요.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
 export const themeStore = new Store<"light" | "dark">("light");
@@ -209,7 +209,7 @@ export const draftStore = new Store({
 
 대신 domain마다 스토어를 두세요. 두 domain이 함께 움직여야 한다면, 각 스토어를 명시적으로 업데이트하는 앱 수준 함수를 작성합니다.
 
-```ts
+```ts lineNumbers
 export function clearWorkspace() {
   sessionStore.setState((prev) => ({ ...prev, activeWorkspaceId: null }));
   draftStore.setState({ title: "", body: "" });
@@ -222,7 +222,7 @@ export function clearWorkspace() {
 
 테스트는 각 테스트가 팩토리를 통해 자기 스토어를 만들 때 가장 쉽습니다.
 
-```ts
+```ts lineNumbers
 import { expect, test } from "vitest";
 
 test("increments count", () => {

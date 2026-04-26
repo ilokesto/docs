@@ -19,7 +19,7 @@ Some sections below mention current implementation details because they explain 
 
 `setState` replaces the whole state value. It does not merge objects.
 
-```ts
+```ts lineNumbers
 const store = new Store({ a: 1, b: 2 });
 
 store.setState({ a: 10 });
@@ -28,7 +28,7 @@ store.setState({ a: 10 });
 
 When the next value depends on the previous value, use the updater form so the update is based on the current state at the moment `setState` runs.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({ ...prev, b: prev.b + 1 }));
 ```
 
@@ -38,7 +38,7 @@ Ordering is synchronous. One `setState` call runs its update flow before the nex
 
 The store uses `Object.is(prevState, nextState)` after resolving the next value. If `Object.is` returns `true`, the state is not replaced and subscribers are not notified.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => prev);
 // No replacement, no notification.
 ```
@@ -49,7 +49,7 @@ For objects and arrays, returning the same reference is a bailout. To publish a 
 
 Nested values are not tracked. The store compares only the root state value with `Object.is`.
 
-```ts
+```ts lineNumbers
 const state = store.getState();
 
 state.profile.name = "Ada";
@@ -58,7 +58,7 @@ state.profile.name = "Ada";
 
 Use immutable updates for nested data.
 
-```ts
+```ts lineNumbers
 store.setState((prev) => ({
   ...prev,
   profile: {
@@ -76,7 +76,7 @@ Notifications are synchronous. After a successful replacement, subscribers run i
 
 Subscribers read the state that was just applied.
 
-```ts
+```ts lineNumbers
 store.subscribe(() => {
   console.log(store.getState());
 });
@@ -99,7 +99,7 @@ Registering the same function reference more than once does not create multiple 
 
 Calling an unsubscribe function during notification is safe.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   unsubscribe();
 });
@@ -113,7 +113,7 @@ This describes current behavior. Do not depend on private field names or the exa
 
 A subscriber can call `setState` while a notification is running. That starts another synchronous update flow immediately.
 
-```ts
+```ts lineNumbers
 store.subscribe(() => {
   const { count } = store.getState();
 
@@ -137,7 +137,7 @@ Keep subscribers small, predictable, and guarded by your own error handling when
 
 Wrap function values in an object when you need to store them.
 
-```ts
+```ts lineNumbers
 store.setState({ handler: () => console.log("run") });
 ```
 

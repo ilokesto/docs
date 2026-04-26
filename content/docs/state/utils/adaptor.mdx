@@ -7,7 +7,7 @@ description: Create Immer-powered object updaters.
 
 `adaptor` is a thin wrapper around Immer's `produce()`. It lets you write a draft-style object update and get back a pure updater function.
 
-```ts
+```ts lineNumbers
 import { adaptor } from '@ilokesto/state/utils';
 
 type State = { user: { profile: { name: string } } };

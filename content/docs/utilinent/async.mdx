@@ -19,7 +19,7 @@ Understanding how these components relate helps you choose the right level of ab
 
 `Mount` treats async operations as a first-class rendering concern. It accepts regular nodes, functions that return nodes, or functions that return Promises.
 
-```tsx
+```tsx lineNumbers
 import { Mount } from '@ilokesto/utilinent';
 
 function AsyncProfile() {
@@ -44,7 +44,7 @@ function AsyncProfile() {
 
 `Observer` is the declarative way to render content only when it enters the viewport.
 
-```tsx
+```tsx lineNumbers
 import { Observer } from '@ilokesto/utilinent';
 
 function LazyContent() {
@@ -65,7 +65,7 @@ function LazyContent() {
 
 `Slacker` is the most specialized component in this family. It combines visibility observation with an async loader.
 
-```tsx
+```tsx lineNumbers
 import { Slacker } from '@ilokesto/utilinent';
 
 function DeferredData() {
@@ -90,7 +90,7 @@ function DeferredData() {
 
 The underlying hook for visibility detection.
 
-```ts
+```ts lineNumbers
 const { ref, isIntersecting, entry } = useIntersectionObserver({
   threshold: 0.1,
   rootMargin: '100px',

@@ -7,7 +7,7 @@ description: 상태 업데이트를 일정 시간 동안 지연시킵니다.
 
 `debounce` 미들웨어는 텍스트 입력이나 브라우저 크기 조정과 같은 빈번한 상태 업데이트를 큐에 모아 두었다가 설정된 대기 시간이 지나면 한 번에 반영합니다. 현재 구현에서는 첫 업데이트가 들어온 시점에 wait window가 시작되고, 그 뒤의 업데이트는 같은 window 안에 함께 묶입니다.
 
-```ts
+```ts lineNumbers
 import { debounce } from '@ilokesto/state/middleware';
 
 const store = debounce(200)({ text: '' });

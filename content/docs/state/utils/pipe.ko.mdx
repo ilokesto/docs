@@ -7,7 +7,7 @@ description: plain initial state에 미들웨어를 조합합니다.
 
 `pipe`는 plain initial state를 기준으로 여러 미들웨어를 조합하고, 최종적으로 초기화된 `Store` 인스턴스를 반환합니다.
 
-```ts
+```ts lineNumbers
 import { create } from '@ilokesto/state';
 import { pipe } from '@ilokesto/state/utils';
 import { logger, devtools } from '@ilokesto/state/middleware';

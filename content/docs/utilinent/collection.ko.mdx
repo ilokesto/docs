@@ -14,7 +14,7 @@ Utilinent의 반복 렌더링 프리미티브는 두 가지지만, 해결하는 
 
 `For`는 “map + fallback” 패턴을 JSX 프리미티브로 만든 것입니다.
 
-```tsx
+```tsx lineNumbers
 import { For } from '@ilokesto/utilinent';
 
 function ProductList({ products }: { products: Array<{ id: string; name: string }> | null }) {
@@ -38,7 +38,7 @@ function ProductList({ products }: { products: Array<{ id: string; name: string 
 
 `Repeat`는 횟수 기반 렌더링을 위한 도구입니다.
 
-```tsx
+```tsx lineNumbers
 import { Repeat } from '@ilokesto/utilinent';
 
 function SkeletonRows() {

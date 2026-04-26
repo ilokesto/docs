@@ -25,7 +25,7 @@ description: React, Vue, Svelte, Angular에서 @ilokesto/store를 사용하는 �
 
 React는 외부 스토어를 위한 내장 브리지인 `useSyncExternalStore`를 제공합니다. React가 구독 정리를 제어하고 렌더 중 일관된 스냅샷을 읽도록 이 API를 사용하세요.
 
-```tsx
+```tsx lineNumbers
 import { useSyncExternalStore } from "react";
 import { Store } from "@ilokesto/store";
 
@@ -60,7 +60,7 @@ export function CounterButton() {
 
 Vue에서는 스토어 스냅샷을 `shallowRef`로 옮기고 `onUnmounted`로 생명주기 정리를 등록합니다.
 
-```ts
+```ts lineNumbers
 import { onUnmounted, shallowRef } from "vue";
 import { Store } from "@ilokesto/store";
 
@@ -93,7 +93,7 @@ export function useCounterStore() {
 
 Svelte의 store contract도 구독 기반입니다. 작은 어댑터는 스냅샷용 readable store와 쓰기용 별도 action helper를 노출할 수 있습니다.
 
-```ts
+```ts lineNumbers
 import { readable } from "svelte/store";
 import { Store } from "@ilokesto/store";
 
@@ -124,7 +124,7 @@ readable setup 함수에서 `unsubscribe`를 반환하면 마지막 구독자가
 
 Angular는 스토어를 service 소유 signal로 연결할 수 있습니다. service가 구독을 소유하고 컴포넌트용 read model을 노출하며, 그 service를 만든 범위를 위한 명시적인 정리 메서드를 제공합니다.
 
-```ts
+```ts lineNumbers
 import { Injectable, OnDestroy, signal } from "@angular/core";
 import { Store } from "@ilokesto/store";
 

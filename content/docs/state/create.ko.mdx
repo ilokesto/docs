@@ -15,7 +15,7 @@ description: "@ilokesto/state에서 스토어를 구축하기 위한 기본 API.
 
 상태 모드에서는 초기 상태를 직접 제공합니다. 반환된 훅은 React의 `useState`와 유사한 `setState` 함수를 제공합니다.
 
-```ts
+```ts lineNumbers
 import { create } from '@ilokesto/state';
 
 // 1. 초기 상태 값을 사용
@@ -33,7 +33,7 @@ const useCounterFromStore = create(store);
 
 리듀서 모드에서는 리듀서 함수와 초기 상태(또는 스토어)를 제공합니다. 반환된 훅은 `dispatch` 함수를 제공합니다.
 
-```ts
+```ts lineNumbers
 type State = { count: number };
 type Action = { type: 'increment' } | { type: 'decrement' };
 
@@ -52,7 +52,7 @@ const useCounter = create(reducer, { count: 0 });
 
 `create`에 의해 반환된 훅은 셀렉터 함수를 인자로 받습니다.
 
-```tsx
+```tsx lineNumbers
 function Counter() {
   // [선택된상태, 업데이트함수]를 반환합니다.
   const [count, setCountOrDispatch] = useCounter(state => state.count);

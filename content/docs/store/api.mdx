@@ -7,7 +7,7 @@ description: The source backed public surface of Store.
 
 The `@ilokesto/store` package exports one public class: `Store<T>`.
 
-```ts
+```ts lineNumbers
 import { Store } from "@ilokesto/store";
 ```
 
@@ -19,7 +19,7 @@ This page documents the public API symbols verified from the current source evid
 
 `Store<T>` is the only exported symbol from `@ilokesto/store`.
 
-```ts
+```ts lineNumbers
 const store = new Store({ count: 0 });
 ```
 
@@ -29,7 +29,7 @@ const store = new Store({ count: 0 });
 
 Creates a store with an initial state value. The store keeps that value as both the initial state and the current state until an update succeeds.
 
-```ts
+```ts lineNumbers
 const store = new Store({ count: 0 });
 ```
 
@@ -37,7 +37,7 @@ const store = new Store({ count: 0 });
 
 ### `getState()`
 
-```ts
+```ts lineNumbers
 getState(): Readonly<T>
 ```
 
@@ -47,7 +47,7 @@ Returns the current state reference typed as `Readonly<T>`.
 
 ### `getInitialState()`
 
-```ts
+```ts lineNumbers
 getInitialState(): Readonly<T>
 ```
 
@@ -57,13 +57,13 @@ This is useful when you need to compare against, or reset back to, the original 
 
 ### `setState(nextState)`
 
-```ts
+```ts lineNumbers
 setState(nextState: T | ((prevState: T) => T)): void
 ```
 
 Replaces the current state with a value or with the result of an updater function.
 
-```ts
+```ts lineNumbers
 store.setState({ count: 1 });
 
 store.setState((prev) => ({
@@ -78,7 +78,7 @@ If the runtime value passed to `setState` is a function, Store treats it as an u
 
 ### `pushMiddleware(middleware)`
 
-```ts
+```ts lineNumbers
 pushMiddleware(
   middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
 ): void
@@ -92,7 +92,7 @@ Because `setState` builds the runner with `reduceRight`, earlier middleware entr
 
 ### `unshiftMiddleware(middleware)`
 
-```ts
+```ts lineNumbers
 unshiftMiddleware(
   middleware: (nextState: T | ((prevState: T) => T), next: (value: T | ((prevState: T) => T)) => void) => void,
 ): void
@@ -104,13 +104,13 @@ Prepended middleware becomes an earlier middleware entry and wraps later entries
 
 ### `subscribe(listener)`
 
-```ts
+```ts lineNumbers
 subscribe(listener: () => void): () => void
 ```
 
 Registers a listener and returns an unsubscribe callback that removes the same listener reference.
 
-```ts
+```ts lineNumbers
 const unsubscribe = store.subscribe(() => {
   console.log(store.getState());
 });

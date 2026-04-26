@@ -11,7 +11,7 @@ The `persist` middleware automatically saves and restores store state across bro
 
 You can use `persist` either directly on a store object or as a curried middleware factory during store creation.
 
-```ts
+```ts lineNumbers
 import { persist } from '@ilokesto/state/middleware';
 
 const store = persist({ local: 'counter-storage' })({ count: 0 });
@@ -36,7 +36,7 @@ When a store is initialized with `persist`, it follows a specific setup sequence
 ## Storage Shape and Versioning
 
 Data is saved in a wrapper object:
-```json
+```json lineNumbers
 {
   "state": { ... },
   "version": 2
@@ -67,7 +67,7 @@ The position of `persist()` in your middleware chain matters.
 **Recommended order**: Place `persist()` towards the **end** of the chain.
 This ensures that it only saves the "final" state after other middleware (like `validate` or `debounce`) have had their chance to process the update.
 
-```ts
+```ts lineNumbers
 const store = pipe(
   validate(schema),
   persist({ local: 'app-state' })

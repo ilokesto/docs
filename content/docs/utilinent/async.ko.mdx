@@ -19,7 +19,7 @@ Utilinent의 비동기 및 가시성 유틸리티는 타이밍이나 뷰포트 �
 
 `Mount`는 비동기 작업을 일급 렌더링 관심사로 다룹니다. 일반 노드, 노드를 반환하는 함수, 또는 Promise를 반환하는 함수를 자식으로 받을 수 있습니다.
 
-```tsx
+```tsx lineNumbers
 import { Mount } from '@ilokesto/utilinent';
 
 function AsyncProfile() {
@@ -44,7 +44,7 @@ function AsyncProfile() {
 
 `Observer`는 콘텐츠가 뷰포트에 들어올 때만 렌더링하는 선언적인 방법입니다.
 
-```tsx
+```tsx lineNumbers
 import { Observer } from '@ilokesto/utilinent';
 
 function LazyContent() {
@@ -65,7 +65,7 @@ function LazyContent() {
 
 `Slacker`는 이 제품군에서 가장 특화된 컴포넌트입니다. 가시성 관찰과 비동기 로더(loader)를 결합합니다.
 
-```tsx
+```tsx lineNumbers
 import { Slacker } from '@ilokesto/utilinent';
 
 function DeferredData() {
@@ -90,7 +90,7 @@ function DeferredData() {
 
 가시성 감지를 위한 기초 훅입니다.
 
-```ts
+```ts lineNumbers
 const { ref, isIntersecting, entry } = useIntersectionObserver({
   threshold: 0.1,
   rootMargin: '100px',

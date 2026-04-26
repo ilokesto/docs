@@ -7,7 +7,7 @@ description: Accumulate and delay state updates.
 
 The `debounce` middleware queues rapid updates and flushes them after a configured wait time. In the current implementation, the wait window starts on the first update and additional updates are batched into that same window.
 
-```ts
+```ts lineNumbers
 import { debounce } from '@ilokesto/state/middleware';
 
 const store = debounce(200)({ text: '' });

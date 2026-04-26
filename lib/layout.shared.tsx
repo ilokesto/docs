@@ -75,6 +75,12 @@ export function baseOptions(): BaseLayoutProps {
 
 export function getPackageTabs(lang: string): LayoutTab[] {
   const isKorean = lang === 'ko';
+  const disabledProps = {
+    'aria-disabled': true,
+    tabIndex: -1,
+    className:
+      'pointer-events-none cursor-not-allowed opacity-50 hover:bg-transparent hover:text-fd-muted-foreground',
+  } as const;
 
   return [
     {
@@ -96,26 +102,29 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'Overlay',
       description: isKorean
-        ? '접근성 있는 headless overlay primitive'
-        : 'Accessible overlay primitives',
-      url: `/${lang}/overlay`,
+        ? 'Overlay primitive 준비 중'
+        : 'Overlay primitives coming soon',
+      url: '#',
       icon: <PackageIcon pkg="overlay" />,
+      props: disabledProps,
     },
     {
       title: 'Modal',
       description: isKorean
-        ? '부드러운 모션의 promise 기반 다이얼로그'
-        : 'Promise-based dialogs with smooth motion',
-      url: `/${lang}/modal`,
+        ? 'Modal primitive 준비 중'
+        : 'Modal primitives coming soon',
+      url: '#',
       icon: <PackageIcon pkg="modal" />,
+      props: disabledProps,
     },
     {
       title: 'Toast',
       description: isKorean
-        ? '가벼운 토스트 알림 런타임'
-        : 'Lightweight toast notifications',
-      url: `/${lang}/toast`,
+        ? 'Toast runtime 준비 중'
+        : 'Toast runtime coming soon',
+      url: '#',
       icon: <PackageIcon pkg="toast" />,
+      props: disabledProps,
     },
     {
       title: 'Form',
@@ -124,12 +133,7 @@ export function getPackageTabs(lang: string): LayoutTab[] {
         : 'Type-safe form primitives coming soon',
       url: '#',
       icon: <PackageIcon pkg="form" />,
-      props: {
-        'aria-disabled': true,
-        tabIndex: -1,
-        className:
-          'pointer-events-none cursor-not-allowed opacity-50 hover:bg-transparent hover:text-fd-muted-foreground',
-      },
+      props: disabledProps,
     },
     {
       title: 'Utilinent',

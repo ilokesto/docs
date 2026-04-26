@@ -25,25 +25,28 @@ const packageCards = [
   {
     pkg: 'overlay',
     title: '@ilokesto/overlay',
+    comingSoon: true,
     descriptions: {
-      en: 'Accessible overlay primitives with explicit runtime ownership.',
-      ko: 'runtime 소유권이 명확한 접근성 중심 overlay primitive.',
+      en: 'Overlay primitives are being prepared for a later docs release.',
+      ko: 'Overlay primitive 문서는 이후 공개를 준비 중입니다.',
     },
   },
   {
     pkg: 'modal',
     title: '@ilokesto/modal',
+    comingSoon: true,
     descriptions: {
-      en: 'Promise-based dialogs with deliberate transport and smooth motion.',
-      ko: '명확한 transport와 부드러운 모션을 갖춘 promise 기반 다이얼로그.',
+      en: 'Modal primitives are being prepared for a later docs release.',
+      ko: 'Modal primitive 문서는 이후 공개를 준비 중입니다.',
     },
   },
   {
     pkg: 'toast',
     title: '@ilokesto/toast',
+    comingSoon: true,
     descriptions: {
-      en: 'Lightweight toast notifications with a provider-scoped runtime.',
-      ko: 'provider-scoped runtime으로 다루는 가벼운 토스트 알림.',
+      en: 'Toast runtime docs are being prepared for a later release.',
+      ko: 'Toast runtime 문서는 이후 공개를 준비 중입니다.',
     },
   },
   {
@@ -57,6 +60,7 @@ const packageCards = [
   {
     pkg: 'form',
     title: '@ilokesto/form',
+    comingSoon: true,
     descriptions: {
       en: 'Type-safe form primitives for the next package in the family.',
       ko: '다음 패키지로 준비 중인 타입 안전 form primitive.',
@@ -76,14 +80,14 @@ const homeCopy: Record<Locale, {
     eyebrow: 'Package family',
     subtitle: 'Small state tools, UI primitives, and composition utilities for product interfaces.',
     panel:
-      'Use only the layer you need: a vanilla store, framework-friendly state helpers, overlay runtimes, dialogs, toasts, forms, and rendering utilities that stay explicit instead of magical.',
+      'Use only the layer you need today: a vanilla store, framework-friendly state helpers, and rendering utilities that stay explicit instead of magical. More UI primitives are on the way.',
     comingSoon: 'Coming soon',
   },
   ko: {
     eyebrow: '패키지 패밀리',
     subtitle: '제품 인터페이스를 위한 작은 상태 도구, UI primitive, composition utility.',
     panel:
-      '필요한 레이어만 골라 쓰세요. vanilla store, 프레임워크 친화적인 상태 헬퍼, overlay runtime, dialog, toast, form, 렌더링 유틸리티까지 마법처럼 숨기기보다 명확하게 조합합니다.',
+      '지금 필요한 레이어만 골라 쓰세요. vanilla store, 프레임워크 친화적인 상태 헬퍼, 렌더링 유틸리티를 마법처럼 숨기기보다 명확하게 조합합니다. 더 많은 UI primitive는 준비 중입니다.',
     comingSoon: '준비 중',
   },
 };
@@ -118,7 +122,7 @@ function PackageCardContent({
           <h2 className="text-lg font-semibold tracking-tight text-fd-foreground">
             {card.title}
           </h2>
-          {card.pkg === 'form' ? (
+          {'comingSoon' in card && card.comingSoon ? (
             <span className="shrink-0 rounded-full border border-fd-border bg-fd-background px-3 py-1 text-xs font-medium text-fd-muted-foreground">
               {copy.comingSoon}
             </span>
@@ -177,7 +181,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             const cardClassName =
               'rounded-3xl border border-fd-border bg-fd-card p-6 shadow-sm transition hover:border-fd-primary/40 hover:bg-fd-accent';
 
-            if (card.pkg === 'form') {
+            if ('comingSoon' in card && card.comingSoon) {
               return (
                 <article
                   key={card.pkg}

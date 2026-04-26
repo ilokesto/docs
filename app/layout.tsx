@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     template: '%s | ilokesto',
   },
   description: 'Official documentation for the ilokesto package family.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

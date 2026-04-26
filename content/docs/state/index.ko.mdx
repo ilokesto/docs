@@ -5,24 +5,22 @@ description: 외부 스토어를 React 훅으로 연결하는 상태 계층.
 
 # @ilokesto/state
 
-`@ilokesto/state`는 `@ilokesto/store` 위에 놓이는 React 계층입니다. 새로운 상태 컨테이너를 하나 더 만드는 대신, 외부 스토어 모델을 `useSyncExternalStore` 기반의 React 훅 API로 연결하는 역할을 합니다.
-
-이 관점을 먼저 잡아두면 패키지의 나머지 설계도 자연스럽게 이해할 수 있습니다. 스토어는 React 바깥에 남고, 읽기와 구독만 훅으로 표현됩니다.
+`@ilokesto/state`는 외부 스토어 상태를 React 훅으로 바꿉니다. 스토어는 React 바깥에 남고, 읽기와 구독은 `useSyncExternalStore`를 통해 흐릅니다.
 
 ## 이 패키지가 제공하는 것
 
-- 상태나 vanilla store를 React 훅으로 바꾸는 `create()` 진입점
-- 상태 모드와 리듀서 모드
-- 읽기 범위를 좁혀 주는 셀렉터 기반 구독
-- 컴포넌트 밖 액션을 위한 `writeOnly()` 같은 접근자
-- 로깅, 영속화, 검증, 디버깅을 위한 스토어 계층 미들웨어
+- 상태 객체나 vanilla store를 받는 하나의 `create()` 진입점
+- 서로 다른 갱신 방식에 맞는 상태 모드와 리듀서 모드
+- 컴포넌트 읽기 범위를 좁히는 셀렉터 구독
+- 컴포넌트 밖 작업을 위한 `writeOnly()` 같은 명령형 접근자
+- 로깅, 영속화, 검증, 디버깅을 위한 스토어 미들웨어
 
 ## 의도적으로 제공하지 않는 것
 
-- Provider 중심 구조
-- Zustand 스타일 initializer function
-- 셀렉터용 별도 equality API
-- 훅 아래에 실제 스토어가 있다는 사실을 감추는 추상화
+- Provider 중심 앱 구조
+- Zustand 스타일 initializer
+- 셀렉터용 custom equality API
+- 훅 뒤의 실제 스토어를 감추는 추상화
 
 ## 설치
 
@@ -48,14 +46,13 @@ function Counter() {
 }
 ```
 
-이 짧은 예제 안에도 패키지의 핵심 모양이 다 들어 있습니다.
+모양은 작습니다.
 
 - `create()`가 외부 상태를 훅으로 바꾸고,
 - selector가 컴포넌트가 읽을 범위를 정하고,
 - writer는 여전히 전체 store state를 갱신합니다.
 
-처음부터 순서대로 보고 싶다면 [빠른 시작](./quick-start)부터 읽는 것이 좋습니다.
-
-- 왜 store가 React 바깥에 남는지 이해하고 싶다면 [멘탈 모델](./mental-model)
-- selector와 writer의 역할 분리가 아직 낯설다면 [셀렉터](./selectors)
-- 이미 vanilla `Store`를 갖고 있고 React binding만 얹고 싶다면 [기존 스토어 사용](./existing-store)
+- [빠른 시작](./quick-start)으로 시작하기
+- [멘탈 모델](./mental-model)에서 React 바깥의 store 이해하기
+- [셀렉터](./selectors)로 읽기와 쓰기 나누기
+- [기존 스토어 사용](./existing-store)으로 vanilla `Store` 연결하기

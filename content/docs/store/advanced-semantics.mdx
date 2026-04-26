@@ -5,15 +5,15 @@ description: Verified Store behavior for updates, notifications, and implementat
 
 # Advanced Semantics
 
-This page collects the precise behavior of `@ilokesto/store` that matters when you build serious state flows or adapters on top of `Store<T>`.
+`@ilokesto/store` has fixed behavior for root replacement, bailout checks, notifications, and listener edge cases when you build on top of `Store<T>`.
 
-For method signatures, start with [API Reference](./api). For beginner concepts, read [Core Concepts](./core-concepts). For adapter boundaries, read [Building on Store](./building-on-store).
+For method signatures, start with API Reference. For beginner concepts, read Core Concepts. For adapter boundaries, read Building on Store.
 
 ## Public contract boundary
 
 The public contract is the behavior consumers can rely on from the documented `Store<T>` methods: reading state, setting state, and subscribing to changes.
 
-Some sections below mention current implementation details because they explain observable behavior. Treat those notes as implementation notes, not as a promise to preserve private fields or exact internal code shape.
+Some sections name implementation facts when those facts produce observable behavior. Application code can rely on the documented behavior, not private fields or exact internal code shape.
 
 ## Update replacement and ordering
 
@@ -68,7 +68,7 @@ store.setState((prev) => ({
 }));
 ```
 
-`Readonly<T>` is a TypeScript signal only. The current source does not freeze, clone, or proxy state at runtime.
+`Readonly<T>` is a TypeScript signal only. Runtime state is not frozen, cloned, or proxied.
 
 ## Notification timing
 
@@ -89,7 +89,7 @@ There is no documented batching, async scheduling, timer, promise boundary, or f
 
 ## Subscriber ordering
 
-Subscribers are stored as listener functions. The current implementation keeps them in a `Set` and builds a snapshot array before notification.
+Subscribers are stored as listener functions. Notification uses a `Set` of listeners and a snapshot array.
 
 Observable result: listeners in the snapshot run in subscription insertion order for that notification.
 
@@ -105,9 +105,9 @@ const unsubscribe = store.subscribe(() => {
 });
 ```
 
-The current implementation snapshots listeners with `Array.from(this.listeners)` before iterating. That means removing a listener during notification does not mutate the active notification snapshot.
+Listeners are snapshotted with `Array.from(this.listeners)` before iteration. Removing a listener during notification does not mutate the active notification snapshot.
 
-This describes current behavior. Do not depend on private field names or the exact snapshot implementation when writing public adapters.
+Public adapters can depend on safe unsubscribe behavior, not private field names or the exact snapshot implementation.
 
 ## Re-entrant updates
 
@@ -143,12 +143,12 @@ store.setState({ handler: () => console.log("run") });
 
 ## Implementation notes
 
-These facts explain the current implementation. They are useful for debugging, but they should not become dependencies in application code.
+These observable facts are useful for debugging. Application code should depend on the public behavior above, not private code shape.
 
 - State application resolves a value or updater result, checks `Object.is`, replaces state, then notifies.
-- Listener notification currently snapshots with `Array.from(this.listeners)`.
-- `Readonly<T>` is type-only. The current source does not freeze, clone, or proxy the state value.
-- Current source contains middleware support through source-backed methods, but this page does not define middleware as the main Store contract. Check [API Reference](./api) for documented public methods before using middleware in published examples.
+- Listener notification snapshots with `Array.from(this.listeners)`.
+- `Readonly<T>` is type-only. Runtime state is not frozen, cloned, or proxied.
+- Middleware exists through source-backed methods, but the main Store contract is the documented public methods. Check API Reference before using middleware in published examples.
 
 ## Summary
 
@@ -156,5 +156,5 @@ These facts explain the current implementation. They are useful for debugging, b
 - `Object.is` controls bailout behavior.
 - Notifications are synchronous after successful replacement.
 - Nested mutation is invisible unless you call `setState` with a new root reference.
-- Listener snapshotting makes unsubscribe during notification safe in the current implementation.
+- Listener snapshotting makes unsubscribe during notification safe.
 - Public docs describe observable behavior, not private implementation stability.

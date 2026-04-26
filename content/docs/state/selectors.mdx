@@ -7,7 +7,7 @@ description: Efficiently subscribing to state slices in @ilokesto/state.
 
 Selectors are the primary mechanism for reading state in `@ilokesto/state`. They allow components to subscribe to specific data slices, narrowing the surface of re-renders.
 
-It is important to understand that **selectors narrow reads, not writes.** Even if you select a single primitive field, the "writer" (the second element in the returned tuple) still expects and operates on the full store state.
+**Selectors narrow reads, not writes.** Even if you select a single primitive field, the "writer" (the second element in the returned tuple) still expects and operates on the full store state.
 
 ## Basic Usage
 
@@ -24,12 +24,12 @@ The hook returns a tuple:
 1. **Selected value**: The result of your selector function.
 2. **Writer**: The `setState` or `dispatch` function for the entire store.
 
-## Memoization and Comparison
+## Memoization behavior
 
-`@ilokesto/state` uses a "runtime-first" memoization model tied to the store's internal snapshot cycle. It does not provide a public equality API (like `shallow` or `isEqual` parameters) because it relies on the underlying store's structural sharing.
+`@ilokesto/state` handles selector memoization inside the hook. There is no custom equality option on the public hook API.
 
-- **The comparison logic**: When the store updates, the hook compares the **previous store snapshot** with the **next store snapshot** using a deep equality check (`deepCompare`).
-- **Reuse behavior**: If the internal snapshots are deeply equal, the previous selected value is reused exactly. This ensures that even if you return an object or array from a selector, it won't trigger a re-render unless the data inside actually changed.
+- **Comparison**: When the store snapshot changes, the hook compares the **previous store snapshot** with the **next store snapshot**.
+- **Reuse**: If those snapshots are deeply equal, the hook reuses the previous selected value. This means a selector that returns an object or array won't trigger a re-render when the data inside stayed the same.
 
 ## The "No-Selector" Path
 
@@ -44,9 +44,9 @@ While convenient for small stores or top-level providers, this should be avoided
 
 ## Selector Identity and Resets
 
-The hook tracks the identity of your selector function. If the selector function itself changes (e.g., it's an inline function that captures different props), the hook may reset its internal subscription state.
+The hook tracks the identity of your selector function. If the selector function itself changes (e.g., it's an inline function that captures different props), the hook may reset its subscription state.
 
-To ensure the best performance:
+For best performance:
 - Keep selectors stable (define them outside the component if they don't depend on props).
 - If a selector must depend on props, ensure those props are stable or accept that the selector will be re-evaluated.
 
@@ -66,6 +66,6 @@ Since the hook only triggers a re-render if the **result** of the selector chang
 
 ## Common Mistakes
 
-1. **Expecting narrow writes**: Thinking `setCount(5)` will work if you selected `state.count`. Writers always deal with the full store shape defined in `create`.
-2. **Expensive logic in selectors**: The selector path is optimized, but it is not free. When store snapshots differ, the selector is evaluated again. Keep selectors cheap and predictable.
-3. **Circular dependencies**: Defining a selector that depends on a value it also writes to in a way that triggers infinite loops.
+1. **Expecting narrow writes**: `setCount(5)` won't work just because you selected `state.count`. Writers always receive the full store shape defined in `create`.
+2. **Expensive selector logic**: When store snapshots differ, the selector runs again. Keep selectors cheap and predictable.
+3. **Circular updates**: Avoid selectors and effects that read a value, write it back, and repeat forever.

@@ -5,23 +5,29 @@ description: A routing guide for the framework neutral Store package.
 
 # Store
 
-`@ilokesto/store` is the small state container at the center of the Store docs. It holds one state value, replaces that value through `setState`, and notifies listeners when a replacement succeeds.
+`@ilokesto/store` stores one TypeScript state value, replaces it through `setState`, and notifies subscribers after successful replacements.
 
-Use this package when you need a plain TypeScript state contract that does not depend on React, Vue, Svelte, Angular, or any other framework.
+The contract stays framework neutral so React, Vue, Svelte, Angular, and other runtimes can connect through adapters instead of owning the core state layer.
 
 ## Package boundary
 
 The package exports `Store<T>` from `@ilokesto/store`.
 
-It covers:
+What it covers:
 
-- storing one state value,
-- reading the current and initial state,
-- replacing state with a value or updater function,
-- subscribing to successful state changes,
-- adding source backed middleware with the current public method names.
+- one stored state value,
+- reads for current and initial state,
+- replacement updates with a value or updater function,
+- subscriptions for successful state changes,
+- source backed middleware through current public method names.
 
-It does not provide framework hooks, selectors, reducers, persistence, data fetching, devtools, or async scheduling. Those belong in adapters or higher level packages.
+What it does not cover:
+
+- framework hooks,
+- selectors or reducers,
+- persistence or data fetching,
+- devtools,
+- async scheduling.
 
 ## Install
 
@@ -31,17 +37,17 @@ It does not provide framework hooks, selectors, reducers, persistence, data fetc
 
 ## Start here
 
-- [Quick Start](./quick-start): Install the package, create a store, update it, subscribe, and clean up.
-- [Core Concepts](./core-concepts): Learn the contract behind snapshots, replacement updates, subscriptions, bailouts, and mutation caveats.
-- [API Reference](./api): Check the source backed public surface for `Store<T>`.
+- [Quick Start](./quick-start): Install and wire a first store.
+- [Core Concepts](./core-concepts): Understand snapshots and replacement updates.
+- [API Reference](./api): Check the public `Store<T>` surface.
 
 ## Continue with task focused pages
 
-- [Framework Usage](./framework-usage): Connect a store to framework lifecycles through adapters.
-- [Common Patterns](./patterns): Apply practical recipes around a plain `Store` instance.
-- [Advanced Semantics](./advanced-semantics): Read the detailed behavior rules behind updates and notifications.
-- [Building on Store](./building-on-store): Build libraries or adapters on the minimal contract.
-- [Troubleshooting](./troubleshooting): Diagnose common Store usage mistakes.
+- [Framework Usage](./framework-usage): Connect framework lifecycles.
+- [Common Patterns](./patterns): Apply plain `Store` recipes.
+- [Advanced Semantics](./advanced-semantics): Review update and notification rules.
+- [Building on Store](./building-on-store): Build adapters on the minimal contract.
+- [Troubleshooting](./troubleshooting): Diagnose common usage mistakes.
 
 ## Small example
 
@@ -58,5 +64,3 @@ counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 
 unsubscribe();
 ```
-
-This example is intentionally plain. It shows the whole package shape: create one store, read a snapshot, replace state, listen for changes, and remove the listener when it is no longer needed.

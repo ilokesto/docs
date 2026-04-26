@@ -5,23 +5,29 @@ description: 프레임워크에 묶이지 않는 Store 패키지를 위한 경�
 
 # Store
 
-`@ilokesto/store`는 Store 문서의 중심에 있는 작은 상태 컨테이너입니다. 하나의 상태 값을 보관하고, `setState`로 그 값을 교체하며, 교체가 성공하면 리스너에게 알립니다.
+`@ilokesto/store`는 하나의 TypeScript 상태 값을 저장하고, `setState`로 값을 교체하며, 교체가 성공하면 구독자에게 알립니다.
 
-React, Vue, Svelte, Angular 또는 다른 프레임워크에 의존하지 않는 plain TypeScript 상태 계약이 필요할 때 이 패키지를 사용하세요.
+이 계약은 프레임워크에 묶이지 않으므로 React, Vue, Svelte, Angular, 그 밖의 런타임은 핵심 상태 계층을 소유하지 않고 어댑터를 통해 연결할 수 있습니다.
 
 ## 패키지 경계
 
 이 패키지는 `@ilokesto/store`에서 `Store<T>`를 내보냅니다.
 
-다루는 범위는 다음과 같습니다.
+다루는 범위:
 
-- 하나의 상태 값 저장,
+- 하나의 저장된 상태 값,
 - 현재 상태와 초기 상태 읽기,
-- 값 또는 업데이트 함수로 상태 교체,
+- 값 또는 업데이트 함수로 실행하는 교체 업데이트,
 - 성공한 상태 변경 구독,
-- 현재 공개 메서드 이름을 쓰는 소스 기반 미들웨어 추가.
+- 현재 공개 메서드 이름을 쓰는 소스 기반 미들웨어.
 
-프레임워크 hook, selector, reducer, persistence, data fetching, devtools, 비동기 스케줄링은 제공하지 않습니다. 그런 기능은 어댑터나 더 높은 수준의 패키지가 맡습니다.
+다루지 않는 범위:
+
+- 프레임워크 hook,
+- selector 또는 reducer,
+- persistence 또는 data fetching,
+- devtools,
+- 비동기 스케줄링.
 
 ## 설치
 
@@ -31,17 +37,17 @@ React, Vue, Svelte, Angular 또는 다른 프레임워크에 의존하지 않는
 
 ## 여기서 시작하기
 
-- [빠른 시작](./quick-start): 패키지를 설치하고, 스토어를 만들고, 업데이트하고, 구독한 뒤 정리합니다.
-- [핵심 개념](./core-concepts): 스냅샷, 교체 업데이트, 구독, 베일아웃, mutation 주의사항 뒤의 계약을 배웁니다.
-- [API 레퍼런스](./api): `Store<T>`의 소스 기반 공개 표면을 확인합니다.
+- [빠른 시작](./quick-start): 첫 스토어 설치와 연결.
+- [핵심 개념](./core-concepts): 스냅샷과 교체 업데이트 이해.
+- [API 레퍼런스](./api): 공개 `Store<T>` 표면 확인.
 
 ## 작업별 페이지 이어서 보기
 
-- [프레임워크 사용](./framework-usage): 어댑터를 통해 스토어를 프레임워크 생명주기에 연결합니다.
-- [공통 패턴](./patterns): plain `Store` 인스턴스를 둘러싼 실전 레시피를 적용합니다.
-- [고급 시맨틱](./advanced-semantics): 업데이트와 알림 뒤의 자세한 동작 규칙을 읽습니다.
-- [Store 기반 구축하기](./building-on-store): 최소 계약 위에 라이브러리나 어댑터를 만듭니다.
-- [문제 해결](./troubleshooting): 흔한 Store 사용 실수를 진단합니다.
+- [프레임워크 사용](./framework-usage): 프레임워크 생명주기 연결.
+- [공통 패턴](./patterns): plain `Store` 레시피 적용.
+- [고급 시맨틱](./advanced-semantics): 업데이트와 알림 규칙 검토.
+- [Store 기반 구축하기](./building-on-store): 최소 계약 위에 어댑터 구축.
+- [문제 해결](./troubleshooting): 흔한 사용 실수 진단.
 
 ## 작은 예제
 
@@ -58,5 +64,3 @@ counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 
 unsubscribe();
 ```
-
-이 예제는 의도적으로 단순합니다. 스토어 하나를 만들고, 스냅샷을 읽고, 상태를 교체하고, 변경을 듣고, 더 필요 없을 때 리스너를 제거하는 패키지의 전체 모양을 보여줍니다.

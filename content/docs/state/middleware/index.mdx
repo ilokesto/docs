@@ -5,7 +5,7 @@ description: Store-level extensions for logging, persistence, validation, and de
 
 # Middleware
 
-`@ilokesto/state` middleware does not wrap React components. It wraps the underlying store. That is an important distinction, because these extensions change how updates flow through the store itself before React sees the result.
+`@ilokesto/state` middleware does not wrap React components. It wraps the underlying store, so extensions can change how updates move through the store before React sees the result.
 
 All built-in middleware are available from the `@ilokesto/state/middleware` entry point, and they are designed to compose cleanly with `pipe()`.
 
@@ -29,7 +29,7 @@ Most middleware support two calling styles:
 1. **Direct**: `middleware(store, options)`
 2. **Curried**: `middleware(options)(store)`
 
-The curried form is usually the best choice when you are composing a store declaratively.
+The curried form reads cleanly when a store is composed declaratively.
 
 ## Built-in Middleware
 
@@ -43,8 +43,8 @@ Each middleware does a different job at the store layer:
 
 ## Execution Order
 
-When using `pipe()`, middleware are applied from top to bottom (left to right). That order is not cosmetic. It changes the update path.
+`pipe()` applies middleware from top to bottom, or left to right in the call. That order changes the update path.
 
 For example, placing `logger()` before `debounce()` logs every attempted update, while placing it after logs only the delayed flush result.
 
-If you only need one middleware, jump directly to its page. If you are composing several, think about ordering first and features second.
+If you use one middleware, start with its page. If you compose several, choose the order before tuning each feature.

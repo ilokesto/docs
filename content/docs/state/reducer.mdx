@@ -49,7 +49,7 @@ function Counter() {
 
 ## Global Dispatch
 
-You can also use the `writeOnly` accessor to get the `dispatch` function outside of React.
+Use the `writeOnly` accessor when code outside React needs to dispatch an action.
 
 ```ts lineNumbers
 export const incrementCount = () => {
@@ -58,13 +58,15 @@ export const incrementCount = () => {
 };
 ```
 
-## Why Use Reducers?
+## When to use reducer mode
 
-- **Complex Logic**: When state transitions depend on multiple fields or require complex validation.
-- **Traceability**: Reducers provide a clear path for all state changes, which is especially useful when combined with the `logger` or `devtools` middleware.
-- **Interoperability**: Easier to migrate existing `useReducer` logic to a global store.
+- Use reducer mode when one action needs to update several fields together.
+- Use it when each transition needs validation or branching before the next state is returned.
+- Use it when named actions make debugging clearer with `logger` or `devtools` middleware.
+- Use it when existing `useReducer` logic should move into a shared store with minimal shape changes.
 
-## Important Note
+## Reducer mode behavior
 
-- **No Partial Updates**: Reducers must always return the **full** state object. Partial state updates are not supported in reducer mode.
-- **Middleware Integration**: Reducer-based stores fully support all `@ilokesto/state` middleware.
+Reducers must always return the **full** state object. Partial state updates are not supported in reducer mode.
+
+Reducer-based stores support all `@ilokesto/state` middleware.

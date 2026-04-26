@@ -5,9 +5,7 @@ description: The conceptual model behind store-first React state.
 
 # Mental Model
 
-`@ilokesto/state` only really makes sense once you stop thinking of it as “another React state library.” It is closer to a React binding for an external store that happens to feel small enough to use like local state.
-
-The package is easiest to reason about if you keep four layers in your head: the store, the hook, the selector, and the writer.
+`@ilokesto/state` has four layers: store, hook, selector, writer.
 
 ## Store + hook, not provider + context
 
@@ -30,14 +28,14 @@ But selectors do **not** give you a slice-local setter. The writer still updates
 
 ## Data Flow
 
-- **Reads** happen through `useSyncExternalStore`.
-- **Writes** go through the store writer or reducer dispatch.
-- **Middleware** sits at the store layer, not the React layer.
-- **SSR** works because the server snapshot comes from `store.getInitialState()`.
+- **Reads** use `useSyncExternalStore`.
+- **Writes** use the store writer or reducer dispatch.
+- **Middleware** runs at the store layer, not the React layer.
+- **SSR** reads the server snapshot from `store.getInitialState()`.
 
 ## Why this shape is useful
 
-This model gives you a useful middle ground:
+This shape trades provider setup for an explicit external store:
 
 - lighter than a provider-heavy architecture,
 - more explicit than ad-hoc local state spread across components,

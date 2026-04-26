@@ -3,7 +3,6 @@
   "root": true,
   "pages": [
     "index",
-    "---Introduction---",
     "quick-start",
     "mental-model",
     "---Reference---",

@@ -5,13 +5,13 @@ description: React, Vue, Svelte, Angular에서 @ilokesto/store를 사용하는 �
 
 # 프레임워크 사용법
 
-`@ilokesto/store`는 공식 React, Vue, Svelte, Angular 패키지를 제공하지 않습니다. 아래 예제는 바닐라 `Store` API인 `getState()`, `setState(next)`, `subscribe(listener)`를 감싸는 작은 어댑터 패턴입니다.
+`@ilokesto/store`는 공식 React, Vue, Svelte, Angular 패키지를 제공하지 않습니다. 바닐라 `Store` API인 `getState()`, `setState(next)`, `subscribe(listener)` 위에 작은 어댑터를 얹어 사용하세요.
 
-복사해서 시작할 수 있는 출발점이 필요할 때 이 예제를 사용하세요. selector, action, 프레임워크별 사용성 helper는 각자의 계층에 두는 편이 좋습니다.
+selector, action, 프레임워크별 helper는 각자의 계층에 두세요.
 
 ## 어댑터 모델
 
-모든 프레임워크 브리지는 같은 흐름을 따릅니다.
+모든 어댑터는 같은 흐름을 따릅니다.
 
 1. `store.getState()`로 현재 스냅샷을 읽습니다.
 2. `store.subscribe(listener)`로 구독합니다.
@@ -19,7 +19,7 @@ description: React, Vue, Svelte, Angular에서 @ilokesto/store를 사용하는 �
 4. 쓰기는 `store.setState(next)`나 action helper를 통해 전달합니다.
 5. 소유 범위가 끝날 때 반환된 unsubscribe 함수를 호출해 정리합니다.
 
-바닐라 스토어를 source of truth로 유지하세요. 어댑터는 스냅샷을 프레임워크 모델로 번역해야 하며, 스냅샷을 제자리에서 변경하거나 private 필드에 의존하면 안 됩니다.
+바닐라 스토어를 source of truth로 유지하세요. 어댑터는 스냅샷을 프레임워크 모델로 번역하고 쓰기는 공개 store API로 다시 보냅니다.
 
 ## React
 
@@ -155,12 +155,8 @@ export class CounterStoreService implements OnDestroy {
 
 ## 모든 어댑터의 주의점
 
-- **스냅샷 일관성**: 프레임워크가 기대하는 구독 모델 안에서 `getState()`로 스냅샷을 읽으세요. React는 이 브리지에 `useSyncExternalStore`를 사용해야 합니다.
-- **정리**: 항상 unsubscribe 함수를 호출하거나, teardown을 소유하는 프레임워크 API에 반환하세요.
+- **스냅샷 일관성**: 프레임워크의 구독 모델 안에서 `getState()`로 스냅샷을 읽으세요. React는 `useSyncExternalStore`를 사용해야 합니다.
+- **정리**: unsubscribe 함수를 호출하거나, teardown을 소유하는 프레임워크 API에 반환하세요.
 - **변경 회피**: 스냅샷을 불변 값으로 다루세요. `Readonly<T>`는 런타임에서 상태를 동결하거나 복제하지 않습니다.
-- **스케줄러 가정 없음**: Store 알림은 동기식입니다. 이 패키지는 프레임워크 batching, async scheduling, render coordination을 추가하지 않습니다.
-- **어댑터 범위**: 이 예제는 어댑터 패턴이지 공식 프레임워크 패키지가 아닙니다. 프레임워크별 selector와 action은 raw store bridge 위에 두세요.
-
-## 제외된 프레임워크
-
-이전 통합 페이지에는 Solid와 Preact 예제도 있었습니다. 이 Framework Usage 페이지는 현재 Store 문서 재구성에서 승인된 범위가 React, Vue, Svelte, Angular뿐이기 때문에 이 네 프레임워크만 이어받습니다.
+- **스케줄러 가정 없음**: Store 알림은 동기식입니다. 이 패키지는 batching, async scheduling, render coordination을 추가하지 않습니다.
+- **어댑터 범위**: 이 예제는 어댑터 패턴이지 공식 프레임워크 패키지가 아닙니다. selector와 action은 raw store bridge 위에 두세요.

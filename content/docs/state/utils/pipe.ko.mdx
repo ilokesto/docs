@@ -5,7 +5,7 @@ description: plain initial state에 미들웨어를 조합합니다.
 
 # `pipe`
 
-`pipe`는 plain initial state를 기준으로 여러 미들웨어를 조합하고, 최종적으로 초기화된 `Store` 인스턴스를 반환합니다.
+`pipe`는 plain initial state로 `Store`를 만들고, 미들웨어를 순서대로 적용한 뒤 초기화된 store를 반환합니다.
 
 ```ts lineNumbers
 import { create } from '@ilokesto/state';
@@ -30,7 +30,7 @@ const useStore = create(store);
 
 ## 언제 쓰면 좋은가
 
-여러 미들웨어를 수동으로 중첩하지 않고, 더 읽기 좋은 형태로 조합하고 싶을 때 `pipe`를 사용하는 것이 좋습니다.
+스토어에 둘 이상의 미들웨어가 필요하고 중첩 호출이 적용 순서를 가릴 때 `pipe`를 사용합니다.
 
 ## 관련 API
 

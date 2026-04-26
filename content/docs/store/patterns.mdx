@@ -5,9 +5,9 @@ description: Practical Store recipes for application code.
 
 # Common Patterns
 
-Use this page when you are writing app code with `@ilokesto/store`. It collects small recipes for creating stores, updating them safely, and keeping state easy to test.
+These patterns cover practical `@ilokesto/store` choices for creating stores, updating them safely, and keeping state easy to test.
 
-If you are writing a framework adapter or library on top of `Store`, read [Building on Store](./building-on-store) instead. For exact replacement, subscription, and bailout rules, read [Advanced Semantics](./advanced-semantics). For the full method list, read the [API Reference](./api).
+If you are writing a framework adapter or library on top of `Store`, Building on Store is the better fit. Advanced Semantics covers exact replacement, subscription, and bailout rules. API Reference lists every method.
 
 ## Module-level store
 
@@ -252,7 +252,7 @@ When a test subscribes, always call the unsubscribe function before the test end
 
 ## Common mistakes
 
-- Mutating objects from `getState()` instead of replacing state with a new value.
-- Forgetting that object updates replace the whole state and do not merge fields.
-- Calling `setState` from a subscriber without a guard, which can create a synchronous loop.
-- Sharing one module-level store across tests that expect isolated state.
+- Do not mutate objects returned by `getState()`; replace state with a new value.
+- Do not treat object updates as merges; they replace the whole state.
+- Do not call `setState` from a subscriber without a guard; that can create a synchronous loop.
+- Do not share one module-level store across tests that expect isolated state.

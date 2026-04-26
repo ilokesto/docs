@@ -5,24 +5,30 @@ description: Utility helpers for store composition and object updates.
 
 # Utilities
 
-`@ilokesto/state/utils` is where the package puts small helpers that improve ergonomics without changing the main `create()` API.
+`@ilokesto/state/utils` contains small helpers for cases where the base `create()` API is already right, but the setup code needs a clearer shape.
 
-Right now that means two different kinds of help:
+The two helpers solve different problems:
 
-- [`pipe`](./pipe) composes middleware around plain initial state and returns a `Store`.
-- [`adaptor`](./adaptor) wraps Immer's `produce()` so you can write draft-style object updates.
+- `pipe` composes store creation with middleware. Start with plain initial state, apply middleware from left to right, then pass the returned `Store` to `create(store)`.
+- `adaptor` wraps Immer's `produce()`. Write a draft-style object update, then pass the returned updater to `writeOnly()` or another store write path.
 
-## When to reach for utilities
+## Choosing between them
 
-Reach for `utils` when the problem is ergonomic rather than architectural.
+Use `pipe` when store setup is the noisy part.
 
-- Use `pipe` when store setup is becoming too nested.
-- Use `adaptor` when object updates are becoming too verbose.
-- Stay with plain `create()` when the base API is already readable enough.
+Use `adaptor` when object update syntax is the noisy part.
+
+Stay with plain `create()` when you do not need middleware composition or draft-style object updates.
+
+## How they differ
+
+`pipe` works before React binding. It builds the store instance that `create(store)` will bind.
+
+`adaptor` works during writes. It turns an Immer draft recipe into a pure updater function for object state.
 
 ## Related APIs
 
 - [`create`](../create): Main entry point for React integration.
 - [`middleware`](../middleware): Built-in middleware for common tasks.
 
-Read [`pipe`](./pipe) if your store setup is the problem. Read [`adaptor`](./adaptor) if object update syntax is the problem.
+Read [`pipe`](./pipe) for middleware composition. Read [`adaptor`](./adaptor) for draft-style object updates.

@@ -5,11 +5,11 @@ description: Guidelines for adapter and library authors.
 
 # Building on Store
 
-Use this page when you are building a framework adapter, reusable library, controller, or integration layer on top of `@ilokesto/store`.
+Build framework adapters, reusable libraries, controllers, or integration layers on top of `@ilokesto/store` by depending on Store's public contract.
 
-This is author guidance, not app copy-paste usage. App developers should start with [Framework Usage](./framework-usage) for React, Vue, Svelte, and Angular examples, or [Common Patterns](./patterns) for application recipes. This page focuses on the stable boundary an adapter can build on.
+These guidelines are for adapter and library authors rather than app-level snippets. App developers should start with Framework Usage for React, Vue, Svelte, and Angular examples, or Common Patterns for application recipes. Adapter code should stay on the stable boundary it can support over time.
 
-For exact method signatures, read the [API Reference](./api). For replacement, equality, notification, and listener rules, read [Advanced Semantics](./advanced-semantics).
+API Reference lists exact method signatures. Advanced Semantics covers replacement, equality, notification, and listener rules.
 
 ## Adapter design principles
 
@@ -83,7 +83,7 @@ export function connectStore<T>(store: Store<T>): StoreConnection<T> {
 }
 ```
 
-The framework-specific version of this shape belongs in [Framework Usage](./framework-usage). The author rule is the same in every runtime: create the subscription when the owner starts, then clean it up when the owner stops.
+The framework-specific version of this shape belongs in Framework Usage. The same rule applies in every runtime: create the subscription when the owner starts, then clean it up when the owner stops.
 
 ## Snapshot consistency
 
@@ -145,4 +145,4 @@ Before publishing an adapter or library, check that it follows the public contra
 - Cleanup is returned, registered, or otherwise guaranteed.
 - Compatibility notes say whether writes are full replacements, action-only, or library-merged partial updates.
 - Tests cover multiple store instances so state does not leak across consumers.
-- Docs link app users to [Framework Usage](./framework-usage) and [Common Patterns](./patterns), while keeping this page focused on adapter authors.
+- Docs link app users to Framework Usage and Common Patterns, while keeping adapter guidance focused on author-facing contracts.

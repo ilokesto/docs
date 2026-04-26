@@ -1,6 +1,6 @@
 ---
 title: API Reference
-description: The source backed public surface of Store.
+description: The public Store API reference.
 ---
 
 # API Reference
@@ -11,7 +11,7 @@ The `@ilokesto/store` package exports one public class: `Store<T>`.
 import { Store } from "@ilokesto/store";
 ```
 
-This page documents the public API symbols verified from the current source evidence. It does not document `setMiddleware()` because that name is stale in the package README and is not present in the verified source API.
+The public `Store<T>` API includes construction, state reads and writes, middleware registration, and subscriptions.
 
 ## Import path and export
 
@@ -27,7 +27,7 @@ const store = new Store({ count: 0 });
 
 ### `new Store<T>(initialState: T)`
 
-Creates a store with an initial state value. The store keeps that value as both the initial state and the current state until an update succeeds.
+Creates a store with an initial state value. The store keeps that value as both the initial state and current state until an update succeeds.
 
 ```ts lineNumbers
 const store = new Store({ count: 0 });
@@ -41,9 +41,9 @@ const store = new Store({ count: 0 });
 getState(): Readonly<T>
 ```
 
-Returns the current state reference typed as `Readonly<T>`.
+Returns the current state reference as `Readonly<T>`.
 
-`Readonly<T>` is a TypeScript signal only. The source does not freeze, clone, or proxy the state value at runtime.
+`Readonly<T>` is a TypeScript type only. Store does not freeze, clone, or proxy the state value at runtime.
 
 ### `getInitialState()`
 
@@ -51,9 +51,9 @@ Returns the current state reference typed as `Readonly<T>`.
 getInitialState(): Readonly<T>
 ```
 
-Returns the constructor value reference typed as `Readonly<T>`.
+Returns the constructor value reference as `Readonly<T>`.
 
-This is useful when you need to compare against, or reset back to, the original value yourself.
+Use it when you need to compare against the original value or reset to it yourself.
 
 ### `setState(nextState)`
 
@@ -86,7 +86,7 @@ pushMiddleware(
 
 Appends middleware to the middleware array used by `setState`.
 
-Middleware receives the pending state action and a `next` function. It must call `next(nextState)` for the update to continue.
+Middleware receives the pending state action and a `next` function. It must call `next(nextState)` to continue the update.
 
 Because `setState` builds the runner with `reduceRight`, earlier middleware entries wrap later entries.
 
@@ -139,7 +139,6 @@ Listeners run synchronously after a successful state replacement.
 - Store does not provide selectors, reducers, action dispatching, persistence, data fetching, devtools, or framework hooks.
 - Store does not batch, schedule, or defer notifications.
 - Store does not track which state properties a listener reads.
-- Store does not expose `setMiddleware()` in the verified current API.
 
 ## Related pages
 

@@ -1,6 +1,6 @@
 ---
 title: API 레퍼런스
-description: Store의 소스 기반 공개 표면입니다.
+description: Store의 공개 API 레퍼런스입니다.
 ---
 
 # API 레퍼런스
@@ -11,7 +11,7 @@ description: Store의 소스 기반 공개 표면입니다.
 import { Store } from "@ilokesto/store";
 ```
 
-이 페이지는 현재 소스 증거로 확인한 공개 API 심볼만 문서화합니다. `setMiddleware()`는 패키지 README에 남아 있는 오래된 이름이고 검증된 소스 API에는 없으므로 현재 API로 문서화하지 않습니다.
+공개 `Store<T>` API는 생성, 상태 읽기와 쓰기, 미들웨어 등록, 구독을 포함합니다.
 
 ## import 경로와 export
 
@@ -27,7 +27,7 @@ const store = new Store({ count: 0 });
 
 ### `new Store<T>(initialState: T)`
 
-초기 상태 값으로 스토어를 만듭니다. 업데이트가 성공하기 전까지 스토어는 그 값을 초기 상태이자 현재 상태로 보관합니다.
+초기 상태 값으로 스토어를 만듭니다. 업데이트가 성공하기 전까지 Store는 그 값을 초기 상태이자 현재 상태로 보관합니다.
 
 ```ts lineNumbers
 const store = new Store({ count: 0 });
@@ -41,9 +41,9 @@ const store = new Store({ count: 0 });
 getState(): Readonly<T>
 ```
 
-현재 상태 참조를 `Readonly<T>` 타입으로 반환합니다.
+현재 상태 참조를 `Readonly<T>`로 반환합니다.
 
-`Readonly<T>`는 TypeScript 신호일 뿐입니다. 소스는 런타임에 상태 값을 동결, 복제, 프록시 처리하지 않습니다.
+`Readonly<T>`는 TypeScript 타입일 뿐입니다. Store는 런타임에 상태 값을 동결, 복제, 프록시 처리하지 않습니다.
 
 ### `getInitialState()`
 
@@ -51,9 +51,9 @@ getState(): Readonly<T>
 getInitialState(): Readonly<T>
 ```
 
-생성자에 전달했던 값의 참조를 `Readonly<T>` 타입으로 반환합니다.
+생성자에 전달했던 값의 참조를 `Readonly<T>`로 반환합니다.
 
-원래 값과 비교하거나 원래 값으로 직접 reset할 때 유용합니다.
+원래 값과 비교하거나 원래 값으로 직접 reset할 때 사용합니다.
 
 ### `setState(nextState)`
 
@@ -86,7 +86,7 @@ pushMiddleware(
 
 `setState`가 사용하는 미들웨어 배열의 뒤에 미들웨어를 추가합니다.
 
-미들웨어는 대기 중인 상태 action과 `next` 함수를 받습니다. 업데이트를 계속 진행하려면 `next(nextState)`를 호출해야 합니다.
+미들웨어는 대기 중인 상태 action과 `next` 함수를 받습니다. 업데이트를 계속하려면 `next(nextState)`를 호출해야 합니다.
 
 `setState`는 `reduceRight`로 runner를 만들기 때문에 앞쪽 미들웨어 항목이 뒤쪽 항목을 감쌉니다.
 
@@ -139,7 +139,6 @@ unsubscribe();
 - Store는 selector, reducer, action dispatching, persistence, data fetching, devtools, framework hook을 제공하지 않습니다.
 - Store는 알림을 batch, schedule, defer하지 않습니다.
 - Store는 리스너가 어떤 상태 속성을 읽는지 추적하지 않습니다.
-- Store는 검증된 현재 API에서 `setMiddleware()`를 노출하지 않습니다.
 
 ## 관련 페이지
 

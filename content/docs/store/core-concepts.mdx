@@ -5,19 +5,19 @@ description: The state, update, and subscription contract behind Store.
 
 # Core Concepts
 
-`@ilokesto/store` is easiest to understand as one synchronous value container. It holds a state value, replaces that value, and notifies listeners after successful replacements.
+`@ilokesto/store` is a synchronous value container. It holds one state value, replaces that value, and notifies listeners after each successful replacement.
 
 ## Store as a contract
 
-`Store<T>` is a contract for a single state atom. The public contract is small: create a store, read its current or initial value, replace the value, add middleware, and subscribe to change notifications.
+`Store<T>` defines the contract for a single state atom. The public API stays small: create a store, read its current or initial value, replace the value, add middleware, and subscribe to change notifications.
 
-The contract does not include framework rendering, selectors, reducers, persistence, data fetching, devtools, or async batching. Those features can be built around a store, but they are not part of the package itself.
+The contract excludes framework rendering, selectors, reducers, persistence, data fetching, devtools, and async batching. Build those concerns around a store when a project needs them.
 
 ## State snapshot
 
 `getState()` returns the current state reference. `getInitialState()` returns the value that was passed to the constructor.
 
-Both methods are typed as `Readonly<T>`. That is a TypeScript signal to treat the value as a snapshot. The source does not freeze, clone, or proxy the state at runtime.
+Both methods return `Readonly<T>`. Treat the value as a TypeScript snapshot. Store does not freeze, clone, or proxy the state at runtime.
 
 ```ts lineNumbers
 const store = new Store({ count: 0 });
@@ -30,7 +30,7 @@ const initial = store.getInitialState();
 
 Reading is direct and synchronous. There is no derived read system and no property level tracking.
 
-If a consumer needs a derived value, calculate it outside the store or in a higher level adapter:
+Calculate derived values outside the store or in a higher level adapter:
 
 ```ts lineNumbers
 const count = store.getState().count;
@@ -83,7 +83,7 @@ unsubscribe();
 
 Listeners run synchronously after a successful replacement. The listener set is snapshotted for notification, so removing a listener during notification does not mutate the active iteration array.
 
-Store keeps listener references in a `Set`. Registering the same function reference more than once stores it once.
+Store keeps listener references in a `Set`. Registering the same function reference more than once still stores one listener.
 
 ## Equality and bailout behavior
 
@@ -99,7 +99,7 @@ store.setState((prev) => {
 });
 ```
 
-For objects and arrays, a new reference is the normal way to represent a change.
+For objects and arrays, represent a change with a new reference.
 
 ## Mutation caveats
 
@@ -111,7 +111,7 @@ const state = store.getState();
 state.items.push("new item");
 ```
 
-That direct mutation does not call `setState`, so listeners are not notified. It can also make later `Object.is` checks harder to reason about because the same object reference has already changed.
+That direct mutation does not call `setState`, so listeners are not notified. It also makes later `Object.is` checks harder to reason about because the same object reference has already changed.
 
 Use an immutable replacement instead:
 
@@ -124,6 +124,6 @@ store.setState((prev) => ({
 
 ## Framework adapter relationship
 
-Framework adapters should treat Store as the state and subscription primitive. The adapter owns framework specific concerns: rendering, lifecycle cleanup, selectors, scheduling, and any memoization rules.
+Framework adapters treat Store as the state and subscription primitive. The adapter owns framework specific concerns: rendering, lifecycle cleanup, selectors, scheduling, and memoization rules.
 
-That separation keeps `@ilokesto/store` usable in plain TypeScript while still giving framework packages a stable base to build on.
+That separation keeps `@ilokesto/store` usable in plain TypeScript and gives framework packages a stable base to build on.

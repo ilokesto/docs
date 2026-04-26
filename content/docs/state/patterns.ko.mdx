@@ -5,7 +5,7 @@ description: "스토어, 액션, 파생 읽기를 조직하는 실전 패턴."
 
 # 패턴
 
-API 자체는 작지만, 실제 프로젝트에서는 이걸 어떻게 조직하느냐가 더 중요합니다. 대부분의 앱은 `create()` 호출 하나보다도 액션을 어디에 둘지, 스토어를 몇 개로 나눌지, 로직을 컴포넌트 안에 둘지 바깥으로 뺄지에서 더 많이 흔들립니다.
+상태 패턴은 액션을 어디에 둘지, 스토어를 몇 개로 나눌지, 로직을 컴포넌트 안에 둘지 스토어 옆에 둘지를 정리합니다.
 
 ## store 정의와 액션은 가깝게 두되, 같은 파일로 뭉개지지 않게 한다
 
@@ -19,7 +19,8 @@ export const useCounter = create({ count: 0 });
 import { useCounter } from '../stores/counter';
 
 export const increment = () => {
-  useCounter.writeOnly()(state => ({ count: state.count + 1 }));
+  const writeCounter = useCounter.writeOnly();
+  writeCounter(state => ({ count: state.count + 1 }));
 };
 ```
 
@@ -72,7 +73,7 @@ export const fetchUser = async (id: string) => {
 
 이 방식은 “로딩 로직까지 store factory 안에 모두 밀어 넣는” 구조보다 경계를 더 깔끔하게 만들어 줍니다.
 
-## 간단한 판단 기준
+## 패턴 선택 기준
 
 - 항상 함께 바뀌는 상태라면 하나의 store로 두고,
 - 도메인이 독립적이면 store를 나누고,

@@ -5,7 +5,7 @@ description: Store에서 자주 만나는 문제, 원인, 해결 방법입니다
 
 # 문제 해결
 
-`@ilokesto/store`가 예상과 다르게 동작할 때 이 페이지를 사용하십시오. 각 답변은 검증된 Store 계약 안에 머물며, 더 자세한 내용은 주요 문서로 연결합니다.
+`@ilokesto/store`에서 자주 만나는 동작은 Store 계약, 상태 교체 규칙, 어댑터 연결을 기준으로 점검하십시오.
 
 ## UI가 업데이트되지 않습니다
 
@@ -15,26 +15,26 @@ description: Store에서 자주 만나는 문제, 원인, 해결 방법입니다
 2. 업데이트가 같은 루트 참조를 반환해서 `Object.is` 베일아웃이 발생했습니다.
 3. 프레임워크 어댑터가 Store 알림을 프레임워크 렌더 생명주기에 연결하지 못했습니다.
 
-기본 읽기, 쓰기, 구독 흐름은 [Core Concepts](./core-concepts)에서 확인한 뒤, 프레임워크 정리와 렌더 연결은 [Framework Usage](./framework-usage)를 검토하십시오.
+기본 읽기, 쓰기, 구독 흐름은 Core Concepts에서 확인한 뒤, 프레임워크 정리와 렌더 연결은 Framework Usage를 검토하십시오.
 
-## 구독자(Subscriber)가 실행되지 않습니다
+## 구독자가 실행되지 않습니다
 
 구독자는 성공적인 상태 교체 뒤에만 실행됩니다. `Object.is(prevState, nextState)`가 `true`이면 실행되지 않습니다.
 
 ```ts lineNumbers
 store.setState((prev) => prev);
-// Subscriber는 실행되지 않습니다.
+// 구독자는 실행되지 않습니다.
 ```
 
-객체를 mutation한 뒤 같은 참조를 다시 넘겼다면, 대신 새 루트 값을 만드십시오. 베일아웃과 알림 규칙은 [Advanced Semantics](./advanced-semantics)를 참고하십시오.
+객체를 mutation한 뒤 같은 참조를 다시 넘겼다면, 대신 새 루트 값을 만드십시오. 베일아웃과 알림 규칙은 Advanced Semantics에서 다룹니다.
 
-## 구독자(Subscriber)가 너무 자주 실행됩니다
+## 구독자가 너무 자주 실행됩니다
 
 `Store`는 구독자가 어떤 필드에 관심이 있는지 추적하지 않습니다. 구독자는 모든 성공적인 루트 상태 교체 뒤에 실행됩니다.
 
 컨슈머가 한 필드에만 관심이 있다면, 자체 계층에서 이전 selected value와 비교하고 바뀌지 않았을 때 작업을 건너뛰십시오. 이는 Store 기능이 아니라 어댑터나 애플리케이션 로직으로 두는 것이 맞습니다.
 
-Store 동작을 감싸는 패턴은 [Patterns](./patterns)와 [Building on Store](./building-on-store)에 속합니다.
+Store 동작을 감싸는 패턴은 Patterns와 Building on Store에 속합니다.
 
 ## React 값이 오래된(stale) 상태로 보입니다
 
@@ -42,7 +42,7 @@ Store 동작을 감싸는 패턴은 [Patterns](./patterns)와 [Building on Store
 
 Store 구독으로 업데이트되는 프레임워크 state에서 렌더 중 값을 읽으십시오. 렌더 밖에서 한 번 실행한 `const value = store.getState()`가 UI에서 계속 최신 상태로 유지된다고 기대하지 마십시오.
 
-프레임워크 수준 연결은 [Framework Usage](./framework-usage)를 참고하십시오. 원시 구독 메서드는 [API Reference](./api)를 확인하십시오.
+프레임워크 수준 연결은 Framework Usage를 참고하십시오. 원시 구독 메서드는 API Reference를 확인하십시오.
 
 ## Vue, Svelte, Angular에서는 어떻게 정리(cleanup)하나요?
 
@@ -50,7 +50,7 @@ Store 구독으로 업데이트되는 프레임워크 state에서 렌더 중 값
 
 정확한 lifecycle hook은 Store 패키지가 아니라 프레임워크 계층의 책임입니다. Store 계약은 반환된 함수를 호출하면 해당 리스너 참조가 제거된다는 것뿐입니다.
 
-프레임워크 예제는 [Framework Usage](./framework-usage)를, 원시 구독 API는 [API Reference](./api)를 참고하십시오.
+프레임워크 예제는 Framework Usage를, 원시 구독 API는 API Reference를 참고하십시오.
 
 ## 중첩 객체를 바꿨는데 아무 일도 일어나지 않습니다
 
@@ -73,7 +73,7 @@ store.setState((prev) => ({
 }));
 ```
 
-중첩 mutation과 `Readonly<T>` 동작은 [Advanced Semantics](./advanced-semantics)에서 다룹니다.
+중첩 mutation과 `Readonly<T>` 동작은 Advanced Semantics에서 다룹니다.
 
 ## Store가 Redux, Zustand, Pinia, NgRx를 대체하나요?
 
@@ -81,7 +81,7 @@ store.setState((prev) => ({
 
 reducer dispatch, selector system, devtools, effects, modules, actions, ready-made framework bindings를 제공하지 않습니다. 필요하다면 그 위에 더 높은 수준의 패턴을 만들 수 있습니다.
 
-패키지 경계는 [Core Concepts](./core-concepts)를 읽으십시오. 래퍼 작성 지침은 [Building on Store](./building-on-store)를 참고하십시오.
+패키지 경계는 Core Concepts를 읽으십시오. 래퍼 작성 지침은 Building on Store를 참고하십시오.
 
 ## Store가 서버 캐시(server cache)나 data fetching을 관리하나요?
 
@@ -89,7 +89,7 @@ reducer dispatch, selector system, devtools, effects, modules, actions, ready-ma
 
 서버에서 온 데이터를 포함해 원하는 어떤 값이든 저장할 수는 있습니다. 하지만 서버 캐시 동작은 애플리케이션이나 다른 라이브러리에서 제공해야 합니다.
 
-Store가 무엇이고 무엇이 아닌지는 [Core Concepts](./core-concepts)를 참고하십시오.
+Store가 무엇이고 무엇이 아닌지는 Core Concepts를 참고하십시오.
 
 ## 어댑터는 어떻게 디버그(debug)하나요?
 
@@ -102,9 +102,3 @@ Store가 무엇이고 무엇이 아닌지는 [Core Concepts](./core-concepts)를
 5. 변경을 발행해야 할 때 Store 업데이트가 새 루트 상태 참조를 반환하는지 확인합니다.
 
 권위 있는 Store 규칙은 [API Reference](./api)와 [Advanced Semantics](./advanced-semantics)에 있습니다. 어댑터 경계는 [Building on Store](./building-on-store)에서 다룹니다.
-
-## 어딘가에서 middleware를 봤습니다. `setMiddleware()`를 써야 하나요?
-
-아닙니다. 현재 Store 문서에서 `setMiddleware()`를 사용하면 안 됩니다. 검증된 소스 export는 `Store<T>`이고, `setMiddleware()`는 검증된 현재 메서드가 아닙니다.
-
-[API Reference](./api)에 문서화된 메서드만 사용하십시오. 현재 구현 세부 사항 위에 무언가를 만든다면 안정적인 공개 계약과 명확히 분리하십시오.

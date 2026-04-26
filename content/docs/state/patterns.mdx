@@ -5,7 +5,7 @@ description: Practical ways to organize stores, actions, and derived reads.
 
 # Patterns
 
-The API is small, but the way you organize it matters a lot. Most real projects do not struggle with `create()` itself. They struggle with where actions live, how many stores to create, and when to keep logic inside components versus next to the store.
+State patterns cover where actions live, how many stores to create, and when logic belongs inside components or next to the store.
 
 ## Keep store definition and actions close, but not identical
 
@@ -19,7 +19,8 @@ export const useCounter = create({ count: 0 });
 import { useCounter } from '../stores/counter';
 
 export const increment = () => {
-  useCounter.writeOnly()(state => ({ count: state.count + 1 }));
+  const writeCounter = useCounter.writeOnly();
+  writeCounter(state => ({ count: state.count + 1 }));
 };
 ```
 
@@ -72,7 +73,7 @@ export const fetchUser = async (id: string) => {
 
 That usually produces cleaner boundaries than storing “loading logic” directly in the store factory.
 
-## A simple rule of thumb
+## Choosing the pattern
 
 - Use one store when the state truly changes together.
 - Split stores when domains are independent.

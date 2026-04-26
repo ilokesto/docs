@@ -5,7 +5,7 @@ description: The primary API for building stores in @ilokesto/state.
 
 # `create`
 
-`create` is the main entry point for `@ilokesto/state`. It defines your state and returns a hook that components use to interact with that state.
+`create` is the main entry point for `@ilokesto/state`. It defines state and returns the hook your components call to read and update that state.
 
 ## Call Signatures
 
@@ -27,7 +27,7 @@ const store = new Store({ count: 0 });
 const useCounterFromStore = create(store);
 ```
 
-If the second form is your real use case, read [Existing Store](./existing-store) next. That page explains when `create(store)` is the right boundary and what does not change when you bind React onto an already-owned store.
+If the second form is your real use case, Existing Store is the better next topic. It explains when `create(store)` is the right boundary and what does not change when you bind React onto an already-owned store.
 
 ### Reducer Mode
 
@@ -50,7 +50,7 @@ const useCounter = create(reducer, { count: 0 });
 
 ## Hook Behavior
 
-The hook returned by `create` accepts a selector function.
+The hook returned by `create` accepts a selector function and returns the selected value with the writer for the active mode.
 
 ```tsx lineNumbers
 function Counter() {
@@ -60,17 +60,17 @@ function Counter() {
 }
 ```
 
-- **In State Mode**: The second element is the store writer. Even if your selector returns only one field, the writer still accepts the next full state value or an updater over the full state: `setState((prev) => ({ ...prev, count: prev.count + 1 }))`.
-- **In Reducer Mode**: The second element is a `dispatch` function that accepts an action: `dispatch({ type: 'increment' })`.
+- **State mode**: The second element is the store writer. Even when the selector returns one field, the writer still accepts the next full state value or an updater over the full state: `setState((prev) => ({ ...prev, count: prev.count + 1 }))`.
+- **Reducer mode**: The second element is a `dispatch` function that accepts an action: `dispatch({ type: 'increment' })`.
 
-## Important Notes
+## Behavior notes
 
-- **No Initializer Functions**: `create` does **not** support Zustand-style initializer functions like `(set, get) => ({ ... })`.
-- **Selector Subscriptions**: The hook internally uses `useSyncExternalStore` to subscribe to the store.
-- **SSR Support**: Supports SSR by using `store.getInitialState()` for the server snapshot.
+`create` does **not** support Zustand-style initializer functions like `(set, get) => ({ ... })`. Pass an initial state value, an existing `Store`, or the reducer pair shown above.
+
+The hook subscribes with `useSyncExternalStore`, so selectors read from the external store contract. For SSR, the server snapshot comes from `store.getInitialState()`.
 
 ## Where to go next
 
-- Read [Selectors](./selectors) if you want the subscription and memoization model in detail.
-- Read [Accessors](./accessors) if you plan to move actions outside components.
-- Read [Existing Store](./existing-store) if your app already owns a vanilla `Store` and only needs the React hook layer.
+- Explore [selector subscriptions](./selectors) for the memoization model.
+- Move [actions outside components](./accessors) with accessors.
+- Bind [an existing Store](./existing-store) when your app already owns a vanilla store.

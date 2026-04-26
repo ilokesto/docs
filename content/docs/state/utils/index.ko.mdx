@@ -5,24 +5,30 @@ description: "스토어 조합과 객체 업데이트를 돕는 유틸리티 헬
 
 # 유틸리티
 
-`@ilokesto/state/utils`는 메인 `create()` API를 바꾸지 않으면서 사용성을 개선하는 작은 헬퍼를 두는 곳입니다.
+`@ilokesto/state/utils`는 기본 `create()` API는 그대로 두고, 설정 코드의 모양만 더 읽기 쉽게 만들 때 쓰는 작은 헬퍼를 담습니다.
 
-현재는 두 종류의 도움이 들어 있습니다.
+두 헬퍼는 서로 다른 문제를 풉니다.
 
-- [`pipe`](./pipe)는 plain initial state를 기준으로 여러 미들웨어를 조합해 `Store`를 만듭니다.
-- [`adaptor`](./adaptor)는 Immer의 `produce()`를 감싸서 draft 스타일 객체 업데이트를 쉽게 만듭니다.
+- `pipe`는 스토어 생성과 미들웨어를 조합합니다. plain initial state에서 시작해 미들웨어를 왼쪽에서 오른쪽으로 적용한 뒤, 반환된 `Store`를 `create(store)`에 넘깁니다.
+- `adaptor`는 Immer의 `produce()`를 감쌉니다. draft 스타일 객체 업데이트를 작성한 뒤, 반환된 updater를 `writeOnly()`나 다른 store write 경로에 넘깁니다.
 
-## 언제 유틸리티를 쓰면 좋은가
+## 둘 중 무엇을 고를까
 
-유틸리티는 구조를 바꾸기보다 사용성을 다듬고 싶을 때 쓰는 편이 좋습니다.
+store 설정 코드가 복잡해질 때는 `pipe`를 씁니다.
 
-- store 설정이 너무 중첩되기 시작하면 `pipe`
-- 객체 업데이트 문법이 너무 장황해지면 `adaptor`
-- 기본 `create()` API만으로 충분히 읽히면 굳이 추가하지 않는 편이 낫습니다.
+객체 업데이트 문법이 복잡해질 때는 `adaptor`를 씁니다.
+
+미들웨어 조합이나 draft 스타일 객체 업데이트가 필요 없다면 기본 `create()`만으로 충분합니다.
+
+## 두 헬퍼의 차이
+
+`pipe`는 React 바인딩 전에 동작합니다. `create(store)`가 바인딩할 store instance를 만듭니다.
+
+`adaptor`는 write 시점에 동작합니다. Immer draft recipe를 객체 상태용 순수 updater 함수로 바꿉니다.
 
 ## 관련 API
 
 - [`create`](../create): React 통합을 위한 메인 진입점.
 - [`미들웨어`](../middleware): 일반적인 작업을 위한 내장 미들웨어.
 
-store 설정이 문제라면 [`pipe`](./pipe)를, 객체 업데이트 문법이 문제라면 [`adaptor`](./adaptor)를 이어서 읽으면 됩니다.
+미들웨어 조합은 [`pipe`](./pipe)를, draft 스타일 객체 업데이트는 [`adaptor`](./adaptor)를 이어서 읽으면 됩니다.

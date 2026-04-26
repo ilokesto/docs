@@ -5,15 +5,14 @@ description: writeOnly()와 readOnly()의 현재 제약을 설명합니다.
 
 # 접근자
 
-접근자는 `create`로 생성된 훅에 붙어 있는 정적 메서드입니다. 이들은 React 기반의 상태 관리와 명령형 코드(imperative code) 또는 외부 액션 파일 사이의 가교 역할을 합니다.
-
-여기서 가장 중요한 점은 **접근자들이 구현 방식이나 안전성 면에서 대칭적이지 않다는 것**입니다.
+접근자는 `create`로 생성된 훅에 붙어 있는 정적 메서드입니다. 액션 파일, 리스너, 그 밖의 명령형 코드에서 상태를 갱신해야 한다면 `writeOnly()`부터 사용하세요. `readOnly()`는 여전히 훅 로직을 거쳐 읽는 더 좁은 React 쪽 편의 기능으로 다룹니다.
 
 ## `writeOnly()`
 
 `writeOnly()`는 표준적인 명령형 작성자(imperative writer)입니다. 이는 스토어의 `setState` 함수(또는 리듀서를 사용하는 경우 `dispatch`)를 반환합니다.
 
 - **React 외부**: 이는 React 컴포넌트 트리 외부에서 정의되는 액션, 부가 효과(side effects), 또는 이벤트 리스너를 관리하는 가장 권장되는 방법입니다.
+- **React 내부**: 컴포넌트가 상태를 구독하고 셀렉터 변경에 따라 다시 렌더링되어야 한다면 훅을 직접 사용하세요.
 
 `writeOnly()`를 호출할 때마다 bound writer 함수가 새로 만들어지지만, 중요한 안정성은 참조 자체보다 같은 store를 계속 가리킨다는 점에 있습니다.
 
@@ -27,13 +26,17 @@ export const increment = () => {
 };
 ```
 
+이 방식은 액션 모듈을 작고 직접적으로 유지합니다. 훅을 가져오고, `writeOnly()`를 호출한 뒤, 반환된 함수로 상태를 씁니다.
+
 ## `readOnly()`
 
 `readOnly()`는 훅의 기존 로직을 통해 상태를 읽는 편의 기능을 제공하지만, 매우 중요한 제약 사항이 있습니다: **이는 단순한 명령형 게터(imperative getter)가 아닙니다.**
 
 런타임 시, `readOnly()`는 일반적인 셀렉터 읽기에 사용되는 것과 동일한 React 훅 경로를 거칩니다. 즉:
-1. **React 전용**: 업데이트를 구독하지 않고 상태만 읽어야 하는 컴포넌트 내에서의 편의 기능 정도로 보는 것이 좋습니다.
-2. **임의의 코드에서 사용 불가**: React 컨텍스트나 훅을 사용할 수 없는 일반 유틸리티 함수나 백그라운드 워커 내에서 `readOnly()`를 호출하지 마십시오.
+
+1. **React 안에서만 사용**: React 훅 규칙과 컨텍스트를 사용할 수 있는 곳에서만 쓰세요.
+2. **유틸리티 파일에 사용하지 않기**: 일반 헬퍼 모듈이나 공유 비즈니스 로직에서 `readOnly()`를 호출하지 마세요.
+3. **워커에 사용하지 않기**: Web Worker, 백그라운드 작업, 그 밖의 React가 아닌 런타임에서 호출하지 마세요.
 
 ```tsx lineNumbers
 function CounterSummary() {
@@ -43,7 +46,9 @@ function CounterSummary() {
 }
 ```
 
-## 언제 vanilla `Store`를 써야 하는가?
+값이 렌더링 결과에 영향을 준다면, React가 정상적으로 구독하고 컴포넌트를 갱신할 수 있도록 셀렉터와 함께 훅을 직접 쓰는 편이 좋습니다.
+
+## 대신 vanilla `Store`를 써야 하는 경우
 
 WebSocket 핸들러나 깊은 유틸리티 함수처럼 React 외부에서 정말로 안전하고 명령형인 읽기가 필요하다면, `@ilokesto/store`의 vanilla `Store` API를 사용해야 합니다.
 
@@ -65,7 +70,7 @@ export const checkCount = () => {
 };
 ```
 
-## 액션 파일 패턴 (Action-File Patterns)
+## 액션 파일 패턴
 
 스토어와 액션을 분리해서 관리하는 것은 흔한 아키텍처 패턴입니다. 접근자를 쓰면 코드가 깔끔해집니다:
 
@@ -83,6 +88,8 @@ export const login = async (credentials) => {
   setState((prev) => ({ ...prev, user, loading: false }));
 };
 ```
+
+이 패턴은 쓰기에 집중해서 사용하세요. 액션 파일이 React 외부에서 현재 상태도 확인해야 한다면 vanilla `Store`를 별도로 정의하고 `store.getState()`로 읽으세요.
 
 ## 흔히 하는 실수
 

@@ -5,7 +5,7 @@ description: Validate state changes using Standard Schema v1.
 
 # Validate
 
-The `validate` middleware checks the next state against a Standard Schema v1 validator before committing the update.
+The `validate` middleware accepts a Standard Schema v1 validator and checks every next state before the store commits it. When validation fails, the update stops and the current state stays unchanged.
 
 ```ts lineNumbers
 import { validate } from '@ilokesto/state/middleware';
@@ -15,12 +15,13 @@ const schema = z.object({ count: z.number().min(0) });
 const store = validate(schema)({ count: 0 });
 ```
 
-## Features
+## Behavior
 
-- **Standard Schema v1**: Compatible with any schema library that supports Standard Schema v1 (e.g., Zod, Valibot, ArkType).
-- **Blocking Validation**: Invalid results are logged and the update is aborted before it reaches the store.
+- **Standard Schema v1**: Works with schema libraries that expose the Standard Schema v1 contract, including Zod, Valibot, and ArkType.
+- **Blocking validation**: Invalid results are logged, then the update is aborted before it reaches the store.
+- **Committed state only**: A failed update does not replace the previous state.
 
-## Limitations
+## Limits
 
-- **Async Support**: Async schema validation is rejected by the current implementation. Only synchronous validation is supported.
-- **Blocking**: Since validation occurs before the update is committed, expensive validation logic may impact UI responsiveness.
+- **Synchronous only**: Async schema validation is rejected. The validator must return a synchronous result.
+- **Commit cost**: Validation runs before each commit, so expensive schema checks can affect UI responsiveness.

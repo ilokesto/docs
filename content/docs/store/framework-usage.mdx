@@ -5,13 +5,13 @@ description: Practical adapter patterns for using @ilokesto/store with React, Vu
 
 # Framework Usage
 
-`@ilokesto/store` does not ship official React, Vue, Svelte, or Angular packages. The examples below are small adapter patterns around the vanilla `Store` API: `getState()`, `setState(next)`, and `subscribe(listener)`.
+`@ilokesto/store` does not ship official React, Vue, Svelte, or Angular packages. Use these small adapters around the vanilla `Store` API: `getState()`, `setState(next)`, and `subscribe(listener)`.
 
-Use these examples when you want a copy-paste-ready starting point, then keep any selectors, actions, or framework-specific ergonomics in your own layer.
+Keep selectors, actions, and framework-specific helpers in your own layer.
 
 ## Adapter model
 
-Every framework bridge follows the same flow:
+Every adapter follows the same flow:
 
 1. Read the current snapshot with `store.getState()`.
 2. Subscribe with `store.subscribe(listener)`.
@@ -19,7 +19,7 @@ Every framework bridge follows the same flow:
 4. Forward writes through `store.setState(next)` or through action helpers.
 5. Run cleanup by calling the returned unsubscribe function when the owning scope ends.
 
-Keep the vanilla store as the source of truth. The adapter should translate snapshots into the framework model, not mutate the snapshot in place or depend on private fields.
+Keep the vanilla store as the source of truth. The adapter translates snapshots into the framework model and sends writes back through the public store API.
 
 ## React
 
@@ -155,12 +155,8 @@ Provide the service at the component or feature scope when you need cleanup tied
 
 ## Caveats for every adapter
 
-- **Snapshot consistency**: Read snapshots through `getState()` inside the framework's expected subscription model. React should use `useSyncExternalStore` for this bridge.
-- **Cleanup**: Always call the unsubscribe function, or return it to the framework API that owns teardown.
+- **Snapshot consistency**: Read snapshots through `getState()` inside the framework's subscription model. React should use `useSyncExternalStore`.
+- **Cleanup**: Call the unsubscribe function, or return it to the framework API that owns teardown.
 - **Mutation avoidance**: Treat snapshots as immutable values. `Readonly<T>` does not freeze or clone state at runtime.
-- **No scheduler assumptions**: Store notifications are synchronous. The package does not add framework batching, async scheduling, or render coordination.
-- **Adapter scope**: These examples are adapter patterns, not official framework packages. Keep framework-specific selectors and actions above the raw store bridge.
-
-## Why Solid and Preact are not included
-
-The previous integrations page also showed Solid and Preact examples. This Framework Usage page intentionally carries forward only React, Vue, Svelte, and Angular because that is the approved scope for the current Store docs restructure.
+- **No scheduler assumptions**: Store notifications are synchronous. The package does not add batching, async scheduling, or render coordination.
+- **Adapter scope**: These are adapter patterns, not official framework packages. Keep selectors and actions above the raw store bridge.

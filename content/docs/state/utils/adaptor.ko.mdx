@@ -1,11 +1,11 @@
 ---
 title: adaptor
-description: Immer 기반 객체 updater를 만듭니다.
+description: Immer draft로 객체 updater를 만듭니다.
 ---
 
 # `adaptor`
 
-`adaptor`는 Immer의 `produce()`를 얇게 감싼 헬퍼입니다. draft 스타일의 객체 업데이트를 작성하면, 그 결과를 순수 updater 함수로 돌려줍니다.
+`adaptor`는 Immer draft recipe를 객체 상태용 순수 updater로 바꿉니다. 변경은 `draft`에 작성하고, 반환된 함수가 다음 불변 상태를 만듭니다.
 
 ```ts lineNumbers
 import { adaptor } from '@ilokesto/state/utils';
@@ -19,10 +19,12 @@ const renameProfile = adaptor<State>((draft) => {
 useStore.writeOnly()(renameProfile);
 ```
 
-## 제약 사항
+## 동작
 
-- `adaptor`는 객체 상태 형태에만 사용할 수 있습니다.
-- 선택적 peer dependency인 `immer`에 의존합니다.
+- `adaptor`는 객체 상태 형태를 받습니다.
+- recipe는 Immer draft를 받으므로, recipe 안에서는 중첩 값을 직접 대입할 수 있습니다.
+- 반환된 updater는 `writeOnly()`에 전달할 수 있는 순수 함수입니다.
+- `immer`는 선택적 peer dependency입니다. `adaptor`를 쓰기 전에 설치하세요.
 
 ## 설치
 
@@ -33,4 +35,4 @@ immer
 ## 관련 API
 
 - [`유틸리티`](./): 유틸리티 개요.
-- [`접근자`](../accessors): 반환된 updater는 `writeOnly()`와 함께 쓰기 좋습니다.
+- [`접근자`](../accessors): 반환된 updater를 `writeOnly()`에 전달합니다.

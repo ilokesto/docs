@@ -5,16 +5,14 @@ description: writeOnly() and the current caveats of readOnly().
 
 # Accessors
 
-Accessors are static methods attached to the hook returned by `create`. They provide a bridge between your React-based state management and imperative code or external action files.
-
-It is important to recognize that these accessors are not symmetric in their implementation or safety.
+Accessors are static methods attached to the hook returned by `create`. Start with `writeOnly()` when action files, listeners, or other imperative code need to update state. Treat `readOnly()` as a narrower React-side convenience for reads that still pass through hook logic.
 
 ## `writeOnly()`
 
 `writeOnly()` is the canonical imperative writer. It returns the store's `setState` function (or `dispatch` if using a reducer).
 
 - **Outside React**: This is the preferred way to define actions, side effects, or event listeners that live outside of the React component tree.
-- **Outside React**: This is the preferred way to define actions, side effects, or event listeners that live outside of the React component tree.
+- **Inside React**: Use the hook directly when a component should subscribe to state and re-render from selector changes.
 
 Each `writeOnly()` call returns a bound store writer. The important stability is behavioral, not referential: it always points at the same underlying store.
 
@@ -28,13 +26,17 @@ export const increment = () => {
 };
 ```
 
+This keeps action modules small and direct: import the hook, call `writeOnly()`, then write through the returned function.
+
 ## `readOnly()`
 
 `readOnly()` exists as a convenience for reading state through the hook's existing logic, but it comes with a major caveat: **it is not a plain imperative getter.**
 
 At runtime, `readOnly()` reaches through the same React hook path used by normal selector reads. This means:
-1. **React-side only**: It is best treated as a React-side convenience for components that need to read state without subscribing to updates.
-2. **Not for arbitrary code**: Do not call `readOnly()` inside plain utility functions or background workers where React context or hooks are unavailable.
+
+1. **Must stay inside React**: Use it only where React hook rules and context are available.
+2. **Not for utility files**: Do not call `readOnly()` from plain helper modules or shared business logic.
+3. **Not for workers**: Do not call it from Web Workers, background jobs, or other non-React runtimes.
 
 ```tsx lineNumbers
 function CounterSummary() {
@@ -44,7 +46,9 @@ function CounterSummary() {
 }
 ```
 
-## When to prefer vanilla `Store`
+If the value affects rendered output, prefer the hook with a selector so React can subscribe and update the component normally.
+
+## When to use the vanilla `Store` instead
 
 If you need a truly safe, imperative read outside of React (e.g., in a WebSocket handler or a deep utility function), you should use the vanilla `Store` API from `@ilokesto/store`.
 
@@ -66,7 +70,7 @@ export const checkCount = () => {
 };
 ```
 
-## Action-File Patterns
+## Action-file patterns
 
 A common architectural pattern is to keep stores and actions separate. Accessors make this clean:
 
@@ -85,7 +89,9 @@ export const login = async (credentials) => {
 };
 ```
 
-## Common Mistakes
+Keep this pattern focused on writes. If an action file also needs to inspect current state outside React, define the vanilla `Store` separately and read through `store.getState()`.
+
+## Common mistakes
 
 1. **Using `readOnly()` in utility files**: This will likely cause a "Hooks can only be called inside the body of a function component" error because it relies on the internal hook state.
 2. **Ignoring the hook-tuple symmetry**: Forgetting that `useStore(selector)` returns a tuple while `writeOnly()` returns just the writer function.

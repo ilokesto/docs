@@ -1,0 +1,246 @@
+---
+title: Angular
+description: signals와 DestroyRef를 사용해 @ilokesto/store를 Angular에 연결하는 방법.
+---
+
+# Angular
+
+Angular 16은 signal을 일급 반응형 기본 요소로 도입했습니다. `DestroyRef`와 결합하면 `zone.js` 의존 없이 `@ilokesto/store`를 Angular의 변경 감지 모델에 깔끔하게 연결할 수 있습니다.
+
+## 어댑터
+
+스토어를 Angular 서비스로 감싸세요. 서비스는 초기 상태를 `signal`로 읽고, 스토어를 구독하고, injector가 소멸될 때 `DestroyRef`로 자동 정리합니다.
+
+```ts lineNumbers
+import { Injectable, signal, DestroyRef, inject } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { counterStore } from "./counter.store";
+
+@Injectable({ providedIn: "root" })
+export class CounterService {
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly state = signal(counterStore.getState());
+
+  constructor() {
+    const unsubscribe = counterStore.subscribe(() => {
+      this.state.set(counterStore.getState());
+    });
+
+    this.destroyRef.onDestroy(unsubscribe);
+  }
+
+  increment() {
+    counterStore.setState((prev) => ({ count: prev.count + 1 }));
+  }
+
+  decrement() {
+    counterStore.setState((prev) => ({ count: prev.count - 1 }));
+  }
+}
+```
+
+`DestroyRef.onDestroy`는 클래스에서 `OnDestroy`를 구현할 필요 없이 정리 콜백을 등록합니다. 콜백은 서비스를 제공한 injector가 소멸될 때 실행됩니다. root 레벨 서비스의 경우 애플리케이션이 종료될 때입니다.
+
+컴포넌트 레벨 서비스(`providers`에 등록, `providedIn: undefined`)의 경우, `DestroyRef`는 컴포넌트의 injector에 스코핑되므로 컴포넌트가 소멸될 때 스토어 listener가 제거됩니다.
+
+## 셀렉터 패턴
+
+`computed`를 사용해 signal에서 반응형 슬라이스를 파생시키세요. Angular의 signal 그래프가 의존성을 자동으로 추적합니다.
+
+```ts lineNumbers
+import { Injectable, signal, computed, DestroyRef, inject } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { authStore } from "./auth.store";
+import type { AuthState } from "./auth.store";
+
+@Injectable({ providedIn: "root" })
+export class AuthService {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly _state = signal(authStore.getState());
+
+  readonly user = computed(() => this._state().user);
+  readonly status = computed(() => this._state().status);
+  readonly isSignedIn = computed(() => this._state().status === "signed-in");
+
+  constructor() {
+    const unsubscribe = authStore.subscribe(() => {
+      this._state.set(authStore.getState());
+    });
+
+    this.destroyRef.onDestroy(unsubscribe);
+  }
+
+  signIn(user: AuthState["user"]) {
+    authStore.setState({ user, status: "signed-in" });
+  }
+
+  signOut() {
+    authStore.setState({ user: null, status: "anonymous" });
+  }
+}
+```
+
+템플릿에서 사용:
+
+```html lineNumbers
+<!-- auth-status.component.html -->
+@if (authService.isSignedIn()) {
+  <span>{{ authService.user()?.name }}</span>
+} @else {
+  <span>로그인</span>
+}
+```
+
+`computed` signal은 지연 평가되고 캐시됩니다. Angular는 기반 `_state` signal이 변경되고 컴포넌트가 computed 값을 읽을 때만 재평가합니다.
+
+## 여러 스토어
+
+컴포넌트에 여러 서비스를 주입하세요. Angular의 의존성 주입은 각 서비스의 라이프사이클을 독립적으로 유지합니다.
+
+```ts lineNumbers
+import { Component, inject } from "@angular/core";
+import { AuthService } from "./auth.service";
+import { ThemeService } from "./theme.service";
+
+@Component({
+  selector: "app-header",
+  template: `
+    <header [attr.data-theme]="themeService.theme()">
+      @if (authService.isSignedIn()) {
+        <span>{{ authService.user()?.name }}</span>
+      } @else {
+        <span>로그인</span>
+      }
+    </header>
+  `,
+})
+export class HeaderComponent {
+  readonly authService = inject(AuthService);
+  readonly themeService = inject(ThemeService);
+}
+```
+
+## Angular Universal과 SSR
+
+Angular Universal로 서버 사이드 렌더링을 사용할 때, 스토어 상태는 렌더링 전에 초기화되어 클라이언트로 전달되어야 합니다.
+
+브라우저 전용 API를 보호하기 위해 `isPlatformBrowser`를 사용하고, 초기 스냅샷 전달에는 Angular의 `TransferState`를 활용하세요.
+
+```ts lineNumbers
+import {
+  Injectable,
+  signal,
+  computed,
+  DestroyRef,
+  inject,
+  PLATFORM_ID,
+} from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { TransferState, makeStateKey } from "@angular/platform-browser";
+import { Store } from "@ilokesto/store";
+import { counterStore } from "./counter.store";
+
+const COUNTER_STATE_KEY = makeStateKey<{ count: number }>("counterState");
+
+@Injectable({ providedIn: "root" })
+export class CounterService {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly transferState = inject(TransferState);
+
+  readonly state = signal(this.getInitialState());
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      const unsubscribe = counterStore.subscribe(() => {
+        this.state.set(counterStore.getState());
+      });
+      this.destroyRef.onDestroy(unsubscribe);
+    }
+  }
+
+  private getInitialState() {
+    if (isPlatformBrowser(this.platformId)) {
+      const transferred = this.transferState.get(COUNTER_STATE_KEY, null);
+      if (transferred) {
+        counterStore.setState(transferred);
+        this.transferState.remove(COUNTER_STATE_KEY);
+      }
+    } else {
+      // 서버: 현재 상태를 전달용으로 저장합니다.
+      this.transferState.set(COUNTER_STATE_KEY, counterStore.getState());
+    }
+    return counterStore.getState();
+  }
+}
+```
+
+## TypeScript
+
+서비스는 자연스럽게 타입이 지정됩니다. signal 타입은 `store.getState()`에서 추론되고, `computed`는 signal 표현식에서 타입을 파생합니다.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
+};
+
+export const authStore = new Store<AuthState>({
+  user: null,
+  status: "anonymous",
+});
+```
+
+```ts lineNumbers
+// Signal<AuthState> — store.getState()에서 추론됩니다.
+readonly _state = signal(authStore.getState());
+
+// Signal<{ id: string; name: string } | null> — computed 표현식에서 추론됩니다.
+readonly user = computed(() => this._state().user);
+```
+
+## 테스트
+
+`TestBed`로 서비스를 새 스토어와 함께 구성하세요. 인스턴스화 전에 스토어 값을 재정의하거나 서비스 메서드를 통해 직접 구동하세요.
+
+```ts lineNumbers
+import { TestBed } from "@angular/core/testing";
+import { expect, test } from "vitest";
+import { Store } from "@ilokesto/store";
+import { CounterService } from "./counter.service";
+
+test("스토어 초기 상태를 노출한다", () => {
+  TestBed.configureTestingModule({});
+  const service = TestBed.inject(CounterService);
+
+  expect(service.state().count).toBe(0);
+});
+
+test("스토어가 변경되면 state signal이 업데이트된다", () => {
+  TestBed.configureTestingModule({});
+  const service = TestBed.inject(CounterService);
+
+  service.increment();
+
+  TestBed.flushEffects();
+
+  expect(service.state().count).toBe(1);
+});
+
+test("injector가 소멸되면 구독을 정리한다", () => {
+  const env = TestBed.configureTestingModule({});
+  const service = TestBed.inject(CounterService);
+
+  TestBed.resetTestingModule();
+
+  // injector 소멸 후 스토어 변경이 오류를 일으키지 않아야 합니다.
+  counterStore.setState({ count: 99 });
+
+  expect(service.state().count).toBe(0);
+});
+```
+
+`TestBed.flushEffects()`는 Angular 18 이상에서 사용 가능합니다. 이전 버전에서는 `TestBed.tick()`을 호출하거나 `fakeAsync`와 `flushMicrotasks`를 함께 사용하세요.

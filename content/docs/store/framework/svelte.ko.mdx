@@ -1,0 +1,267 @@
+---
+title: Svelte
+description: Svelte 4 및 Svelte 5 runes에서 @ilokesto/store를 연결하는 방법.
+---
+
+# Svelte
+
+Svelte는 두 가지 반응형 모델을 제공합니다: Svelte 4의 스토어 계약과 Svelte 5의 runes입니다. `@ilokesto/store`와 어댑터 패턴은 Svelte의 구독 및 라이프사이클 기본 요소에 직접 매핑되기 때문에 두 모델 모두 깔끔하게 통합됩니다.
+
+## 어댑터 — Svelte 4
+
+Svelte 4의 `readable` 함수는 모든 push 기반 데이터 소스를 감싸는 스토어를 만듭니다. `@ilokesto/store`를 소스로 전달하면 Svelte의 정리 메커니즘이 구독 해제를 처리합니다.
+
+```ts lineNumbers
+import { readable, derived } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+export function fromStore<T>(store: Store<T>) {
+  return readable(store.getState(), (set) => {
+    set(store.getState());
+
+    const unsubscribe = store.subscribe(() => {
+      set(store.getState());
+    });
+
+    return unsubscribe;
+  });
+}
+```
+
+`readable`에 전달된 함수는 `set` 콜백을 받습니다. 초기값을 설정하기 위해 한 번 호출되고, 이후 스토어 알림마다 다시 호출됩니다. 설정 함수에서 `unsubscribe`를 반환하면 마지막 구독자가 구독을 해제할 때 Svelte가 이를 호출합니다. 이는 모든 어댑터에서 요구하는 정리 규칙과 일치합니다.
+
+컴포넌트에서 Svelte의 `$` 접두사로 자동 구독하세요:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { fromStore } from "./lib/fromStore";
+  import { counterStore } from "./stores/counter";
+
+  const counter = fromStore(counterStore);
+</script>
+
+<span>{$counter.count}</span>
+<button on:click={() => counterStore.setState((s) => ({ count: s.count + 1 }))}>
+  증가
+</button>
+```
+
+Svelte는 컴포넌트가 소멸될 때 자동으로 unsubscribe를 호출합니다.
+
+## 셀렉터 패턴 — Svelte 4
+
+`derived`를 사용해 readable에서 슬라이스를 추출하세요. derived 스토어는 상위 스토어가 변경되고 파생값도 달라진 경우에만 업데이트됩니다.
+
+```ts lineNumbers
+import { derived } from "svelte/store";
+import { fromStore } from "./lib/fromStore";
+import { counterStore } from "./stores/counter";
+
+const counter = fromStore(counterStore);
+
+// count가 변경될 때만 구독자에게 알립니다.
+export const count = derived(counter, ($c) => $c.count);
+```
+
+```svelte lineNumbers
+<script lang="ts">
+  import { count } from "./stores/derivedCounter";
+</script>
+
+<span>{$count}</span>
+```
+
+## 어댑터 — Svelte 5 runes
+
+Svelte 5는 스토어 계약을 runes로 대체합니다. `$state`와 `$effect`를 사용해 runes 네이티브 반응성으로 어댑터를 연결하세요.
+
+```ts lineNumbers
+// counterAdapter.svelte.ts
+import { Store } from "@ilokesto/store";
+import { counterStore } from "./counter";
+
+export function createCounterAdapter(store: Store<{ count: number }>) {
+  let state = $state(store.getState());
+
+  $effect(() => {
+    state = store.getState();
+
+    const unsubscribe = store.subscribe(() => {
+      state = store.getState();
+    });
+
+    return unsubscribe;
+  });
+
+  return {
+    get count() {
+      return state.count;
+    },
+  };
+}
+```
+
+`.svelte.ts` 확장자에 주의하세요. Svelte 5 runes(`$state`, `$effect`)는 `.svelte` 또는 `.svelte.ts` 파일에서만 사용할 수 있습니다. 일반 `.ts` 파일에 어댑터 로직을 넣으면 컴파일 오류가 발생합니다.
+
+컴포넌트에서 어댑터를 사용하세요:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { createCounterAdapter } from "./counterAdapter.svelte";
+  import { counterStore } from "./stores/counter";
+
+  const counter = createCounterAdapter(counterStore);
+</script>
+
+<span>{counter.count}</span>
+<button onclick={() => counterStore.setState((s) => ({ count: s.count + 1 }))}>
+  증가
+</button>
+```
+
+## 여러 스토어
+
+### Svelte 4
+
+여러 readable 래퍼를 조합하고, 스토어 간 파생이 필요할 때는 `derived`로 결합하세요:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { fromStore } from "./lib/fromStore";
+  import { authStore } from "./stores/auth";
+  import { themeStore } from "./stores/theme";
+
+  const auth = fromStore(authStore);
+  const theme = fromStore(themeStore);
+</script>
+
+<header data-theme={$theme}>
+  {#if $auth.user}
+    <span>{$auth.user.name}</span>
+  {:else}
+    <span>로그인</span>
+  {/if}
+</header>
+```
+
+### Svelte 5
+
+스토어별로 별도의 어댑터를 만들고 컴포넌트에서 조합하세요:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { createAuthAdapter } from "./authAdapter.svelte";
+  import { createThemeAdapter } from "./themeAdapter.svelte";
+  import { authStore } from "./stores/auth";
+  import { themeStore } from "./stores/theme";
+
+  const auth = createAuthAdapter(authStore);
+  const theme = createThemeAdapter(themeStore);
+</script>
+
+<header data-theme={theme.value}>
+  {#if auth.user}
+    <span>{auth.user.name}</span>
+  {:else}
+    <span>로그인</span>
+  {/if}
+</header>
+```
+
+## TypeScript
+
+제네릭 타입 파라미터는 readable 래퍼와 파생 셀렉터 모두에 전달됩니다.
+
+```ts lineNumbers
+import { readable, derived, Readable } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+export function fromStore<T>(store: Store<T>): Readable<T> {
+  return readable(store.getState(), (set) => {
+    set(store.getState());
+    const unsubscribe = store.subscribe(() => set(store.getState()));
+    return unsubscribe;
+  });
+}
+
+export function fromSelector<T, U>(
+  store: Store<T>,
+  selector: (state: T) => U,
+): Readable<U> {
+  return derived(fromStore(store), selector);
+}
+```
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
+};
+
+export const authStore = new Store<AuthState>({
+  user: null,
+  status: "anonymous",
+});
+
+// Readable<{ id: string; name: string } | null>
+export const user = fromSelector(authStore, (s) => s.user);
+```
+
+## 테스트
+
+Svelte 4 어댑터는 반환된 readable을 직접 구독해서 테스트할 수 있습니다. 컴포넌트를 마운트할 필요가 없습니다.
+
+```ts lineNumbers
+import { get } from "svelte/store";
+import { expect, test } from "vitest";
+import { Store } from "@ilokesto/store";
+import { fromStore } from "./lib/fromStore";
+
+test("스토어 초기 상태를 미러링한다", () => {
+  const store = new Store({ count: 0 });
+  const readable = fromStore(store);
+
+  expect(get(readable).count).toBe(0);
+});
+
+test("스토어가 변경되면 업데이트된다", () => {
+  const store = new Store({ count: 0 });
+  const readable = fromStore(store);
+
+  const values: number[] = [];
+  const unsubscribe = readable.subscribe((s) => values.push(s.count));
+
+  store.setState({ count: 5 });
+  store.setState({ count: 10 });
+
+  unsubscribe();
+
+  expect(values).toEqual([0, 5, 10]);
+});
+
+test("모든 구독자가 떠나면 정리된다", () => {
+  const store = new Store({ count: 0 });
+  let listenerCount = 0;
+
+  const originalSubscribe = store.subscribe.bind(store);
+  store.subscribe = (fn) => {
+    listenerCount += 1;
+    const unsub = originalSubscribe(fn);
+    return () => {
+      listenerCount -= 1;
+      unsub();
+    };
+  };
+
+  const readable = fromStore(store);
+  const unsubscribe = readable.subscribe(() => {});
+
+  expect(listenerCount).toBe(1);
+  unsubscribe();
+  expect(listenerCount).toBe(0);
+});
+```
+
+Svelte 5 runes의 경우, runes는 Svelte 컴파일러가 활성화된 상태에서만 동작하므로 최소 `.svelte` 테스트 컴포넌트와 `@testing-library/svelte`를 함께 사용하세요.

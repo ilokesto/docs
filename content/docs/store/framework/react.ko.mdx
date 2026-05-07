@@ -1,0 +1,204 @@
+---
+title: React
+description: useSyncExternalStore를 사용해 @ilokesto/store를 React에 연결하는 방법.
+---
+
+# React
+
+React는 외부 상태를 구독하는 공식 방법으로 `useSyncExternalStore`를 제공합니다. 이 훅은 동시 렌더링, tearing 방지, SSR을 한 번에 처리합니다. React에서 `@ilokesto/store`를 연결하는 모든 어댑터는 이 위에 구축해야 합니다.
+
+## 어댑터
+
+최소 어댑터는 현재 스냅샷을 읽고, 변경을 구독하고, tearing이 없는 값을 반환합니다.
+
+```ts lineNumbers
+import { useSyncExternalStore } from "react";
+import { Store } from "@ilokesto/store";
+
+export function useStore<T>(store: Store<T>): T {
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getState,
+    store.getState,
+  );
+}
+```
+
+`store.subscribe`를 직접 전달하세요. `useSyncExternalStore`는 listener를 전달하고 반환된 unsubscribe 함수를 돌려받는데, 이는 `subscribe` 시그니처와 정확히 일치합니다.
+
+세 번째 인자는 서버 스냅샷입니다. 서버에서는 한 번만 읽히고, 클라이언트에서는 초기 hydration 검사를 초기화합니다. 두 쪽 모두 `store.getState`를 사용하면 클라이언트와 서버 스냅샷이 항상 같은 참조를 가집니다. 양쪽에서 같은 값으로 스토어를 초기화할 때 적합한 방식입니다.
+
+## 셀렉터 패턴
+
+작은 스토어에서는 전체 상태 객체를 읽어도 충분합니다. 더 큰 스토어에서는 셀렉터 훅을 사용하면 관련 없는 필드가 바뀔 때 불필요한 리렌더를 줄일 수 있습니다.
+
+```ts lineNumbers
+import { useSyncExternalStore } from "react";
+import { Store } from "@ilokesto/store";
+
+export function useSelector<T, U>(
+  store: Store<T>,
+  selector: (state: T) => U,
+): U {
+  return useSyncExternalStore(
+    store.subscribe,
+    () => selector(store.getState()),
+    () => selector(store.getState()),
+  );
+}
+```
+
+`useSyncExternalStore`는 렌더링 사이에 반환값을 `Object.is`로 비교합니다. 선택된 슬라이스가 변경되지 않았다면 컴포넌트는 다시 렌더링되지 않습니다.
+
+```ts lineNumbers
+// count 필드가 변경될 때만 리렌더됩니다.
+const count = useSelector(counterStore, (s) => s.count);
+```
+
+셀렉터가 매번 새 객체를 반환하면 `useRef`로 메모이제이션하거나, 모듈 수준의 함수처럼 안정적인 참조를 사용하세요:
+
+```ts lineNumbers
+// 안정적인 참조 — 추가 메모이제이션 불필요.
+const selectCount = (s: CounterState) => s.count;
+
+function Counter() {
+  const count = useSelector(counterStore, selectCount);
+  return <span>{count}</span>;
+}
+```
+
+## 여러 스토어
+
+컴포넌트가 여러 스토어의 상태가 필요하다면 `useSelector` 호출을 여러 번 조합하세요. 외부 스토어 구독 개수에는 제한이 없습니다.
+
+```ts lineNumbers
+function Header() {
+  const user = useSelector(authStore, (s) => s.user);
+  const theme = useStore(themeStore);
+
+  return (
+    <header data-theme={theme}>
+      {user ? <span>{user.name}</span> : <span>로그인</span>}
+    </header>
+  );
+}
+```
+
+각 구독은 독립적입니다. `themeStore`가 변경되어도 `authStore`의 셀렉터는 다시 실행되지 않습니다.
+
+## SSR과 hydration
+
+서버에서 렌더링할 때 `useSyncExternalStore`는 `getState` 대신 서버 스냅샷 getter를 호출합니다. 렌더링 전에 서버 측 데이터로 스토어를 초기화하면 양쪽의 스냅샷이 일치합니다.
+
+```ts lineNumbers
+// server.ts
+import { counterStore } from "./stores/counter";
+
+export async function renderApp(req: Request): Promise<string> {
+  const serverCount = await fetchCountFromDb(req);
+  counterStore.setState({ count: serverCount });
+
+  return renderToString(<App />);
+}
+```
+
+클라이언트에서는 마운트 전에 같은 초기값으로 hydrate하세요:
+
+```ts lineNumbers
+// client.ts
+import { counterStore } from "./stores/counter";
+
+const serverData = (window as any).__INITIAL_STATE__;
+
+if (serverData) {
+  counterStore.setState(serverData.counter);
+}
+
+hydrateRoot(document.getElementById("root")!, <App />);
+```
+
+`useSyncExternalStore`에 전달된 클라이언트 스냅샷이 서버 스냅샷과 다르면 React가 hydration 불일치 경고를 출력합니다. 양쪽을 일관되게 유지하세요.
+
+## TypeScript
+
+타입 안전한 셀렉터는 제네릭 시그니처에서 자연스럽게 따라옵니다. 반환 타입은 셀렉터에서 자동으로 추론됩니다.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
+};
+
+export const authStore = new Store<AuthState>({
+  user: null,
+  status: "anonymous",
+});
+
+// 반환 타입은 { id: string; name: string } | null — 자동으로 추론됩니다.
+const user = useSelector(authStore, (s) => s.user);
+```
+
+컴포넌트 코드에서 스토어 참조를 숨기고 싶다면 타입이 지정된 전용 헬퍼로 감싸세요:
+
+```ts lineNumbers
+export function useAuthUser() {
+  return useSelector(authStore, (s) => s.user);
+}
+
+export function useAuthStatus() {
+  return useSelector(authStore, (s) => s.status);
+}
+```
+
+## 테스트
+
+`@testing-library/react`의 `renderHook`을 사용해 훅을 독립적으로 테스트하세요. 공유 상태를 피하기 위해 테스트마다 새 스토어를 생성하세요.
+
+```ts lineNumbers
+import { renderHook, act } from "@testing-library/react";
+import { expect, test } from "vitest";
+import { Store } from "@ilokesto/store";
+import { useStore } from "./useStore";
+
+test("초기 상태를 반환한다", () => {
+  const store = new Store({ count: 0 });
+
+  const { result } = renderHook(() => useStore(store));
+
+  expect(result.current.count).toBe(0);
+});
+
+test("상태가 변경되면 리렌더된다", () => {
+  const store = new Store({ count: 0 });
+
+  const { result } = renderHook(() => useStore(store));
+
+  act(() => {
+    store.setState({ count: 5 });
+  });
+
+  expect(result.current.count).toBe(5);
+});
+
+test("셀렉터는 선택된 슬라이스로 리렌더를 제한한다", () => {
+  const store = new Store({ count: 0, label: "counter" });
+  let renderCount = 0;
+
+  const { result } = renderHook(() => {
+    renderCount += 1;
+    return useSelector(store, (s) => s.label);
+  });
+
+  act(() => {
+    // count는 변경되지만 label은 변경되지 않습니다.
+    store.setState((prev) => ({ ...prev, count: 1 }));
+  });
+
+  expect(result.current).toBe("counter");
+  expect(renderCount).toBe(1); // 추가 렌더가 발생하지 않습니다.
+});
+```
+
+`act`로 상태 변경을 감싸면 React가 effects와 리렌더 배치를 assertion 전에 처리합니다.

@@ -1,0 +1,267 @@
+---
+title: Svelte
+description: Connecting @ilokesto/store to Svelte 4 and Svelte 5 runes.
+---
+
+# Svelte
+
+Svelte provides two distinct reactivity models: the store contract in Svelte 4, and runes in Svelte 5. Both integrate cleanly with `@ilokesto/store` because the adapter pattern maps directly to Svelte's subscription and lifecycle primitives.
+
+## Adapter — Svelte 4
+
+Svelte 4's `readable` function creates a store that wraps any push-based data source. Pass `@ilokesto/store` as the source and Svelte's cleanup mechanism handles unsubscription.
+
+```ts lineNumbers
+import { readable, derived } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+export function fromStore<T>(store: Store<T>) {
+  return readable(store.getState(), (set) => {
+    set(store.getState());
+
+    const unsubscribe = store.subscribe(() => {
+      set(store.getState());
+    });
+
+    return unsubscribe;
+  });
+}
+```
+
+The function passed to `readable` receives a `set` callback. It is called once to seed the initial value, then again on each store notification. Returning `unsubscribe` from the setup function tells Svelte to call it when the last subscriber unsubscribes — matching the cleanup discipline required by all adapters.
+
+Use the result with Svelte's `$` prefix to auto-subscribe in components:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { fromStore } from "./lib/fromStore";
+  import { counterStore } from "./stores/counter";
+
+  const counter = fromStore(counterStore);
+</script>
+
+<span>{$counter.count}</span>
+<button on:click={() => counterStore.setState((s) => ({ count: s.count + 1 }))}>
+  Increment
+</button>
+```
+
+Svelte automatically calls the unsubscribe when the component is destroyed.
+
+## Selector pattern — Svelte 4
+
+Use `derived` to project a slice from the readable. Derived stores update only when the upstream changes and the derived value is different.
+
+```ts lineNumbers
+import { derived } from "svelte/store";
+import { fromStore } from "./lib/fromStore";
+import { counterStore } from "./stores/counter";
+
+const counter = fromStore(counterStore);
+
+// Only notifies subscribers when `count` changes.
+export const count = derived(counter, ($c) => $c.count);
+```
+
+```svelte lineNumbers
+<script lang="ts">
+  import { count } from "./stores/derivedCounter";
+</script>
+
+<span>{$count}</span>
+```
+
+## Adapter — Svelte 5 runes
+
+Svelte 5 replaces the store contract with runes. Use `$state` and `$effect` to wire the adapter with rune-native reactivity.
+
+```ts lineNumbers
+// counterAdapter.svelte.ts
+import { Store } from "@ilokesto/store";
+import { counterStore } from "./counter";
+
+export function createCounterAdapter(store: Store<{ count: number }>) {
+  let state = $state(store.getState());
+
+  $effect(() => {
+    state = store.getState();
+
+    const unsubscribe = store.subscribe(() => {
+      state = store.getState();
+    });
+
+    return unsubscribe;
+  });
+
+  return {
+    get count() {
+      return state.count;
+    },
+  };
+}
+```
+
+Note the `.svelte.ts` extension — Svelte 5 runes (`$state`, `$effect`) are only available in `.svelte` or `.svelte.ts` files. Putting adapter logic in plain `.ts` files will cause a compile error.
+
+Use the adapter in a component:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { createCounterAdapter } from "./counterAdapter.svelte";
+  import { counterStore } from "./stores/counter";
+
+  const counter = createCounterAdapter(counterStore);
+</script>
+
+<span>{counter.count}</span>
+<button onclick={() => counterStore.setState((s) => ({ count: s.count + 1 }))}>
+  Increment
+</button>
+```
+
+## Multiple stores
+
+### Svelte 4
+
+Compose multiple readable wrappers and combine with `derived` when cross-store derivations are needed:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { fromStore } from "./lib/fromStore";
+  import { authStore } from "./stores/auth";
+  import { themeStore } from "./stores/theme";
+
+  const auth = fromStore(authStore);
+  const theme = fromStore(themeStore);
+</script>
+
+<header data-theme={$theme}>
+  {#if $auth.user}
+    <span>{$auth.user.name}</span>
+  {:else}
+    <span>Sign in</span>
+  {/if}
+</header>
+```
+
+### Svelte 5
+
+Create a separate adapter per store and compose them in the component:
+
+```svelte lineNumbers
+<script lang="ts">
+  import { createAuthAdapter } from "./authAdapter.svelte";
+  import { createThemeAdapter } from "./themeAdapter.svelte";
+  import { authStore } from "./stores/auth";
+  import { themeStore } from "./stores/theme";
+
+  const auth = createAuthAdapter(authStore);
+  const theme = createThemeAdapter(themeStore);
+</script>
+
+<header data-theme={theme.value}>
+  {#if auth.user}
+    <span>{auth.user.name}</span>
+  {:else}
+    <span>Sign in</span>
+  {/if}
+</header>
+```
+
+## TypeScript
+
+The generic parameter threads through both the readable wrapper and the derived selector.
+
+```ts lineNumbers
+import { readable, derived, Readable } from "svelte/store";
+import { Store } from "@ilokesto/store";
+
+export function fromStore<T>(store: Store<T>): Readable<T> {
+  return readable(store.getState(), (set) => {
+    set(store.getState());
+    const unsubscribe = store.subscribe(() => set(store.getState()));
+    return unsubscribe;
+  });
+}
+
+export function fromSelector<T, U>(
+  store: Store<T>,
+  selector: (state: T) => U,
+): Readable<U> {
+  return derived(fromStore(store), selector);
+}
+```
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
+};
+
+export const authStore = new Store<AuthState>({
+  user: null,
+  status: "anonymous",
+});
+
+// Readable<{ id: string; name: string } | null>
+export const user = fromSelector(authStore, (s) => s.user);
+```
+
+## Testing
+
+Test Svelte 4 adapters by subscribing to the returned readable directly — no component mount needed.
+
+```ts lineNumbers
+import { get } from "svelte/store";
+import { expect, test } from "vitest";
+import { Store } from "@ilokesto/store";
+import { fromStore } from "./lib/fromStore";
+
+test("mirrors initial store state", () => {
+  const store = new Store({ count: 0 });
+  const readable = fromStore(store);
+
+  expect(get(readable).count).toBe(0);
+});
+
+test("updates when store changes", () => {
+  const store = new Store({ count: 0 });
+  const readable = fromStore(store);
+
+  const values: number[] = [];
+  const unsubscribe = readable.subscribe((s) => values.push(s.count));
+
+  store.setState({ count: 5 });
+  store.setState({ count: 10 });
+
+  unsubscribe();
+
+  expect(values).toEqual([0, 5, 10]);
+});
+
+test("cleans up when all subscribers leave", () => {
+  const store = new Store({ count: 0 });
+  let listenerCount = 0;
+
+  const originalSubscribe = store.subscribe.bind(store);
+  store.subscribe = (fn) => {
+    listenerCount += 1;
+    const unsub = originalSubscribe(fn);
+    return () => {
+      listenerCount -= 1;
+      unsub();
+    };
+  };
+
+  const readable = fromStore(store);
+  const unsubscribe = readable.subscribe(() => {});
+
+  expect(listenerCount).toBe(1);
+  unsubscribe();
+  expect(listenerCount).toBe(0);
+});
+```
+
+For Svelte 5 runes, use `@testing-library/svelte` with a minimal `.svelte` test component, as runes require the Svelte compiler to be active during tests.

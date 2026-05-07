@@ -1,0 +1,246 @@
+---
+title: Angular
+description: Connecting @ilokesto/store to Angular with signals and DestroyRef.
+---
+
+# Angular
+
+Angular 16 introduced signals as a first-class reactive primitive. Combined with `DestroyRef`, signals give a clean, injection-friendly way to bridge `@ilokesto/store` into Angular's change detection model without `zone.js` dependencies.
+
+## Adapter
+
+Wrap the store in an Angular service. The service reads the initial state into a `signal`, subscribes to the store, and uses `DestroyRef` to clean up automatically when the injector is destroyed.
+
+```ts lineNumbers
+import { Injectable, signal, DestroyRef, inject } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { counterStore } from "./counter.store";
+
+@Injectable({ providedIn: "root" })
+export class CounterService {
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly state = signal(counterStore.getState());
+
+  constructor() {
+    const unsubscribe = counterStore.subscribe(() => {
+      this.state.set(counterStore.getState());
+    });
+
+    this.destroyRef.onDestroy(unsubscribe);
+  }
+
+  increment() {
+    counterStore.setState((prev) => ({ count: prev.count + 1 }));
+  }
+
+  decrement() {
+    counterStore.setState((prev) => ({ count: prev.count - 1 }));
+  }
+}
+```
+
+`DestroyRef.onDestroy` registers the cleanup callback without needing to implement `OnDestroy` in the class. The callback runs when the injector that provided the service is destroyed — for root-level services, that is when the application tears down.
+
+For component-level services (`providedIn: undefined` with `providers` on the component), `DestroyRef` is scoped to the component's injector, so the store listener is removed when the component is destroyed.
+
+## Selector pattern
+
+Use `computed` to derive reactive slices from the signal. Angular's signal graph tracks dependencies automatically.
+
+```ts lineNumbers
+import { Injectable, signal, computed, DestroyRef, inject } from "@angular/core";
+import { Store } from "@ilokesto/store";
+import { authStore } from "./auth.store";
+import type { AuthState } from "./auth.store";
+
+@Injectable({ providedIn: "root" })
+export class AuthService {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly _state = signal(authStore.getState());
+
+  readonly user = computed(() => this._state().user);
+  readonly status = computed(() => this._state().status);
+  readonly isSignedIn = computed(() => this._state().status === "signed-in");
+
+  constructor() {
+    const unsubscribe = authStore.subscribe(() => {
+      this._state.set(authStore.getState());
+    });
+
+    this.destroyRef.onDestroy(unsubscribe);
+  }
+
+  signIn(user: AuthState["user"]) {
+    authStore.setState({ user, status: "signed-in" });
+  }
+
+  signOut() {
+    authStore.setState({ user: null, status: "anonymous" });
+  }
+}
+```
+
+Template usage:
+
+```html lineNumbers
+<!-- auth-status.component.html -->
+@if (authService.isSignedIn()) {
+  <span>{{ authService.user()?.name }}</span>
+} @else {
+  <span>Sign in</span>
+}
+```
+
+`computed` signals are lazy and cached. Angular re-evaluates them only when the underlying `_state` signal changes and the component reads the computed value.
+
+## Multiple stores
+
+Inject multiple services into a component. Angular's dependency injection keeps each service lifecycle independent.
+
+```ts lineNumbers
+import { Component, inject } from "@angular/core";
+import { AuthService } from "./auth.service";
+import { ThemeService } from "./theme.service";
+
+@Component({
+  selector: "app-header",
+  template: `
+    <header [attr.data-theme]="themeService.theme()">
+      @if (authService.isSignedIn()) {
+        <span>{{ authService.user()?.name }}</span>
+      } @else {
+        <span>Sign in</span>
+      }
+    </header>
+  `,
+})
+export class HeaderComponent {
+  readonly authService = inject(AuthService);
+  readonly themeService = inject(ThemeService);
+}
+```
+
+## SSR with Angular Universal
+
+When using Angular Universal for server-side rendering, store state must be initialised before the render and transferred to the client.
+
+Use `isPlatformBrowser` to guard browser-only APIs, and Angular's `TransferState` to transfer the initial snapshot.
+
+```ts lineNumbers
+import {
+  Injectable,
+  signal,
+  computed,
+  DestroyRef,
+  inject,
+  PLATFORM_ID,
+} from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { TransferState, makeStateKey } from "@angular/platform-browser";
+import { Store } from "@ilokesto/store";
+import { counterStore } from "./counter.store";
+
+const COUNTER_STATE_KEY = makeStateKey<{ count: number }>("counterState");
+
+@Injectable({ providedIn: "root" })
+export class CounterService {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly transferState = inject(TransferState);
+
+  readonly state = signal(this.getInitialState());
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      const unsubscribe = counterStore.subscribe(() => {
+        this.state.set(counterStore.getState());
+      });
+      this.destroyRef.onDestroy(unsubscribe);
+    }
+  }
+
+  private getInitialState() {
+    if (isPlatformBrowser(this.platformId)) {
+      const transferred = this.transferState.get(COUNTER_STATE_KEY, null);
+      if (transferred) {
+        counterStore.setState(transferred);
+        this.transferState.remove(COUNTER_STATE_KEY);
+      }
+    } else {
+      // Server: save current state for transfer.
+      this.transferState.set(COUNTER_STATE_KEY, counterStore.getState());
+    }
+    return counterStore.getState();
+  }
+}
+```
+
+## TypeScript
+
+Services are naturally typed. The signal type is inferred from `store.getState()`, and `computed` derives its type from the signal expression.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
+};
+
+export const authStore = new Store<AuthState>({
+  user: null,
+  status: "anonymous",
+});
+```
+
+```ts lineNumbers
+// Signal<AuthState> — inferred from store.getState().
+readonly _state = signal(authStore.getState());
+
+// Signal<{ id: string; name: string } | null> — inferred from computed expression.
+readonly user = computed(() => this._state().user);
+```
+
+## Testing
+
+Use `TestBed` to configure the service with a fresh store. Override the store value before instantiation or drive it through the service's methods.
+
+```ts lineNumbers
+import { TestBed } from "@angular/core/testing";
+import { expect, test } from "vitest";
+import { Store } from "@ilokesto/store";
+import { CounterService } from "./counter.service";
+
+test("exposes initial store state", () => {
+  TestBed.configureTestingModule({});
+  const service = TestBed.inject(CounterService);
+
+  expect(service.state().count).toBe(0);
+});
+
+test("state signal updates when store changes", () => {
+  TestBed.configureTestingModule({});
+  const service = TestBed.inject(CounterService);
+
+  service.increment();
+
+  TestBed.flushEffects();
+
+  expect(service.state().count).toBe(1);
+});
+
+test("cleans up subscription when injector is destroyed", () => {
+  const env = TestBed.configureTestingModule({});
+  const service = TestBed.inject(CounterService);
+
+  TestBed.resetTestingModule();
+
+  // After injector destruction, further store changes should not throw.
+  counterStore.setState({ count: 99 });
+
+  expect(service.state().count).toBe(0);
+});
+```
+
+`TestBed.flushEffects()` is available in Angular 18+. In earlier versions, call `TestBed.tick()` or use `fakeAsync` with `flushMicrotasks`.

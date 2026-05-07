@@ -1,0 +1,42 @@
+---
+title: 프레임워크 사용법
+description: React, Vue, Svelte, Angular에서 @ilokesto/store를 연결하는 방법.
+---
+
+# 프레임워크 사용법
+
+`@ilokesto/store`는 공식 프레임워크 바인딩을 제공하지 않습니다. 공개 API인
+`getState()`, `setState(next)`, `subscribe(listener)` 세 가지를 각 프레임워크에서
+얇은 어댑터로 감싸서 사용하세요.
+
+## 어댑터 모델
+
+모든 어댑터는 같은 다섯 단계를 따릅니다.
+
+1. `store.getState()`로 현재 스냅샷을 읽습니다.
+2. 프레임워크의 반응형 모델(ref, signal, readable 등)에 스냅샷을 반영합니다.
+3. `store.subscribe(listener)`로 구독합니다.
+4. 알림을 받을 때마다 새 스냅샷을 가져와 반응형 모델에 밀어 넣습니다.
+5. 소유 범위가 끝나면 반환된 unsubscribe 함수를 호출합니다.
+
+바닐라 스토어를 source of truth로 유지하세요. 어댑터는 스냅샷을 프레임워크 모델로
+번역하고 쓰기는 `store.setState`로 다시 돌려보냅니다.
+
+## 주의점
+
+- **스냅샷 일관성** — 구독 콜백 안에서 `getState()`로 읽으세요. listener 인자를 그대로
+  쓰지 마세요. React는 tearing-free 읽기를 위해 반드시 `useSyncExternalStore`를
+  사용해야 합니다.
+- **정리** — 어댑터는 반드시 소유 범위가 끝날 때 unsubscribe를 호출해야 합니다. 정리를
+  빠뜨리면 스토어가 오래된 참조를 붙잡고 listener가 영원히 실행됩니다.
+- **변경 금지** — `Readonly<T>`는 TypeScript 힌트일 뿐입니다. 스토어는 런타임에
+  상태를 동결하거나 깊은 복사를 하지 않습니다. 스냅샷을 불변 값으로 다루세요.
+- **동기 알림** — 스토어는 `setState` 완료 직후 동기적으로 listener에 알립니다.
+  batching, debouncing, render-layer 스케줄링은 없습니다.
+
+## 프레임워크 선택
+
+- [React](./framework/react) — `useSyncExternalStore`, selector 훅, SSR hydration
+- [Vue](./framework/vue) — `shallowRef`, `computed`, `onUnmounted`
+- [Svelte](./framework/svelte) — `readable`, `derived`, Svelte 5 runes
+- [Angular](./framework/angular) — `Injectable` 서비스, `signal`, `DestroyRef`

@@ -1,18 +1,18 @@
 ---
 title: Accessors
-description: writeOnly() and the current caveats of readOnly().
+description: Imperative writeOnly() and synchronous readOnly() helpers.
 ---
 
 # Accessors
 
-Accessors are static methods attached to the hook returned by `create`. Start with `writeOnly()` when action files, listeners, or other imperative code need to update state. Treat `readOnly()` as a narrower React-side convenience for reads that still pass through hook logic.
+Accessors are static methods attached to the adapter returned by `create`. Start with `writeOnly()` when action files, listeners, or other imperative code need to update state. Use `readOnly()` when non-rendering code needs a synchronous snapshot.
 
 ## `writeOnly()`
 
 `writeOnly()` is the canonical imperative writer. It returns the store's `setState` function (or `dispatch` if using a reducer).
 
-- **Outside React**: This is the preferred way to define actions, side effects, or event listeners that live outside of the React component tree.
-- **Inside React**: Use the hook directly when a component should subscribe to state and re-render from selector changes.
+- **Outside framework lifecycles**: This is the preferred way to define actions, side effects, or event listeners.
+- **Inside components**: Use the adapter directly when a component should subscribe to state and re-render from selector changes.
 
 Each `writeOnly()` call returns a bound store writer. The important stability is behavioral, not referential: it always points at the same underlying store.
 
@@ -26,37 +26,29 @@ export const increment = () => {
 };
 ```
 
-This keeps action modules small and direct: import the hook, call `writeOnly()`, then write through the returned function.
+This keeps action modules small and direct: import the adapter, call `writeOnly()`, then write through the returned function.
 
 ## `readOnly()`
 
-`readOnly()` exists as a convenience for reading state through the hook's existing logic, but it comes with a major caveat: **it is not a plain imperative getter.**
-
-At runtime, `readOnly()` reaches through the same React hook path used by normal selector reads. This means:
-
-1. **Must stay inside React**: Use it only where React hook rules and context are available.
-2. **Not for utility files**: Do not call `readOnly()` from plain helper modules or shared business logic.
-3. **Not for workers**: Do not call it from Web Workers, background jobs, or other non-React runtimes.
+`readOnly()` returns the current store snapshot, optionally projected through a selector. It is a synchronous read helper and does not subscribe the caller to future updates.
 
 ```tsx lineNumbers
-function CounterSummary() {
-  const count = useCounter.readOnly((state) => state.count);
-
-  return <span>{count}</span>;
+export function getCurrentCount() {
+  return useCounter.readOnly((state) => state.count);
 }
 ```
 
-If the value affects rendered output, prefer the hook with a selector so React can subscribe and update the component normally.
+If the value affects rendered output, prefer the framework adapter with a selector so the component can subscribe and update normally.
 
 ## When to use the vanilla `Store` instead
 
-If you need a truly safe, imperative read outside of React (e.g., in a WebSocket handler or a deep utility function), you should use the vanilla `Store` API from `@ilokesto/store`.
+If non-framework code already owns the store directly, the vanilla `Store` API from `@ilokesto/store` is still the clearest imperative boundary.
 
 The pattern for this is to create the store separately and pass it to `create()`:
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 // 1. Create the vanilla store
 export const counterStore = new Store({ count: 0 });
@@ -64,7 +56,7 @@ export const counterStore = new Store({ count: 0 });
 // 2. Create the hook from it
 export const useCounter = create(counterStore);
 
-// 3. Now you have a safe, non-hook getter anywhere
+// 3. You can still read through the owned vanilla store directly.
 export const checkCount = () => {
   console.log(counterStore.getState().count);
 };
@@ -89,10 +81,10 @@ export const login = async (credentials) => {
 };
 ```
 
-Keep this pattern focused on writes. If an action file also needs to inspect current state outside React, define the vanilla `Store` separately and read through `store.getState()`.
+Keep this pattern focused on writes. If an action file also needs to inspect current state, use `readOnly()` for a quick snapshot or define the vanilla `Store` separately and read through `store.getState()` when ownership should stay outside the adapter.
 
 ## Common mistakes
 
-1. **Using `readOnly()` in utility files**: This will likely cause a "Hooks can only be called inside the body of a function component" error because it relies on the internal hook state.
-2. **Ignoring the hook-tuple symmetry**: Forgetting that `useStore(selector)` returns a tuple while `writeOnly()` returns just the writer function.
-3. **Overusing `readOnly()` inside components**: If you need the value for rendering, use the hook directly with a selector. `readOnly()` is for cases where you only need the value during an event or effect.
+1. **Expecting `readOnly()` to subscribe**: It returns a snapshot. It does not update a component when the store changes.
+2. **Ignoring adapter return shapes**: React returns a tuple, Vue/Solid/Angular return objects, and Svelte returns store-like objects.
+3. **Overusing `readOnly()` inside components**: If you need the value for rendering, use the adapter directly with a selector.

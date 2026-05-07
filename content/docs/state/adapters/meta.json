@@ -1,0 +1,6 @@
+{
+  "title": "Framework Adapters",
+  "defaultOpen": true,
+  "collapsible": false,
+  "pages": ["react", "vue", "angular", "svelte", "solid"]
+}

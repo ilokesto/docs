@@ -1,0 +1,28 @@
+---
+title: Framework Adapters
+description: Import paths and return shapes for each @ilokesto/state framework adapter.
+---
+
+# Framework Adapters
+
+`@ilokesto/state` is a multi-framework package. The package root is not the adapter API; each framework imports from its own subpath.
+
+| Framework | Import path | Return shape |
+|---|---|---|
+| React | `@ilokesto/state/react` | hook tuple: `[selected, setState]` or `[selected, dispatch]` |
+| Vue | `@ilokesto/state/vue` | composable result: `{ state, setState }` or `{ state, dispatch }` |
+| Angular | `@ilokesto/state/angular` | signal result: `{ state, setState, subscribe }` or `{ state, dispatch, subscribe }` |
+| Svelte | `@ilokesto/state/svelte` | Svelte store object with `setState`/`dispatch` and `select()` |
+| Solid | `@ilokesto/state/solid` | accessor result: `{ state, setState }` or `{ state, dispatch }` |
+
+All adapters share the same underlying store contract: create a store from plain state, an existing `Store`, or a reducer pair. What changes is how the selected state is exposed to each framework.
+
+## Choose your adapter
+
+- [React](./react) — `useSyncExternalStore` hook tuple.
+- [Vue](./vue) — `ComputedRef` composable scoped to `setup()` or `effectScope()`.
+- [Angular](./angular) — Angular `Signal` scoped by injection context or `DestroyRef`.
+- [Svelte](./svelte) — Svelte readable/writable store helpers.
+- [Solid](./solid) — Solid accessor scoped to a reactive owner.
+
+Middleware and utilities stay framework-neutral: import them from [`@ilokesto/state/middleware`](../middleware) and [`@ilokesto/state/utils`](../utils).

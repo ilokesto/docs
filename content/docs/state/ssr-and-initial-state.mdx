@@ -72,7 +72,7 @@ It is not safe as a default server pattern because the module can be shared acro
 Prefer a factory that creates a new store for each request:
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 type ViewerState = {
   viewerId: string | null;
@@ -111,10 +111,12 @@ export default function Page({ viewer }: PageProps) {
 This example avoids inventing a framework adapter.
 It only shows the important boundary: request data becomes an initial object, and that object is passed into `create()` through a factory.
 
+In React Server Components, do not pass the hook itself from a server component to a client component. Pass plain serializable `initialState` across the boundary, then create the hook inside the client component with a one-time initializer.
+
 The wrong shape is a server singleton that is reused for every request:
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export const useViewer = create({
   viewerId: null,
@@ -159,7 +161,7 @@ useViewer.setState({
 
 The second example may reach the right live state, but it does not start from the same snapshot.
 The first render can show anonymous light mode markup while the server produced signed in dark mode markup.
-React sees a different tree before your correction has a chance to settle.
+The client sees a different tree before your correction has a chance to settle.
 
 The same issue can appear when reading browser only data during the initial render.
 For example, a theme stored in `localStorage` is not available during server rendering.
@@ -169,6 +171,35 @@ Pick one source for the first render.
 If the server owns the first answer, serialize that answer and create the client store from it.
 If the browser owns the first answer, render a stable placeholder until the browser value is known.
 Do not mix the two without an explicit rule.
+
+### Common first-render pitfalls
+
+These values often create mismatches because the server and browser cannot answer them the same way during the first render:
+
+- `Date.now()` or `new Date()` used as initial state,
+- `Math.random()` used for IDs or defaults,
+- `window`, `document`, `localStorage`, or media-query reads during initial render,
+- persisted state that replaces request state before hydration,
+- user-specific server data stored in a module-level singleton.
+
+Move those reads behind an explicit boundary. Either pass the value from the server as serialized initial state, or render a stable client-only placeholder and update after mount.
+
+```tsx lineNumbers
+function ClientOnlyTheme() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
+  if (!ready) return <ThemeShell theme="light" />;
+
+  const theme = readThemeFromLocalStorage();
+  return <ThemeShell theme={theme} />;
+}
+```
+
+The placeholder keeps the first client render aligned with the server. The browser-only value appears only after React is in control.
 
 ## Bootstrap pattern
 
@@ -198,7 +229,8 @@ export default async function AccountPage() {
 // app/account/account-client.tsx
 'use client';
 
-import { create } from '@ilokesto/state';
+import { useState } from 'react';
+import { createAccountStore } from './account-store';
 
 type AccountState = {
   viewerId: string | null;
@@ -210,7 +242,7 @@ type AccountClientProps = {
 };
 
 export function AccountClient({ initialState }: AccountClientProps) {
-  const useAccount = create(initialState);
+  const [useAccount] = useState(() => createAccountStore(initialState));
 
   return <AccountView useAccount={useAccount} />;
 }
@@ -219,11 +251,12 @@ export function AccountClient({ initialState }: AccountClientProps) {
 The example uses normal component props as the bootstrap channel.
 It does not require a package specific provider or hidden global.
 The key is that `initialState` is a plain object that can cross the server to client boundary safely.
+The client component creates the hook once, so re-renders do not reset the store.
 
 For larger apps, keep the factory separate from the framework file:
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export type AccountState = {
   viewerId: string | null;

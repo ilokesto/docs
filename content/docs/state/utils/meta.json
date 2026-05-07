@@ -1,0 +1,6 @@
+{
+  "title": "Utilities",
+  "defaultOpen": true,
+  "collapsible": false,
+  "pages": ["pipe", "adaptor"]
+}

@@ -1,17 +1,17 @@
 ---
 title: 기존 스토어 사용
-description: 이미 존재하는 @ilokesto/store를 React hook 계층에 연결합니다.
+description: 이미 존재하는 @ilokesto/store를 framework adapter에 연결합니다.
 ---
 
 # 기존 스토어 사용
 
 ## 소유한 스토어 연결
 
-`@ilokesto/state`는 React hook이 항상 스토어를 만들도록 강제하지 않습니다. 앱에 이미 vanilla `Store` 인스턴스가 있다면, 그 인스턴스를 `create`에 전달해 React가 같은 source of truth를 구독하게 만들 수 있습니다.
+`@ilokesto/state`는 adapter가 항상 스토어를 만들도록 강제하지 않습니다. 앱에 이미 vanilla `Store` 인스턴스가 있다면, 그 인스턴스를 framework `create` 함수에 전달해 UI 계층이 같은 source of truth를 구독하게 만들 수 있습니다.
 
-이 패턴은 경계를 분명하게 유지합니다. vanilla store는 상태, 미들웨어, 명령형 읽기를 소유합니다. `create(store)`가 반환하는 hook은 `create(initialState)`에서 얻는 것과 같은 selector와 writer 모양을 React 컴포넌트에 제공합니다.
+이 패턴은 경계를 분명하게 유지합니다. vanilla store는 상태, 미들웨어, 명령형 읽기를 소유합니다. `create(store)`가 반환하는 adapter는 `create(initialState)`에서 얻는 것과 같은 selector와 writer 모양을 framework subscriber에 제공합니다.
 
-React가 시작되기 전에 스토어가 이미 존재하거나, React 밖의 코드가 모든 읽기와 쓰기를 hook으로 우회하지 않고 컴포넌트와 상태를 공유해야 할 때 이 패턴이 맞습니다.
+UI 계층이 시작되기 전에 스토어가 이미 존재하거나, framework lifecycle 밖의 코드가 모든 읽기와 쓰기를 adapter로 우회하지 않고 컴포넌트와 상태를 공유해야 할 때 이 패턴이 맞습니다.
 
 ## 기본 모양
 
@@ -19,12 +19,12 @@ React가 시작되기 전에 스토어가 이미 존재하거나, React 밖의 �
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 // 1. vanilla store 생성
 const myStore = new Store({ count: 0 });
 
-// 2. React hook 계층 연결
+// 2. React adapter 연결
 const useCounter = create(myStore);
 ```
 
@@ -42,7 +42,7 @@ function CounterButton() {
 }
 ```
 
-React 밖의 코드는 계속 vanilla store를 직접 사용할 수 있습니다.
+framework 밖의 코드는 계속 vanilla store를 직접 사용할 수 있습니다.
 
 ```ts lineNumbers
 export function resetCounter() {
@@ -58,20 +58,20 @@ hook과 vanilla store는 이제 같은 상태 컨테이너를 가리킵니다. �
 
 ## 이 패턴을 사용할 때
 
-React component tree 밖에 스토어의 실제 소유자가 있을 때 `create(store)`를 선택하세요.
+framework component tree 밖에 스토어의 실제 소유자가 있을 때 `create(store)`를 선택하세요.
 
 대표적인 경우는 다음과 같습니다.
 
-1. **vanilla store가 이미 존재할 때**: 패키지, 서비스 모듈, 앱 bootstrap 파일이 React 렌더링 전에 `new Store(...)`를 만듭니다.
-2. **React와 non React 코드가 상태를 공유할 때**: 컴포넌트, 이벤트 리스너, WebSocket handler, command palette, 테스트, worker가 하나의 상태 값을 함께 써야 합니다.
-3. **React 전에 미들웨어를 구성할 때**: 컴포넌트가 구독하기 전에 store에 logging, persistence, validation, debounce를 붙여야 합니다.
-4. **소유권과 표현을 분리할 때**: domain module이 상태 contract를 소유하고, React는 표시와 업데이트만 담당합니다.
+1. **vanilla store가 이미 존재할 때**: 패키지, 서비스 모듈, 앱 bootstrap 파일이 framework adapter가 구독하기 전에 `new Store(...)`를 만듭니다.
+2. **UI와 non-framework 코드가 상태를 공유할 때**: 컴포넌트, 이벤트 리스너, WebSocket handler, command palette, 테스트, worker가 하나의 상태 값을 함께 써야 합니다.
+3. **adapter 구독 전에 미들웨어를 구성할 때**: 컴포넌트가 구독하기 전에 store에 logging, persistence, validation, debounce를 붙여야 합니다.
+4. **소유권과 표현을 분리할 때**: domain module이 상태 contract를 소유하고, UI 계층은 표시와 업데이트만 담당합니다.
 
 `create` 전에 미들웨어를 적용하는 구체적인 구성은 다음처럼 쓸 수 있습니다.
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 import { logger, persist } from '@ilokesto/state/middleware';
 
 const baseStore = new Store({ count: 0 });
@@ -83,9 +83,9 @@ export const useCounter = create(counterStore);
 export { counterStore };
 ```
 
-이 구조에서는 React가 어떤 미들웨어가 있는지 결정하지 않습니다. React는 이미 구성된 store만 받습니다. 같은 store를 actions, tests, 다른 runtime layer에서 import할 때 유용합니다.
+이 구조에서는 framework adapter가 어떤 미들웨어가 있는지 결정하지 않습니다. adapter는 이미 구성된 store만 받습니다. 같은 store를 actions, tests, 다른 runtime layer에서 import할 때 유용합니다.
 
-작은 component local store에는 이 패턴이 필요하지 않습니다. React만 소비자이고 별도 store 소유자가 없다면 `create({ count: 0 })`가 더 단순합니다.
+작은 component local store에는 이 패턴이 필요하지 않습니다. framework component만 소비자이고 별도 store 소유자가 없다면 `create({ count: 0 })`가 더 단순합니다.
 
 ## 바뀌지 않는 것
 
@@ -93,13 +93,13 @@ export { counterStore };
 
 다음 동작은 그대로 유지됩니다.
 
-1. **기존 상태가 유지됩니다**: React가 연결될 때 현재 store 값이 그대로 현재 값입니다.
+1. **기존 상태가 유지됩니다**: adapter가 연결될 때 현재 store 값이 그대로 현재 값입니다.
 2. **기존 미들웨어가 계속 실행됩니다**: `create(store)` 전에 붙인 미들웨어는 update path에 남아 있습니다.
-3. **subscriber가 update를 공유합니다**: React subscriber와 vanilla store subscriber는 같은 commit을 관찰합니다.
-4. **hook tuple이 바뀌지 않습니다**: 컴포넌트는 계속 `[selectedValue, writer]`를 받습니다.
+3. **subscriber가 update를 공유합니다**: framework subscriber와 vanilla store subscriber는 같은 commit을 관찰합니다.
+4. **adapter 모양이 바뀌지 않습니다**: 컴포넌트는 각 framework에 맞는 selected value와 writer 모양을 계속 받습니다.
 5. **SSR은 여전히 initial snapshot을 읽습니다**: server snapshot path는 계속 `store.getInitialState()`에 의존합니다.
 
-차이는 소유권입니다. `create(initialState)`에서는 state package가 store를 만들어 줍니다. `create(store)`에서는 이미 소유된 store를 제공하고 React hook 계층이 거기에 연결됩니다.
+차이는 소유권입니다. `create(initialState)`에서는 state package가 store를 만들어 줍니다. `create(store)`에서는 이미 소유된 store를 제공하고 framework adapter가 거기에 연결됩니다.
 
 ## 수명 주기와 소유권
 
@@ -110,7 +110,7 @@ browser 전용 module state라면 singleton store도 괜찮을 수 있습니다.
 ```ts lineNumbers
 // counter-store.ts
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export const counterStore = new Store({ count: 0 });
 export const useCounter = create(counterStore);
@@ -130,7 +130,7 @@ data가 하나의 request, 하나의 test, 하나의 isolated render에 속한�
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export function createSessionState(initialUserId: string | null) {
   const store = new Store({ userId: initialUserId });
@@ -158,10 +158,10 @@ selector는 읽기를 좁힙니다. writer는 여전히 전체 store state를 �
 setCounter((state) => ({ count: state.count + 1 }));
 ```
 
-hook의 static accessor도 같은 동작을 유지합니다.
+adapter의 static accessor도 같은 동작을 유지합니다.
 
 ```ts lineNumbers
-export function incrementOutsideReact() {
+export function incrementOutsideFramework() {
   const setCounter = useCounter.writeOnly();
   setCounter((state) => ({ count: state.count + 1 }));
 }
@@ -169,7 +169,7 @@ export function incrementOutsideReact() {
 
 `writeOnly()`는 같은 underlying store에 연결된 writer를 반환합니다. vanilla store를 직접 import하지 않아야 하는 action file에 유용합니다.
 
-non React 코드에서 plain read가 필요하다면 이미 소유한 vanilla store API를 선호하세요.
+non-framework 코드에서 plain read가 필요하다면 이미 소유한 vanilla store API를 선호하세요.
 
 ```ts lineNumbers
 export function getCurrentCount() {
@@ -177,15 +177,15 @@ export function getCurrentCount() {
 }
 ```
 
-`readOnly()`는 Accessors에 적힌 hook caveat을 그대로 따릅니다. 기존 store를 연결한다고 해서 `readOnly()`가 general purpose imperative getter로 바뀌지는 않습니다.
+`readOnly()`는 Accessors에 적힌 adapter caveat을 그대로 따릅니다. 기존 store를 연결한다고 해서 `readOnly()`가 general purpose imperative getter로 바뀌지는 않습니다.
 
 ## 흔한 함정
 
 1. **컴포넌트 안에서 store를 만드는 경우**: render 중 새 store가 만들어져 하나의 소유된 instance를 공유한다는 목적이 사라집니다. store는 module, factory, bootstrap layer에서 만드세요.
 2. **request data에 server singleton을 쓰는 경우**: 공유 module state는 한 request의 data를 다른 request로 누출할 수 있습니다. request scoped state에는 per request factory를 사용하세요.
-3. **미들웨어 순서를 잊는 경우**: `create(store)` 전에 붙인 미들웨어가 React가 관찰하는 값을 결정합니다. hook을 export하기 전에 순서를 정하세요.
+3. **미들웨어 순서를 잊는 경우**: `create(store)` 전에 붙인 미들웨어가 framework subscriber가 관찰하는 값을 결정합니다. adapter를 export하기 전에 순서를 정하세요.
 4. **`create(store)`가 state를 reset한다고 기대하는 경우**: 이 호출은 현재 store에 연결합니다. store를 다시 만들거나 reset하지 않습니다.
 5. **소유권 경계를 섞는 경우**: action이 어떤 때는 vanilla store로 쓰고 어떤 때는 `writeOnly()`로 쓴다면, 두 경로가 같은 store에 닿는다는 점을 문서화해 debugging을 단순하게 유지하세요.
-6. **manual subscription을 활성 상태로 남기는 경우**: non React 코드가 React hook과 함께 `store.subscribe()`를 호출한다면, 반환된 `unsubscribe` 함수를 보관하고 cleanup 때 호출하세요.
+6. **manual subscription을 활성 상태로 남기는 경우**: non-framework 코드가 framework adapter와 함께 `store.subscribe()`를 호출한다면, 반환된 `unsubscribe` 함수를 보관하고 cleanup 때 호출하세요.
 7. **선택된 읽기와 좁은 쓰기를 혼동하는 경우**: selector는 컴포넌트가 읽는 값을 좁힐 뿐, writer가 받는 값을 좁히지 않습니다.
 8. **initial snapshot을 무시하는 경우**: SSR은 store의 initial state path를 사용합니다. request factory와 hydration data를 맞춰 두세요.

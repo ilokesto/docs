@@ -18,7 +18,7 @@ Install the package using your preferred package manager:
 The smallest useful `@ilokesto/state` store starts from plain initial state.
 
 ```tsx lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 const useCounter = create({ count: 0 });
 ```
@@ -62,7 +62,8 @@ This keeps components small and makes store behavior easier to reuse and test.
 ## What's Next?
 
 - [Core Concepts](./core-concepts): why the store lives outside React.
-- [`create`](./create): call signatures, including reducer mode.
+- [Framework Adapters](./adapters): import paths for React, Vue, Angular, Svelte, and Solid.
+- [`create`](./create): shared call signatures, including reducer mode.
 - [Selectors](./selectors): subscriptions and memoization behind the tuple.
 - [Accessors](./accessors): actions and reads outside components.
 - [Existing Store](./existing-store): add the hook layer to a vanilla `Store`.

@@ -1,0 +1,38 @@
+---
+title: Vue
+description: computed ref와 lifecycle-scoped composable로 @ilokesto/state/vue를 사용하는 방법.
+---
+
+# Vue
+
+Vue 어댑터 API는 `@ilokesto/state/vue`에서 가져옵니다.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/vue';
+
+type CounterState = { count: number };
+
+const useCounter = create<CounterState>({ count: 0 });
+
+export function useCounterState() {
+  const { state, setState } = useCounter((current) => current.count);
+
+  return {
+    count: state,
+    increment: () => setState((prev) => ({ ...prev, count: prev.count + 1 })),
+  };
+}
+```
+
+## 반환 형태
+
+Vue 어댑터는 composable을 반환합니다. 호출 결과는 다음과 같습니다.
+
+- state mode: `{ state: ComputedRef<S>, setState }`
+- reducer mode: `{ state: ComputedRef<S>, dispatch }`
+
+선택된 값은 `ComputedRef`이므로 template에서 자연스럽게 unwrap됩니다.
+
+## Lifecycle 규칙
+
+반환된 composable은 `setup()` 내부 또는 활성 `effectScope()` 안에서 실행되어야 합니다. Vue lifecycle 밖에서는 동기 읽기에 `readOnly()`, 쓰기에 `writeOnly()`를 사용하세요.

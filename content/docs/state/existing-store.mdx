@@ -1,17 +1,17 @@
 ---
 title: Existing Store
-description: Bind an existing @ilokesto/store instance to the React hook layer.
+description: Bind an existing @ilokesto/store instance to a framework adapter.
 ---
 
 # Existing Store
 
 ## Bind an owned store
 
-`@ilokesto/state` does not require the React hook to create the store. If your app already has a vanilla `Store` instance, pass that instance to `create` and let React subscribe to the same source of truth.
+`@ilokesto/state` does not require the adapter to create the store. If your app already has a vanilla `Store` instance, pass that instance to a framework `create` function and let the UI layer subscribe to the same source of truth.
 
-This pattern keeps the boundary clear. The vanilla store owns state, middleware, and imperative reads. The hook returned by `create(store)` gives React components the same selector and writer shape they get from `create(initialState)`.
+This pattern keeps the boundary clear. The vanilla store owns state, middleware, and imperative reads. The adapter returned by `create(store)` gives framework subscribers the same selector and writer shape they get from `create(initialState)`.
 
-The pattern fits stores that already exist before React starts, and state shared by code outside React without routing every read and write through a hook.
+The pattern fits stores that already exist before the UI layer starts, and state shared by code outside framework lifecycles without routing every read and write through an adapter.
 
 ## The basic shape
 
@@ -19,12 +19,12 @@ The `create` function accepts either an initial state value or an existing `Stor
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 // 1. Create a vanilla store
 const myStore = new Store({ count: 0 });
 
-// 2. Bind it to the React hook layer
+// 2. Bind it to the React adapter
 const useCounter = create(myStore);
 ```
 
@@ -42,7 +42,7 @@ function CounterButton() {
 }
 ```
 
-Non React code can still use the vanilla store directly.
+Non-framework code can still use the vanilla store directly.
 
 ```ts lineNumbers
 export function resetCounter() {
@@ -58,20 +58,20 @@ The hook and the vanilla store now point at the same state container. A write th
 
 ## When to use this pattern
 
-Choose `create(store)` when the store has a real owner outside the React component tree.
+Choose `create(store)` when the store has a real owner outside the framework component tree.
 
 Common cases include:
 
-1. **A vanilla store already exists**: A package, service module, or app bootstrap file creates `new Store(...)` before React renders.
-2. **React and non React code share state**: Components, event listeners, WebSocket handlers, command palettes, tests, or workers need one shared state value.
-3. **Middleware is configured before React**: The store should be logged, persisted, validated, or debounced before any component subscribes to it.
-4. **Ownership is separate from presentation**: A domain module owns the state contract, while React only displays and updates it.
+1. **A vanilla store already exists**: A package, service module, or app bootstrap file creates `new Store(...)` before a framework adapter subscribes.
+2. **UI and non-framework code share state**: Components, event listeners, WebSocket handlers, command palettes, tests, or workers need one shared state value.
+3. **Middleware is configured before adapters subscribe**: The store should be logged, persisted, validated, or debounced before any component subscribes to it.
+4. **Ownership is separate from presentation**: A domain module owns the state contract, while the UI layer only displays and updates it.
 
 A concrete middleware before create setup can look like this:
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 import { logger, persist } from '@ilokesto/state/middleware';
 
 const baseStore = new Store({ count: 0 });
@@ -83,9 +83,9 @@ export const useCounter = create(counterStore);
 export { counterStore };
 ```
 
-In this shape, React never decides which middleware exists. It only receives the already configured store. That is useful when the same configured store is imported by actions, tests, or other runtime layers.
+In this shape, the framework adapter never decides which middleware exists. It only receives the already configured store. That is useful when the same configured store is imported by actions, tests, or other runtime layers.
 
-This pattern is not needed for a small component local store. If React is the only consumer and there is no separate store owner, `create({ count: 0 })` is simpler.
+This pattern is not needed for a small component local store. If the framework component is the only consumer and there is no separate store owner, `create({ count: 0 })` is simpler.
 
 ## What stays the same
 
@@ -93,13 +93,13 @@ Passing an existing `Store` does not create a second copy. `create(store)` uses 
 
 These behaviors stay the same:
 
-1. **Existing state is preserved**: The current store value remains the current value when React binds to it.
+1. **Existing state is preserved**: The current store value remains the current value when an adapter binds to it.
 2. **Existing middleware still runs**: Middleware attached before `create(store)` remains on the update path.
-3. **Subscribers share updates**: React subscribers and vanilla store subscribers observe the same commits.
-4. **The hook tuple is unchanged**: Components still receive `[selectedValue, writer]`.
+3. **Subscribers share updates**: Framework subscribers and vanilla store subscribers observe the same commits.
+4. **The adapter shape is unchanged**: Components still receive the same selected value and writer shape for their framework.
 5. **SSR still reads the initial snapshot**: The server snapshot path still depends on `store.getInitialState()`.
 
-The difference is ownership. With `create(initialState)`, the state package creates the store for you. With `create(store)`, you provide an already owned store and the React hook layer binds to it.
+The difference is ownership. With `create(initialState)`, the state package creates the store for you. With `create(store)`, you provide an already owned store and the framework adapter binds to it.
 
 ## Lifecycle and ownership
 
@@ -110,7 +110,7 @@ For browser only module state, a singleton store can be fine:
 ```ts lineNumbers
 // counter-store.ts
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export const counterStore = new Store({ count: 0 });
 export const useCounter = create(counterStore);
@@ -130,7 +130,7 @@ Prefer a factory when the data belongs to one request, one test, or one isolated
 
 ```ts lineNumbers
 import { Store } from '@ilokesto/store';
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export function createSessionState(initialUserId: string | null) {
   const store = new Store({ userId: initialUserId });
@@ -158,10 +158,10 @@ The selector narrows the read. The writer still updates the full store state.
 setCounter((state) => ({ count: state.count + 1 }));
 ```
 
-The static accessors on the hook also keep the same behavior.
+The static accessors on the adapter also keep the same behavior.
 
 ```ts lineNumbers
-export function incrementOutsideReact() {
+export function incrementOutsideFramework() {
   const setCounter = useCounter.writeOnly();
   setCounter((state) => ({ count: state.count + 1 }));
 }
@@ -169,7 +169,7 @@ export function incrementOutsideReact() {
 
 `writeOnly()` returns the bound writer for the same underlying store. It is useful for action files that should not import the vanilla store directly.
 
-If non React code needs a plain read, prefer the vanilla store API you already own:
+If non-framework code needs a plain read, prefer the vanilla store API you already own:
 
 ```ts lineNumbers
 export function getCurrentCount() {
@@ -177,15 +177,15 @@ export function getCurrentCount() {
 }
 ```
 
-`readOnly()` follows the same hook caveats documented in Accessors. Binding an existing store does not turn `readOnly()` into a general purpose imperative getter.
+`readOnly()` follows the same adapter caveats documented in Accessors. Binding an existing store does not turn `readOnly()` into a general purpose imperative getter.
 
 ## Common pitfalls
 
 1. **Creating the store inside a component**: That creates a new store during render and loses the point of sharing one owned instance. Create the store in a module, factory, or bootstrap layer.
 2. **Using a server singleton for request data**: Shared module state can leak one request's data into another request. Use a per request factory for request scoped state.
-3. **Forgetting middleware order**: Middleware attached before `create(store)` controls what React observes. Decide the order before exporting the hook.
+3. **Forgetting middleware order**: Middleware attached before `create(store)` controls what framework subscribers observe. Decide the order before exporting the adapter.
 4. **Expecting `create(store)` to reset state**: It binds to the current store. It does not rebuild or reset that store.
 5. **Mixing ownership boundaries**: If actions sometimes write through the vanilla store and sometimes through `writeOnly()`, document that both paths hit the same store so debugging stays simple.
-6. **Leaving manual subscriptions active**: If non React code calls `store.subscribe()` alongside the React hook, keep the returned `unsubscribe` function and call it during cleanup.
+6. **Leaving manual subscriptions active**: If non-framework code calls `store.subscribe()` alongside a framework adapter, keep the returned `unsubscribe` function and call it during cleanup.
 7. **Confusing selected reads with narrow writes**: Selectors narrow what a component reads, not what the writer accepts.
 8. **Ignoring the initial snapshot**: SSR uses the store's initial state path. Keep request factories and hydration data aligned.

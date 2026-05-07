@@ -18,7 +18,7 @@ store hook을 만들면 React 컴포넌트가 읽고 갱신할 수 있는 작고
 가장 작은 `@ilokesto/state` 사용 예제는 초기 상태 객체에서 시작합니다.
 
 ```tsx lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 const useCounter = create({ count: 0 });
 ```
@@ -61,9 +61,10 @@ export const increment = () => {
 
 ## 다음 단계는?
 
-- [코어 콘셉](./core-concepts): store가 React 바깥에 있는 이유.
-- [`create`](./create): 리듀서 모드를 포함한 호출 시그니처.
+- [코어 콘셉](./core-concepts): store가 framework 바깥에 있는 이유.
+- [프레임워크 어댑터](./adapters): React, Vue, Angular, Svelte, Solid import path.
+- [`create`](./create): 리듀서 모드를 포함한 공유 호출 시그니처.
 - [셀렉터](./selectors): 튜플 뒤의 구독과 메모이제이션.
 - [접근자](./accessors): 컴포넌트 밖 액션과 읽기.
-- [기존 스토어 사용](./existing-store): vanilla `Store`에 hook 계층 더하기.
+- [기존 스토어 사용](./existing-store): vanilla `Store`에 framework adapter 더하기.
 - [미들웨어](./middleware): 로깅, 영속화, 검증, DevTools 지원.

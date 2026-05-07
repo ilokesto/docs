@@ -1,0 +1,28 @@
+---
+title: 프레임워크 어댑터
+description: "@ilokesto/state 프레임워크별 어댑터의 import path와 반환 형태."
+---
+
+# 프레임워크 어댑터
+
+`@ilokesto/state`는 멀티 프레임워크 패키지입니다. 패키지 root는 adapter API가 아니며, 각 프레임워크는 자기 subpath에서 가져옵니다.
+
+| 프레임워크 | import path | 반환 형태 |
+|---|---|---|
+| React | `@ilokesto/state/react` | hook tuple: `[selected, setState]` 또는 `[selected, dispatch]` |
+| Vue | `@ilokesto/state/vue` | composable 결과: `{ state, setState }` 또는 `{ state, dispatch }` |
+| Angular | `@ilokesto/state/angular` | signal 결과: `{ state, setState, subscribe }` 또는 `{ state, dispatch, subscribe }` |
+| Svelte | `@ilokesto/state/svelte` | `setState`/`dispatch`와 `select()`를 가진 Svelte store 객체 |
+| Solid | `@ilokesto/state/solid` | accessor 결과: `{ state, setState }` 또는 `{ state, dispatch }` |
+
+모든 어댑터는 같은 store 계약을 공유합니다. plain state, 기존 `Store`, reducer pair로 store를 만들고, 프레임워크마다 선택된 상태를 노출하는 방식만 달라집니다.
+
+## 어댑터 선택
+
+- [React](./react) — `useSyncExternalStore` 기반 hook tuple.
+- [Vue](./vue) — `setup()` 또는 `effectScope()`에 스코핑되는 `ComputedRef` composable.
+- [Angular](./angular) — injection context 또는 `DestroyRef`로 스코핑되는 Angular `Signal`.
+- [Svelte](./svelte) — Svelte readable/writable store helper.
+- [Solid](./solid) — reactive owner에 스코핑되는 Solid accessor.
+
+미들웨어와 유틸리티는 프레임워크와 무관합니다. [`@ilokesto/state/middleware`](../middleware)와 [`@ilokesto/state/utils`](../utils)에서 가져오세요.

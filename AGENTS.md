@@ -52,27 +52,35 @@ Every library doc uses the following section order in `meta.json`:
 - Page slugs use kebab-case.
 - Korean translations live alongside English files as `<slug>.ko.mdx`.
 
-## Library-Specific Extensions
+## Folder Grouping
 
-Libraries with plugin-like subsystems may add extra named sections **between Reference and Guides**.
-These sections follow the same named separator convention.
+Use the common named separators for top-level structure. Do not add library-specific top-level separators such as `---Middleware---` or `---Utilities---` unless the project explicitly changes this architecture document first.
 
-### Allowed Extension Sections
+When a library has feature groups, represent them as folders inside the closest common section:
 
-| Library | Extension Section | Separator |
-|---|---|---|
-| `@ilokesto/state` | Middleware | `---Middleware---` |
-| `@ilokesto/state` | Utilities | `---Utilities---` |
-| `@ilokesto/utilinent` | Feature groups (Rendering Primitives, etc.) | Named per category |
+- API exports, middleware, utilities, and other spec-level surfaces belong under `---Reference---`.
+- Task-oriented walkthroughs and recipes belong under `---Guides---`.
+- Edge cases, internals, and implementation notes belong under `---Advanced---`.
 
-Extension sections appear **after** `---Reference---` and **before** `---Guides---`.
+For Fumadocs folder groups, prefer this shape:
+
+```json
+{
+  "title": "Display Name",
+  "defaultOpen": true,
+  "collapsible": false,
+  "pages": ["child-page"]
+}
+```
+
+Keep `index.mdx` in the folder so the folder label can navigate to the overview page, but omit `"index"` from `pages` to avoid a duplicated child item.
 
 ## Current Library Map
 
 ```
 docs/content/docs/
 ├── store/       @ilokesto/store    — framework-neutral vanilla store
-├── state/       @ilokesto/state    — React hooks backed by Store
+├── state/       @ilokesto/state    — multi-framework adapters backed by Store
 └── utilinent/   @ilokesto/utilinent — React rendering-logic utilities
 ```
 
@@ -80,7 +88,9 @@ docs/content/docs/
 `Getting Started` → `Reference` → `Guides` → `Advanced` → `troubleshooting`
 
 ### state — `meta.json` sections
-`Getting Started` → `Reference` → `Middleware` → `Utilities` → `Guides` → `Advanced`
+`Getting Started` → `Reference` → `Guides` → `Advanced`
+
+`middleware/` and `utils/` are folder groups under `Reference`, not separate top-level separators.
 
 ### utilinent — `meta.json` sections
 `Getting Started` → _(feature category sections)_ → `Advanced`

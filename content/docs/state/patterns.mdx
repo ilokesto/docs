@@ -7,6 +7,20 @@ description: Practical ways to organize stores, actions, and derived reads.
 
 State patterns cover where actions live, how many stores to create, and when logic belongs inside components or next to the store.
 
+## Choose the right state boundary
+
+Not every state value needs a store. A good first decision is where the value naturally lives.
+
+| State shape | Prefer |
+|---|---|
+| One component owns it | React `useState` |
+| Many components need a stable dependency | React context |
+| Many components subscribe to the same changing value | `create()` |
+| Non-React code also reads or writes it | `create()` + accessors or an existing `Store` |
+| One request, tab, widget, or test needs its own copy | a store factory |
+
+This keeps `@ilokesto/state` focused on shared client state instead of replacing every local React primitive.
+
 ## Keep store definition and actions close, but not identical
 
 A common pattern is to keep the hook in one module and export actions from a sibling module. That keeps `create()` small while still letting you build a real state API.
@@ -79,3 +93,4 @@ That usually produces cleaner boundaries than storing “loading logic” direct
 - Split stores when domains are independent.
 - Use selectors before adding more derived fields.
 - Move writes behind actions when the same update appears in more than one component.
+- Use factories when state must be isolated per request, widget, test, or render tree.

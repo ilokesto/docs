@@ -5,12 +5,12 @@ description: 로깅, 영속화, 검증, 디버깅을 위한 store-level 확장.
 
 # 미들웨어
 
-`@ilokesto/state`의 미들웨어는 React 컴포넌트를 감싸지 않습니다. 기반이 되는 store를 감싸서, React가 결과를 보기 전에 store 단계의 업데이트 흐름을 바꿀 수 있습니다.
+`@ilokesto/state`의 미들웨어는 framework component를 감싸지 않습니다. 기반이 되는 store를 감싸서, 어떤 adapter가 결과를 보기 전에 store 단계의 업데이트 흐름을 바꿀 수 있습니다.
 
 모든 내장 미들웨어는 `@ilokesto/state/middleware` 엔트리포인트에서 가져올 수 있고, `pipe()`와 함께 자연스럽게 조합되도록 설계되어 있습니다.
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 import { logger, persist } from '@ilokesto/state/middleware';
 import { pipe } from '@ilokesto/state/utils';
 
@@ -41,6 +41,20 @@ store를 선언적으로 조합할 때는 커링된 형태가 깔끔하게 읽�
 - [**Debounce**](./debounce): 빠른 업데이트를 하나의 지연된 flush window로 묶습니다.
 - [**Validate**](./validate): Standard Schema v1을 사용하여 상태 업데이트를 검증합니다.
 
+## 역할로 고르기
+
+store 계층에서 풀고 싶은 문제부터 고르세요.
+
+| 역할 | 미들웨어 |
+|---|---|
+| 개발 중 모든 업데이트 보기 | [Logger](./logger) |
+| Redux DevTools에서 상태 확인 | [DevTools](./devtools) |
+| 새로고침 후 상태 복원 | [Persist](./persist) |
+| 검색 입력처럼 시끄러운 write 지연 | [Debounce](./debounce) |
+| 구독자 실행 전에 잘못된 상태 거부 | [Validate](./validate) |
+
+모든 스토어에 미들웨어가 필요한 것은 아닙니다. 그 문제를 store 경계에서 푸는 것이 가장 깔끔할 때 추가하세요.
+
 ## 실행 순서
 
 `pipe()`는 미들웨어를 위에서 아래로, 호출 안에서는 왼쪽에서 오른쪽으로 적용합니다. 이 순서는 실제 update path를 바꿉니다.
@@ -48,3 +62,20 @@ store를 선언적으로 조합할 때는 커링된 형태가 깔끔하게 읽�
 예를 들어 `logger()`를 `debounce()` 앞에 두면 모든 업데이트 시도를 기록하고, 뒤에 두면 지연된 flush 결과만 기록합니다.
 
 미들웨어 하나만 쓴다면 해당 페이지에서 시작하세요. 여러 개를 조합한다면 각 기능을 조정하기 전에 순서부터 정하세요.
+
+## 안전한 기본 순서
+
+많은 앱에서는 다음 순서가 좋은 시작점입니다.
+
+```ts lineNumbers
+const useStore = create(
+  pipe(
+    { count: 0 },
+    validate(schema),
+    persist({ local: 'counter' }),
+    logger()
+  )
+);
+```
+
+검증은 상태가 받아들여지기 전에 실행되고, 영속화는 받아들여진 값을 저장하며, logger는 framework subscriber가 관찰할 값을 보여줍니다. 거부된 시도까지 로깅하거나 debounce된 결과만 저장하고 싶을 때처럼 의도가 다를 때만 순서를 바꾸세요.

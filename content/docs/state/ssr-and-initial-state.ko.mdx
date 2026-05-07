@@ -28,7 +28,7 @@ store가 `{ count: 0 }`으로 시작한 뒤 write를 받으면 `getState()`는 `
 그래서 서버 렌더링은 이후의 클라이언트 변경이 아니라 생성자 시점의 값에 묶입니다.
 SSR 코드를 설계할 때 초기값을 편리한 기본값이 아니라 렌더링 계약의 일부로 다루세요.
 
-## Server and client snapshots
+## 서버와 클라이언트 스냅샷
 
 React의 외부 store 계약에는 여기서 중요한 snapshot 읽기가 두 개 있습니다.
 client snapshot은 앱이 실행된 뒤 사용하는 live 값입니다.
@@ -60,7 +60,7 @@ SSR 동안 훅은 `store.getInitialState()`를 server snapshot으로 제공합�
 하이드레이션 뒤 client effect가 "따라잡는" 방식에 기대지 마세요.
 effect는 첫 렌더를 보호하기에는 너무 늦게 실행됩니다.
 
-## Per-request stores
+## 요청별 스토어
 
 서버 코드는 하나의 프로세스 생명주기 안에서 많은 사용자를 처리합니다.
 그래서 SSR에서 module level state는 위험합니다.
@@ -72,7 +72,7 @@ singleton store는 request A의 데이터를 유지한 채 request B를 렌더�
 요청마다 새 store를 만드는 factory를 선호하세요.
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 type ViewerState = {
   viewerId: string | null;
@@ -111,10 +111,12 @@ export default function Page({ viewer }: PageProps) {
 이 예시는 framework adapter를 새로 만들지 않습니다.
 중요한 경계만 보여줍니다. request data가 initial object가 되고, 그 object가 factory를 통해 `create()`로 들어갑니다.
 
+React Server Components에서는 서버 컴포넌트에서 클라이언트 컴포넌트로 hook 자체를 넘기지 마세요. 경계를 넘기는 값은 직렬화 가능한 plain `initialState`로 두고, 클라이언트 컴포넌트 안에서 one-time initializer로 hook을 만드세요.
+
 나쁜 모양은 모든 요청에서 재사용되는 서버 singleton입니다.
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export const useViewer = create({
   viewerId: null,
@@ -127,7 +129,7 @@ export const useViewer = create({
 한 요청이 store를 write한 뒤 다른 요청이 렌더링될 수 있습니다.
 렌더 중 write하지 않는다고 해도, 이후 유지보수에서 singleton이 실수로 공유 mutable cache가 될 수 있습니다.
 
-## Hydration and mismatch
+## 하이드레이션 불일치
 
 하이드레이션은 서버 렌더 결과와 첫 클라이언트 렌더를 비교합니다.
 가장 안전한 길은 단순합니다. 서버 마크업을 만든 초기 상태와 같은 초기 상태로 클라이언트 store를 만드세요.
@@ -170,7 +172,36 @@ useViewer.setState({
 브라우저가 첫 답을 소유한다면 브라우저 값을 알 때까지 안정적인 placeholder를 렌더링하세요.
 명시적인 규칙 없이 둘을 섞지 마세요.
 
-## Bootstrap pattern
+### 흔한 첫 렌더 함정
+
+다음 값들은 서버와 브라우저가 첫 렌더 동안 같은 답을 줄 수 없어서 mismatch를 만들기 쉽습니다.
+
+- 초기 상태에서 사용하는 `Date.now()` 또는 `new Date()`,
+- ID나 기본값에 쓰는 `Math.random()`,
+- 초기 렌더 중 읽는 `window`, `document`, `localStorage`, media query,
+- hydration 전에 request state를 대체하는 persisted state,
+- 사용자별 서버 데이터를 담은 module-level singleton.
+
+이런 읽기는 명시적인 경계 뒤로 옮기세요. 서버가 값을 직렬화한 initial state로 넘기거나, 안정적인 client-only placeholder를 렌더링한 뒤 mount 후에 업데이트합니다.
+
+```tsx lineNumbers
+function ClientOnlyTheme() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
+
+  if (!ready) return <ThemeShell theme="light" />;
+
+  const theme = readThemeFromLocalStorage();
+  return <ThemeShell theme={theme} />;
+}
+```
+
+placeholder는 첫 클라이언트 렌더를 서버와 맞춰 줍니다. 브라우저 전용 값은 React가 제어권을 가진 뒤에 나타납니다.
+
+## 부트스트랩 패턴
 
 bootstrap pattern은 서버와 클라이언트 경계에서 초기값을 눈에 보이게 만듭니다.
 서버는 plain JSON을 준비합니다.
@@ -198,7 +229,8 @@ export default async function AccountPage() {
 // app/account/account-client.tsx
 'use client';
 
-import { create } from '@ilokesto/state';
+import { useState } from 'react';
+import { createAccountStore } from './account-store';
 
 type AccountState = {
   viewerId: string | null;
@@ -210,7 +242,7 @@ type AccountClientProps = {
 };
 
 export function AccountClient({ initialState }: AccountClientProps) {
-  const useAccount = create(initialState);
+  const [useAccount] = useState(() => createAccountStore(initialState));
 
   return <AccountView useAccount={useAccount} />;
 }
@@ -219,11 +251,12 @@ export function AccountClient({ initialState }: AccountClientProps) {
 이 예시는 일반 component props를 bootstrap channel로 사용합니다.
 package 전용 provider나 숨겨진 global이 필요하지 않습니다.
 핵심은 `initialState`가 서버에서 클라이언트 경계를 안전하게 건널 수 있는 plain object라는 점입니다.
+클라이언트 컴포넌트는 hook을 한 번만 만들기 때문에, 리렌더가 store를 초기화하지 않습니다.
 
 앱이 커지면 factory를 framework file과 분리하세요.
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 export type AccountState = {
   viewerId: string | null;
@@ -238,7 +271,7 @@ export function createAccountStore(initialState: AccountState) {
 이렇게 하면 test, server file, client file이 store를 만드는 하나의 공유 방식을 갖습니다.
 또 초기 상태 type이 명시되어 서버와 클라이언트가 서로 어긋나는 일을 줄입니다.
 
-## Persistence + SSR conflict
+## 영속화와 SSR 충돌
 
 persistence는 첫 렌더에 또 다른 질문을 추가합니다.
 서버는 하나의 initial state를 제공할 수 있고, 브라우저에는 이전 방문에서 남은 오래된 persisted state가 있을 수 있습니다.

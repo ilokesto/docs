@@ -1,0 +1,42 @@
+---
+title: Svelte
+description: Svelte store와 select()로 @ilokesto/state/svelte를 사용하는 방법.
+---
+
+# Svelte
+
+Svelte 어댑터 API는 `@ilokesto/state/svelte`에서 가져옵니다.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/svelte';
+
+type CounterState = { count: number };
+
+export const counter = create<CounterState>({ count: 0 });
+export const count = counter.select((state) => state.count);
+```
+
+```svelte lineNumbers
+<script lang="ts">
+  import { counter, count } from './counter';
+
+  const increment = () => {
+    counter.update((state) => ({ ...state, count: state.count + 1 }));
+  };
+</script>
+
+<button on:click={increment}>{$count}</button>
+```
+
+## 반환 형태
+
+Svelte 어댑터는 Svelte store 객체를 반환합니다.
+
+- state mode: `Writable<T>`에 `set`, `update`, 그리고 `setState`, `select`, `writeOnly`, `readOnly`가 더해진 형태
+- reducer mode: readable store + `dispatch`, `select`, `writeOnly`, `readOnly`
+
+표준 Svelte write에는 `set()` 또는 `update()`를 사용하고, 다른 adapter와 같은 writer 이름이 필요하면 `setState()`를 사용하세요. 집중된 구독을 위해서는 `select()`로 derived readable store를 만드세요.
+
+## Lifecycle 규칙
+
+Svelte는 store contract로 구독 정리를 관리합니다. `$store` 문법을 사용하는 컴포넌트는 mount 시 구독하고 destroy 시 구독을 해제합니다.

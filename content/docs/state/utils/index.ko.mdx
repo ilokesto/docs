@@ -20,11 +20,42 @@ store 설정 코드가 복잡해질 때는 `pipe`를 씁니다.
 
 미들웨어 조합이나 draft 스타일 객체 업데이트가 필요 없다면 기본 `create()`만으로 충분합니다.
 
+| 코드가 복잡해지는 이유 | 사용하기 |
+|---|---|
+| 여러 미들웨어의 순서를 읽기 좋게 만들고 싶다 | [`pipe`](./pipe) |
+| 중첩 객체 write에서 spread가 너무 많다 | [`adaptor`](./adaptor) |
+| 하나의 초기 객체만으로 충분히 명확하다 | 기본 [`create`](../create) |
+
 ## 두 헬퍼의 차이
 
 `pipe`는 React 바인딩 전에 동작합니다. `create(store)`가 바인딩할 store instance를 만듭니다.
 
 `adaptor`는 write 시점에 동작합니다. Immer draft recipe를 객체 상태용 순수 updater 함수로 바꿉니다.
+
+## 함께 쓰이는 모습
+
+두 헬퍼는 같은 기능 안에 함께 나타날 수 있지만, 서로 다른 시점에 동작합니다.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/react';
+import { persist } from '@ilokesto/state/middleware';
+import { adaptor, pipe } from '@ilokesto/state/utils';
+
+const useProfile = create(
+  pipe(
+    { profile: { name: 'Ari' } },
+    persist({ local: 'profile' })
+  )
+);
+
+export const renameProfile = (name: string) => {
+  useProfile.writeOnly()(adaptor((draft) => {
+    draft.profile.name = name;
+  }));
+};
+```
+
+`pipe`는 React가 store에 바인딩하기 전에 store 모양을 잡습니다. `adaptor`는 store가 생긴 뒤 하나의 write 모양을 잡습니다.
 
 ## 관련 API
 

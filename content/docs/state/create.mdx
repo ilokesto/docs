@@ -7,6 +7,21 @@ description: The primary API for building stores in @ilokesto/state.
 
 `create` is the main entry point for `@ilokesto/state`. It defines state and returns the hook your components call to read and update that state.
 
+`create` exists on each framework adapter subpath. Import it from the framework you are using: `@ilokesto/state/react`, `@ilokesto/state/vue`, `@ilokesto/state/angular`, `@ilokesto/state/svelte`, or `@ilokesto/state/solid`.
+
+The overloads are shared across adapters, but the return shape is framework-specific. React returns hook tuples, Vue returns composable results, Angular returns signals, Svelte returns store objects, and Solid returns accessors.
+
+## Choose a create shape
+
+| Situation | Use |
+|---|---|
+| A framework adapter owns a small shared state value | `create(initialState)` |
+| A vanilla `Store` already owns the state | `create(store)` |
+| Updates should be expressed as actions | `create(reducer, initialState)` |
+| Server data should seed one render/request | a factory that calls `create(initialState)` |
+
+The returned value always belongs to the adapter you imported. For exact return shapes, start with [Framework Adapters](./adapters).
+
 ## Call Signatures
 
 The `create` function is overloaded to support two primary modes of operation.
@@ -16,7 +31,7 @@ The `create` function is overloaded to support two primary modes of operation.
 In state mode, you provide the initial state directly. The returned hook provides a `setState` function similar to React's `useState`.
 
 ```ts lineNumbers
-import { create } from '@ilokesto/state';
+import { create } from '@ilokesto/state/react';
 
 // 1. With initial state value
 const useCounter = create({ count: 0 });
@@ -48,9 +63,9 @@ const reducer = (state: State, action: Action): State => {
 const useCounter = create(reducer, { count: 0 });
 ```
 
-## Hook Behavior
+## Adapter behavior
 
-The hook returned by `create` accepts a selector function and returns the selected value with the writer for the active mode.
+Every adapter returned by `create` accepts a selector function and returns the selected value with the writer for the active mode. The container shape depends on the framework.
 
 ```tsx lineNumbers
 function Counter() {
@@ -63,14 +78,17 @@ function Counter() {
 - **State mode**: The second element is the store writer. Even when the selector returns one field, the writer still accepts the next full state value or an updater over the full state: `setState((prev) => ({ ...prev, count: prev.count + 1 }))`.
 - **Reducer mode**: The second element is a `dispatch` function that accepts an action: `dispatch({ type: 'increment' })`.
 
+The React example above shows the tuple form. Vue, Angular, Svelte, and Solid expose equivalent selected state and writers through their framework-native primitives.
+
 ## Behavior notes
 
 `create` does **not** support Zustand-style initializer functions like `(set, get) => ({ ... })`. Pass an initial state value, an existing `Store`, or the reducer pair shown above.
 
-The hook subscribes with `useSyncExternalStore`, so selectors read from the external store contract. For SSR, the server snapshot comes from `store.getInitialState()`.
+Each adapter subscribes through the framework's lifecycle model, so selectors read from the same external store contract while exposing framework-native values. For SSR, the server snapshot comes from `store.getInitialState()`.
 
 ## Where to go next
 
+- Pick an import path in [Framework Adapters](./adapters).
 - Explore [selector subscriptions](./selectors) for the memoization model.
-- Move [actions outside components](./accessors) with accessors.
+- Move actions outside framework lifecycles with [Accessors](./accessors).
 - Bind [an existing Store](./existing-store) when your app already owns a vanilla store.

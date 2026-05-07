@@ -20,15 +20,46 @@ Use `adaptor` when object update syntax is the noisy part.
 
 Stay with plain `create()` when you do not need middleware composition or draft-style object updates.
 
+| Your code feels noisy because... | Use |
+|---|---|
+| Several middleware need a readable order | [`pipe`](./pipe) |
+| Nested object writes require too much spreading | [`adaptor`](./adaptor) |
+| The store is already clear with one initial object | plain [`create`](../create) |
+
 ## How they differ
 
-`pipe` works before React binding. It builds the store instance that `create(store)` will bind.
+`pipe` works before adapter binding. It builds the store instance that `create(store)` will bind.
 
 `adaptor` works during writes. It turns an Immer draft recipe into a pure updater function for object state.
 
+## How they fit together
+
+The helpers can appear in the same feature, but at different moments.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/react';
+import { persist } from '@ilokesto/state/middleware';
+import { adaptor, pipe } from '@ilokesto/state/utils';
+
+const useProfile = create(
+  pipe(
+    { profile: { name: 'Ari' } },
+    persist({ local: 'profile' })
+  )
+);
+
+export const renameProfile = (name: string) => {
+  useProfile.writeOnly()(adaptor((draft) => {
+    draft.profile.name = name;
+  }));
+};
+```
+
+`pipe` shapes the store before a framework adapter binds to it. `adaptor` shapes one write after the store exists.
+
 ## Related APIs
 
-- [`create`](../create): Main entry point for React integration.
+- [`create`](../create): Shared entry point for framework adapters.
 - [`middleware`](../middleware): Built-in middleware for common tasks.
 
 Read [`pipe`](./pipe) for middleware composition. Read [`adaptor`](./adaptor) for draft-style object updates.

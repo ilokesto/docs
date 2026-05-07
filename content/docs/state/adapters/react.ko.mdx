@@ -1,0 +1,52 @@
+---
+title: React
+description: hook tuple과 selector로 @ilokesto/state/react를 사용하는 방법.
+---
+
+# React
+
+React 어댑터 API는 `@ilokesto/state/react`에서 가져옵니다.
+
+```tsx lineNumbers
+import { create } from '@ilokesto/state/react';
+
+type CounterState = { count: number };
+
+const useCounter = create<CounterState>({ count: 0 });
+
+function Counter() {
+  const [count, setCounter] = useCounter((state) => state.count);
+
+  return (
+    <button onClick={() => setCounter((prev) => ({ ...prev, count: prev.count + 1 }))}>
+      {count}
+    </button>
+  );
+}
+```
+
+## 반환 형태
+
+React 어댑터는 hook을 반환합니다. hook을 호출하면 readonly tuple을 받습니다.
+
+- state mode: `[selectedValue, setState]`
+- reducer mode: `[selectedValue, dispatch]`
+
+selector는 컴포넌트가 읽는 범위를 좁힙니다. writer는 여전히 전체 store state를 업데이트합니다.
+
+## Accessors
+
+액션 파일이나 React 컴포넌트 밖 이벤트 핸들러에서는 `writeOnly()`를 사용하세요.
+
+```ts lineNumbers
+export const increment = () => {
+  const setCounter = useCounter.writeOnly();
+  setCounter((prev) => ({ ...prev, count: prev.count + 1 }));
+};
+```
+
+`readOnly()`는 동기 읽기 helper로만 사용하세요. 값이 렌더링에 영향을 준다면 React가 구독할 수 있도록 selector가 있는 hook을 선호하세요.
+
+## SSR
+
+React 어댑터는 `useSyncExternalStore` 위에 있습니다. 서버 스냅샷은 store initial state에서 오므로, 요청별 데이터는 factory를 통해 전달해야 합니다. 전체 패턴은 [SSR 및 초기 상태](../ssr-and-initial-state)에서 이어서 다룹니다.

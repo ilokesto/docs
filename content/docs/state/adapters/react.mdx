@@ -1,0 +1,52 @@
+---
+title: React
+description: Using @ilokesto/state/react with hook tuples and selectors.
+---
+
+# React
+
+Import React adapter APIs from `@ilokesto/state/react`.
+
+```tsx lineNumbers
+import { create } from '@ilokesto/state/react';
+
+type CounterState = { count: number };
+
+const useCounter = create<CounterState>({ count: 0 });
+
+function Counter() {
+  const [count, setCounter] = useCounter((state) => state.count);
+
+  return (
+    <button onClick={() => setCounter((prev) => ({ ...prev, count: prev.count + 1 }))}>
+      {count}
+    </button>
+  );
+}
+```
+
+## Return shape
+
+The React adapter returns a hook. Calling the hook returns a readonly tuple:
+
+- state mode: `[selectedValue, setState]`
+- reducer mode: `[selectedValue, dispatch]`
+
+Selectors narrow what the component reads. The writer still updates the full store state.
+
+## Accessors
+
+Use `writeOnly()` for action files or event handlers outside React components.
+
+```ts lineNumbers
+export const increment = () => {
+  const setCounter = useCounter.writeOnly();
+  setCounter((prev) => ({ ...prev, count: prev.count + 1 }));
+};
+```
+
+Use `readOnly()` only as a synchronous read helper. If the value affects rendering, prefer the hook with a selector so React can subscribe.
+
+## SSR
+
+The React adapter is built on `useSyncExternalStore`. Server snapshots come from the store initial state, so request-specific data should be passed through a factory. Continue with [SSR and Initial State](../ssr-and-initial-state) for the full pattern.

@@ -1,18 +1,18 @@
 ---
 title: 코어 콘셉
-description: "store-first React state를 이해하는 개념적 모델."
+description: "store-first framework adapter를 이해하는 개념적 모델."
 ---
 
 # 코어 콘셉
 
-`@ilokesto/state`는 store, hook, selector, writer라는 네 층으로 이루어집니다.
+`@ilokesto/state`는 store, adapter, selector, writer라는 네 층으로 이루어집니다.
 
-## Provider + Context가 아니라 Store + Hook
+## Provider + Context가 아니라 Store + Adapter
 
-Provider 중심 라이브러리와 달리, `@ilokesto/state`는 먼저 store를 두고 그 위에 React 훅을 얹습니다.
+Provider 중심 라이브러리와 달리, `@ilokesto/state`는 먼저 store를 두고 그 위에 framework adapter를 얹습니다.
 
-1. **store**는 React 바깥에 있고, 실제 상태를 소유합니다.
-2. **hook**은 `create()`가 반환하며, 컴포넌트가 그 store를 구독하는 방식입니다.
+1. **store**는 framework runtime 바깥에 있고, 실제 상태를 소유합니다.
+2. **adapter**는 `create()`가 반환하며, 컴포넌트가 그 store를 구독하는 방식입니다.
 3. **selector**는 컴포넌트가 읽을 범위를 좁힙니다.
 4. **writer**는 여전히 전체 상태를 갱신하거나 reducer action을 dispatch합니다.
 
@@ -28,9 +28,9 @@ Selector는 raw external store보다 API가 더 확장 가능해 보이는 주�
 
 ## 데이터 흐름
 
-- **읽기**는 `useSyncExternalStore`를 사용합니다.
+- **읽기**는 framework adapter의 구독 primitive를 사용합니다.
 - **쓰기**는 store writer 또는 reducer dispatch를 사용합니다.
-- **미들웨어**는 React 계층이 아니라 store 계층에서 실행됩니다.
+- **미들웨어**는 framework 계층이 아니라 store 계층에서 실행됩니다.
 - **SSR**은 `store.getInitialState()`에서 server snapshot을 읽습니다.
 
 ## 왜 이 모양이 유용한가
@@ -39,6 +39,6 @@ Selector는 raw external store보다 API가 더 확장 가능해 보이는 주�
 
 - provider-heavy 구조보다 가볍고,
 - 컴포넌트별 local state보다 명시적이며,
-- 실제 store 위에서 동작하므로 미들웨어나 non-React 통합도 가능하게 남겨 둡니다.
+- 실제 store 위에서 동작하므로 미들웨어나 non-framework 통합도 가능하게 남겨 둡니다.
 
-정확한 API 모양을 보고 싶다면 [`create`](./create)를, 실제 조직 패턴을 보고 싶다면 [패턴](./patterns)을 이어서 읽어 보세요.
+정확한 import path를 보고 싶다면 [프레임워크 어댑터](./adapters)를, 실제 조직 패턴을 보고 싶다면 [패턴](./patterns)을 이어서 읽어 보세요.

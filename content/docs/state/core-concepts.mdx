@@ -1,18 +1,18 @@
 ---
 title: Core Concepts
-description: The conceptual model behind store-first React state.
+description: The conceptual model behind store-first framework adapters.
 ---
 
 # Core Concepts
 
-`@ilokesto/state` has four layers: store, hook, selector, writer.
+`@ilokesto/state` has four layers: store, adapter, selector, writer.
 
-## Store + hook, not provider + context
+## Store + adapter, not provider + context
 
-Unlike provider-first libraries, `@ilokesto/state` starts with a store and then binds that store to React.
+Unlike provider-first libraries, `@ilokesto/state` starts with a store and then binds that store to a framework adapter.
 
-1. **The store** lives outside React and owns the real state.
-2. **The hook** returned by `create()` is how components subscribe to that store.
+1. **The store** lives outside the framework runtime and owns the real state.
+2. **The adapter** returned by `create()` is how components subscribe to that store.
 3. **The selector** narrows what a component reads.
 4. **The writer** still updates the full state or dispatches a reducer action.
 
@@ -28,9 +28,9 @@ But selectors do **not** give you a slice-local setter. The writer still updates
 
 ## Data Flow
 
-- **Reads** use `useSyncExternalStore`.
+- **Reads** use the framework adapter's subscription primitive.
 - **Writes** use the store writer or reducer dispatch.
-- **Middleware** runs at the store layer, not the React layer.
+- **Middleware** runs at the store layer, not the framework layer.
 - **SSR** reads the server snapshot from `store.getInitialState()`.
 
 ## Why this shape is useful
@@ -39,6 +39,6 @@ This shape trades provider setup for an explicit external store:
 
 - lighter than a provider-heavy architecture,
 - more explicit than ad-hoc local state spread across components,
-- still close enough to a real store that middleware and non-React integration remain possible.
+- still close enough to a real store that middleware and non-framework integration remain possible.
 
-If you want the exact API surface next, read [`create`](./create). If you want practical organization patterns, go to [Patterns](./patterns).
+If you want exact import paths next, read [Framework Adapters](./adapters). If you want practical organization patterns, go to [Patterns](./patterns).

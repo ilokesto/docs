@@ -1,0 +1,6 @@
+{
+  "title": "프레임워크 어댑터",
+  "defaultOpen": true,
+  "collapsible": false,
+  "pages": ["react", "vue", "angular", "svelte", "solid"]
+}

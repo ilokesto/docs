@@ -1,0 +1,6 @@
+{
+  "title": "Middleware",
+  "defaultOpen": true,
+  "collapsible": false,
+  "pages": ["logger", "devtools", "debounce", "persist", "validate"]
+}

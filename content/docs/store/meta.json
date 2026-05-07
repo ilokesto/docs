@@ -3,14 +3,16 @@
   "root": true,
   "pages": [
     "index",
+    "---Getting Started---",
     "quick-start",
     "core-concepts",
+    "---Reference---",
     "api",
-    "---",
+    "---Guides---",
     "framework-usage",
     "patterns",
     "building-on-store",
-    "---",
+    "---Advanced---",
     "advanced-semantics",
     "troubleshooting"
   ]

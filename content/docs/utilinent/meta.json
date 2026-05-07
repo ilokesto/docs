@@ -3,9 +3,9 @@
   "root": true,
   "pages": [
     "index",
-    "---Introduction---",
+    "---Getting Started---",
     "quick-start",
-    "mental-model",
+    "core-concepts",
     "---Rendering Primitives---",
     "conditional",
     "collection",

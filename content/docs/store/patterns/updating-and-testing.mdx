@@ -1,0 +1,160 @@
+---
+title: Updating and Testing
+description: Reset state, derive values, wrap async flows, and test stores in isolation.
+---
+
+# Updating and Testing
+
+After a store has the right owner, the next step is keeping updates predictable. The safest pattern is simple: replace state intentionally, derive secondary values outside the stored value, and create a fresh store for each test.
+
+## Reset pattern
+
+`getInitialState()` returns the value passed to the constructor. That makes reset helpers simple, but remember that `Store` does not clone or freeze that value at runtime.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type FormState = {
+  name: string;
+  email: string;
+  submitted: boolean;
+};
+
+const formStore = new Store<FormState>({
+  name: "",
+  email: "",
+  submitted: false,
+});
+
+export function resetForm() {
+  formStore.setState(formStore.getInitialState());
+}
+```
+
+If the initial value contains nested objects that app code might mutate, create a fresh initial value through a factory instead.
+
+```ts lineNumbers
+function createInitialFormState(): FormState {
+  return { name: "", email: "", submitted: false };
+}
+
+const formStore = new Store<FormState>(createInitialFormState());
+
+export function resetForm() {
+  formStore.setState(createInitialFormState());
+}
+```
+
+## Derived values
+
+`Store` keeps one source value. Derive secondary values with plain functions so they are always based on the latest snapshot.
+
+```ts lineNumbers
+type CartState = {
+  items: Array<{ id: string; price: number; quantity: number }>;
+};
+
+const cartStore = new Store<CartState>({ items: [] });
+
+export function getCartTotal() {
+  return cartStore
+    .getState()
+    .items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+export function hasItems() {
+  return cartStore.getState().items.length > 0;
+}
+```
+
+Keep derived data outside the stored value unless you need to preserve it as user input. This avoids stale cached fields after updates.
+
+## Async flows
+
+Async work should happen around store updates. Start the request, update a loading state, then replace the full state when the request settles.
+
+```ts lineNumbers
+type ProfileState = {
+  profile: { id: string; name: string } | null;
+  loading: boolean;
+  error: string | null;
+};
+
+const profileStore = new Store<ProfileState>({
+  profile: null,
+  loading: false,
+  error: null,
+});
+
+export async function loadProfile(userId: string) {
+  profileStore.setState((prev) => ({
+    ...prev,
+    loading: true,
+    error: null,
+  }));
+
+  try {
+    const profile = await fetchProfile(userId);
+
+    profileStore.setState({
+      profile,
+      loading: false,
+      error: null,
+    });
+  } catch (error) {
+    profileStore.setState((prev) => ({
+      ...prev,
+      loading: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }));
+  }
+}
+```
+
+`setState` itself is synchronous. The async part is your surrounding function, not the Store notification model.
+
+Store is also not a server-cache library. For retries, request deduplication, invalidation, and stale-time behavior, pair it with a data-fetching tool and keep Store focused on client-owned state.
+
+## Testing with isolated stores
+
+Tests are easiest when each test creates its own store through a factory.
+
+```ts lineNumbers
+import { expect, test } from "vitest";
+
+test("increments count", () => {
+  const { store, increment } = createCounterStore();
+
+  increment();
+
+  expect(store.getState().count).toBe(1);
+});
+
+test("notifies subscribers after a change", () => {
+  const { store, increment } = createCounterStore();
+  let calls = 0;
+
+  const unsubscribe = store.subscribe(() => {
+    calls += 1;
+  });
+
+  increment();
+  unsubscribe();
+
+  expect(calls).toBe(1);
+});
+```
+
+When a test subscribes, always call the unsubscribe function before the test ends. That matches the same cleanup discipline used by framework adapters.
+
+## Common mistakes
+
+- Do not mutate objects returned by `getState()`; replace state with a new value.
+- Do not treat object updates as merges; they replace the whole state.
+- Do not call `setState` from a subscriber without a guard; that can create a synchronous loop.
+- Do not share one module-level store across tests that expect isolated state.
+
+## Next
+
+- Read [Organizing Stores](./organizing-stores) if you are still deciding where each store should live.
+- Use [Troubleshooting](../troubleshooting) when one of these mistakes has already happened in an app.

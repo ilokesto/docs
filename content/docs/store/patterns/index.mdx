@@ -1,0 +1,39 @@
+---
+title: Common Patterns
+description: A friendly map for choosing practical Store recipes.
+---
+
+# Common Patterns
+
+This section is for the moment after your first store works and the next question is: “How should I shape this in a real app?”
+
+`@ilokesto/store` stays small on purpose. It gives you one value, replacement updates, and subscriptions. The patterns here show how to arrange those pieces without turning the store into a framework, reducer system, or data-fetching cache.
+
+## Pick a path
+
+- [Organizing stores](./organizing-stores) — choose between a module-level store, a store factory, or several smaller stores.
+- [Updating and testing](./updating-and-testing) — reset state, derive values, wrap async flows, and keep tests isolated.
+
+If you are building a framework adapter or a library on top of `Store`, start with [Building on Store](../building-on-store) instead. If you need exact replacement, subscription, or bailout rules, use [Advanced Semantics](../advanced-semantics).
+
+## A small rule of thumb
+
+Start with the smallest store that has a clear owner.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+export const themeStore = new Store<"light" | "dark">("light");
+
+export function toggleTheme() {
+  themeStore.setState((prev) => (prev === "light" ? "dark" : "light"));
+}
+```
+
+When the state needs to be shared by many screens, keep it at module level. When each screen, tab, request, or test needs its own copy, use a factory. When unrelated parts change independently, split them into separate stores.
+
+## What Store is not trying to solve
+
+These recipes keep Store focused on client-side application state. For server cache, retries, invalidation, or request deduplication, pair Store with a data-fetching tool rather than recreating one inside your state object.
+
+Use Store for values your app owns directly: theme, current draft, auth snapshot, feature flags, small workflow state, and coordination between local UI pieces.

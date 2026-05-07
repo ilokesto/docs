@@ -1,71 +1,11 @@
 ---
-title: 공통 패턴
-description: 애플리케이션 코드에서 바로 쓰는 Store 레시피입니다.
+title: 업데이트와 테스트
+description: 상태 초기화, 파생 값, 비동기 흐름, 격리된 테스트를 다룹니다.
 ---
 
-# 공통 패턴
+# 업데이트와 테스트
 
-이 패턴들은 `@ilokesto/store`로 스토어를 만들고, 안전하게 업데이트하고, 상태를 테스트하기 쉽게 유지하는 실전 선택지를 다룹니다.
-
-`Store` 위에 프레임워크 어댑터나 라이브러리를 만드는 중이라면 스토어 기반 구축하기가 더 잘 맞습니다. 정확한 교체, 구독, 베일아웃 규칙은 고급 시맨틱에 있고, 전체 메서드 목록은 API 레퍼런스에 있습니다.
-
-## 모듈 수준 스토어
-
-앱의 여러 부분이 공유해야 하는 상태에는 모듈 수준 스토어가 잘 맞습니다. 상태 모양은 좁게 유지하고, 허용되는 업데이트를 설명하는 작은 함수를 함께 내보내세요.
-
-```ts lineNumbers
-import { Store } from "@ilokesto/store";
-
-type AuthState = {
-  user: { id: string; name: string } | null;
-  status: "anonymous" | "signed-in";
-};
-
-const initialAuthState: AuthState = {
-  user: null,
-  status: "anonymous",
-};
-
-export const authStore = new Store<AuthState>(initialAuthState);
-
-export function signIn(user: { id: string; name: string }) {
-  authStore.setState({ user, status: "signed-in" });
-}
-
-export function signOut() {
-  authStore.setState(initialAuthState);
-}
-```
-
-auth, theme, feature flag, 현재 workspace처럼 앱 전체에서 공유되는 작은 값에 이 패턴을 사용하세요.
-
-## 스토어 팩토리
-
-팩토리는 기능 인스턴스마다 새 스토어를 만듭니다. 화면, 탭, 테스트, 서버 요청 범위처럼 사용자나 실행 사이에 상태가 새면 안 되는 곳에 유용합니다.
-
-```ts lineNumbers
-import { Store } from "@ilokesto/store";
-
-type CounterState = {
-  count: number;
-};
-
-export function createCounterStore(initialCount = 0) {
-  const store = new Store<CounterState>({ count: initialCount });
-
-  return {
-    store,
-    increment() {
-      store.setState((prev) => ({ count: prev.count + 1 }));
-    },
-    decrement() {
-      store.setState((prev) => ({ count: prev.count - 1 }));
-    },
-  };
-}
-```
-
-모듈 수준 상태 때문에 테스트 순서가 결과에 영향을 주거나, 앱 인스턴스 사이에 데이터가 의도치 않게 공유될 수 있다면 팩토리를 선택하세요.
+스토어의 소유자가 정해졌다면 다음 단계는 업데이트를 예측 가능하게 유지하는 것입니다. 가장 안전한 패턴은 단순합니다: 상태를 의도적으로 교체하고, 부가 값은 저장된 값 밖에서 파생하고, 테스트마다 새 스토어를 만드세요.
 
 ## 초기화 패턴
 
@@ -173,50 +113,7 @@ export async function loadProfile(userId: string) {
 
 `setState` 자체는 동기식입니다. 비동기 부분은 Store 알림 모델이 아니라 그 주변의 사용자 함수에 있습니다.
 
-## 스토어 나누기
-
-서로 관련 없는 소비자가 같은 알림 흐름을 공유하면 안 될 때는 책임별로 스토어를 나누세요.
-
-```ts lineNumbers
-import { Store } from "@ilokesto/store";
-
-export const themeStore = new Store<"light" | "dark">("light");
-
-export const sessionStore = new Store({
-  userId: null as string | null,
-  activeWorkspaceId: null as string | null,
-  tokenExpiresAt: null as number | null,
-});
-
-export const draftStore = new Store({
-  title: "",
-  body: "",
-});
-```
-
-분리된 스토어는 소유권을 더 분명하게 만듭니다. 각 스토어가 하나의 일을 맡기 때문에 초기화와 테스트도 작아집니다.
-
-## 하나의 거대한 스토어 피하기
-
-앱 전체를 담는 단일 객체는 편해 보이지만, 시간이 지나면 안전하게 바꾸기 어려워지는 경우가 많습니다.
-
-다음 신호를 살펴보세요.
-
-- 관련 없는 업데이트에도 많은 필드를 spread해야 합니다.
-- 작은 동작을 테스트하려고 큰 fixture가 필요합니다.
-- 구독자가 관심 없는 변경에도 깨어납니다.
-- reset 로직이 모든 기능을 알아야 합니다.
-
-대신 domain마다 스토어를 두세요. 두 domain이 함께 움직여야 한다면, 각 스토어를 명시적으로 업데이트하는 앱 수준 함수를 작성합니다.
-
-```ts lineNumbers
-export function clearWorkspace() {
-  sessionStore.setState((prev) => ({ ...prev, activeWorkspaceId: null }));
-  draftStore.setState({ title: "", body: "" });
-}
-```
-
-이렇게 하면 모든 기능을 하나의 공유 상태 객체로 합치지 않고도 조정 지점을 코드에 드러낼 수 있습니다.
+Store는 서버 캐시 라이브러리도 아닙니다. retry, 요청 deduplication, invalidation, stale-time 동작이 필요하다면 data-fetching 도구와 함께 사용하고, Store는 클라이언트가 직접 소유한 상태에 집중시키세요.
 
 ## 격리된 스토어로 테스트하기
 
@@ -256,3 +153,8 @@ test("notifies subscribers after a change", () => {
 - 객체 업데이트를 병합처럼 다루지 마세요. 객체 업데이트는 전체 상태를 교체합니다.
 - guard 없이 subscriber 안에서 `setState`를 호출하지 마세요. 동기식 루프가 생길 수 있습니다.
 - 격리된 상태를 기대하는 테스트 사이에서 하나의 모듈 수준 스토어를 공유하지 마세요.
+
+## 다음
+
+- 각 스토어를 어디에 둘지 아직 고민 중이라면 [스토어 조직하기](./organizing-stores)를 읽어 보세요.
+- 이미 앱에서 문제가 발생했다면 [문제 해결](../troubleshooting)을 사용하세요.

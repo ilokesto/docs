@@ -1,0 +1,6 @@
+{
+  "title": "Common Patterns",
+  "defaultOpen": true,
+  "collapsible": false,
+  "pages": ["organizing-stores", "updating-and-testing"]
+}

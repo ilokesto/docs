@@ -1,0 +1,118 @@
+---
+title: Organizing Stores
+description: Choose module-level stores, factories, or smaller stores by ownership.
+---
+
+# Organizing Stores
+
+Store organization starts with one question: who owns this state?
+
+If the whole app shares it, a module-level store is simple. If each screen, tab, request, or test needs its own copy, use a factory. If unrelated fields change for unrelated reasons, split them into separate stores.
+
+## Module-level store
+
+A module-level store works well for state shared by many parts of an app. Keep the state shape focused, then export small functions that describe the allowed updates.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type AuthState = {
+  user: { id: string; name: string } | null;
+  status: "anonymous" | "signed-in";
+};
+
+const initialAuthState: AuthState = {
+  user: null,
+  status: "anonymous",
+};
+
+export const authStore = new Store<AuthState>(initialAuthState);
+
+export function signIn(user: { id: string; name: string }) {
+  authStore.setState({ user, status: "signed-in" });
+}
+
+export function signOut() {
+  authStore.setState(initialAuthState);
+}
+```
+
+Use this pattern for app-wide state such as auth, theme, feature flags, or a small current-workspace value.
+
+## Store factory
+
+A factory creates a fresh store for each feature instance. This is useful when state must not leak across users, screens, tabs, tests, or server request scopes.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type CounterState = {
+  count: number;
+};
+
+export function createCounterStore(initialCount = 0) {
+  const store = new Store<CounterState>({ count: initialCount });
+
+  return {
+    store,
+    increment() {
+      store.setState((prev) => ({ count: prev.count + 1 }));
+    },
+    decrement() {
+      store.setState((prev) => ({ count: prev.count - 1 }));
+    },
+  };
+}
+```
+
+Prefer a factory when a module-level store would make tests order-dependent or accidentally share state between app instances.
+
+## Splitting stores
+
+Split stores by responsibility when unrelated consumers should not share the same notification stream.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+export const themeStore = new Store<"light" | "dark">("light");
+
+export const sessionStore = new Store({
+  userId: null as string | null,
+  activeWorkspaceId: null as string | null,
+  tokenExpiresAt: null as number | null,
+});
+
+export const draftStore = new Store({
+  title: "",
+  body: "",
+});
+```
+
+Separate stores make ownership clearer. They also make resets and tests smaller because each store has one job.
+
+## Avoiding one giant store
+
+A single app-wide object can look convenient, but it often becomes harder to change safely.
+
+Watch for these signals:
+
+- unrelated updates require spreading many fields,
+- tests need large fixtures for tiny behaviors,
+- subscribers wake up for changes they do not care about,
+- reset logic has to know about every feature.
+
+Use a store per domain instead. If two domains need to coordinate, write an app-level function that updates each store explicitly.
+
+```ts lineNumbers
+export function clearWorkspace() {
+  sessionStore.setState((prev) => ({ ...prev, activeWorkspaceId: null }));
+  draftStore.setState({ title: "", body: "" });
+}
+```
+
+This keeps coordination visible without turning every feature into one shared state object.
+
+## Next
+
+- Continue with [Updating and Testing](./updating-and-testing) for reset helpers, derived values, async flows, and isolated tests.
+- Read [Core Concepts](../core-concepts) if you want the deeper model behind replacement updates and subscriptions.

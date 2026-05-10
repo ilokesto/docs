@@ -4,12 +4,8 @@ Official bilingual documentation for the ilokesto package family.
 
 ## Routes
 
-- `/en/state`
-- `/ko/state`
 - `/en/store`
 - `/ko/store`
-- `/en/utilinent`
-- `/ko/utilinent`
 
 ## Development
 

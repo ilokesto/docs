@@ -1,6 +1,0 @@
-{
-  "title": "미들웨어",
-  "defaultOpen": true,
-  "collapsible": false,
-  "pages": ["logger", "devtools", "debounce", "persist", "validate"]
-}

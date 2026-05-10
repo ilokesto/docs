@@ -57,7 +57,7 @@ function PackageIcon({ pkg }: { pkg: keyof typeof packageMetadata }) {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div
-        className={`size-3 rounded-[4px] shrink-0 ${packageMetadata[pkg].colorClass}`}
+        className={`size-3 rounded-sm shrink-0 ${packageMetadata[pkg].colorClass}`}
       />
     </div>
   );
@@ -94,10 +94,11 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'State',
       description: isKorean
-        ? '@ilokesto/store 위에 얹는 React 상태 훅'
-        : 'React state hooks on top of @ilokesto/store',
-      url: `/${lang}/state`,
+        ? 'State helper 문서 준비 중'
+        : 'State helper docs coming soon',
+      url: '#',
       icon: <PackageIcon pkg="state" />,
+      props: disabledProps,
     },
     {
       title: 'Overlay',
@@ -138,10 +139,11 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'Utilinent',
       description: isKorean
-        ? '선언적 렌더링과 composition helper'
-        : 'Declarative rendering and composition helpers',
-      url: `/${lang}/utilinent`,
+        ? 'Rendering utility 문서 준비 중'
+        : 'Rendering utility docs coming soon',
+      url: '#',
       icon: <PackageIcon pkg="utilinent" />,
+      props: disabledProps,
     },
   ];
 }

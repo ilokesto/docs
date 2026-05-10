@@ -79,21 +79,11 @@ Keep `index.mdx` in the folder so the folder label can navigate to the overview 
 
 ```
 docs/content/docs/
-├── store/       @ilokesto/store    — framework-neutral vanilla store
-├── state/       @ilokesto/state    — multi-framework adapters backed by Store
-└── utilinent/   @ilokesto/utilinent — React rendering-logic utilities
+└── store/       @ilokesto/store    — framework-neutral vanilla store
 ```
 
 ### store — `meta.json` sections
 `Getting Started` → `Reference` → `Guides` → `Advanced` → `troubleshooting`
-
-### state — `meta.json` sections
-`Getting Started` → `Reference` → `Guides` → `Advanced`
-
-`middleware/` and `utils/` are folder groups under `Reference`, not separate top-level separators.
-
-### utilinent — `meta.json` sections
-`Getting Started` → _(feature category sections)_ → `Advanced`
 
 ## Adding a New Library
 

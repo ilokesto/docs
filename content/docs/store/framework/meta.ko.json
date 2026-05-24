@@ -1,6 +1,0 @@
-{
-  "title": "프레임워크 사용법",
-  "defaultOpen": true,
-  "collapsible": false,
-  "pages": ["react", "vue", "svelte", "angular"]
-}

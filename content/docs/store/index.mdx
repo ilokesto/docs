@@ -1,9 +1,9 @@
 ---
-title: Introduction
-description: A routing guide for the framework neutral Store package.
+title: Introduce the Store
+description: Framework-neutral TypeScript store with replace-only state updates and subscription notifications.
 ---
 
-# Store
+# Introduce the `Store`
 
 `@ilokesto/store` stores one TypeScript state value, replaces it through `setState`, and notifies subscribers after successful replacements.
 
@@ -13,41 +13,12 @@ The contract stays framework neutral so React, Vue, Svelte, Angular, and other r
 
 The package exports `Store<T>` from `@ilokesto/store`.
 
-What it covers:
-
-- one stored state value,
-- reads for current and initial state,
-- replacement updates with a value or updater function,
-- subscriptions for successful state changes,
-- source backed middleware through current public method names.
-
-What it does not cover:
-
-- framework hooks,
-- selectors or reducers,
-- persistence or data fetching,
-- devtools,
-- async scheduling.
 
 ## Install
 
 ```package-install
 @ilokesto/store
 ```
-
-## Start here
-
-- [Quick Start](./quick-start): Install and wire a first store.
-- [Core Concepts](./core-concepts): Understand snapshots and replacement updates.
-- [API Reference](./api): Check the public `Store<T>` surface.
-
-## Continue with task focused pages
-
-- [Framework Usage](./framework): Connect framework lifecycles.
-- [Common Patterns](./patterns): Apply plain `Store` recipes.
-- [Advanced Semantics](./advanced-semantics): Review update and notification rules.
-- [Building on Store](./building-on-store): Build adapters on the minimal contract.
-- [Troubleshooting](./troubleshooting): Diagnose common usage mistakes.
 
 ## Small example
 
@@ -64,3 +35,7 @@ counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 
 unsubscribe();
 ```
+
+## Next
+
+- [Build a small cart store](./tutorial)

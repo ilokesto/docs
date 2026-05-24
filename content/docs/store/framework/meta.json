@@ -1,6 +1,0 @@
-{
-  "title": "Framework Usage",
-  "defaultOpen": true,
-  "collapsible": false,
-  "pages": ["react", "vue", "svelte", "angular"]
-}

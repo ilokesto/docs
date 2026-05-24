@@ -1,0 +1,93 @@
+---
+title: 튜토리얼
+description: Store로 작은 장바구니 store를 만듭니다.
+---
+
+# 튜토리얼: 작은 장바구니 store 만들기
+
+이 튜토리얼은 순수 TypeScript로 작은 장바구니 store를 만듭니다. 핵심 흐름은 상태 만들기, 상태 읽기, 변경 구독하기, 상태 업데이트하기, 구독 해제하기입니다.
+
+## 1. store 만들기
+
+먼저 상태 타입을 정의한 뒤, 초기 상태를 `new Store()`에 전달합니다.
+
+```ts lineNumbers
+import { Store } from "@ilokesto/store";
+
+type CartItem = {
+  id: string;
+  title: string;
+  quantity: number;
+};
+
+type CartState = {
+  items: CartItem[];
+};
+
+const cartStore = new Store<CartState>({
+  items: [],
+});
+```
+
+## 2. 현재 상태 읽기
+
+최신 값이 필요할 때는 `getState()`를 사용합니다.
+
+```ts lineNumbers
+const currentCart = cartStore.getState();
+
+console.log(currentCart.items);
+```
+
+## 3. 변경 구독하기
+
+`subscribe()`는 리스너를 받고 구독 해제 함수를 반환합니다. 리스너는 상태를 인자로 받지 않으므로, 리스너 안에서 `getState()`로 최신 값을 읽습니다.
+
+```ts lineNumbers
+const unsubscribe = cartStore.subscribe(() => {
+  console.table(cartStore.getState().items);
+});
+```
+
+## 4. `setState`로 업데이트하기
+
+`setState()`는 저장된 값을 교체합니다. 객체 상태를 다룰 때는 이전 값을 직접 수정하지 말고 새 객체를 반환하세요.
+
+```ts lineNumbers
+function addItem(item: CartItem): void {
+  cartStore.setState((prev) => ({
+    items: [...prev.items, item],
+  }));
+}
+
+function increaseQuantity(id: string): void {
+  cartStore.setState((prev) => ({
+    items: prev.items.map((item) =>
+      item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+    ),
+  }));
+}
+
+function clearCart(): void {
+  cartStore.setState({ items: [] });
+}
+```
+
+## 5. 전체 흐름 실행하기
+
+```ts lineNumbers
+addItem({ id: "keyboard", title: "Keyboard", quantity: 1 });
+increaseQuantity("keyboard");
+clearCart();
+
+unsubscribe();
+```
+
+`unsubscribe()`가 실행되면 리스너가 제거되므로 이후의 `setState()` 호출에는 반응하지 않습니다.
+
+## 핵심 정리
+
+- `Store<T>`는 타입이 있는 상태 값 하나를 보관합니다.
+- `setState()`는 다음 값 또는 이전 값을 받는 함수를 인자로 받을 수 있습니다.
+- 구독자는 상태가 다른 값으로 교체된 뒤에만 실행됩니다.
+- 리스너가 더 필요하지 않다면 반드시 구독 해제 함수를 호출하세요.

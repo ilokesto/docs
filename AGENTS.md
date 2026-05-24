@@ -83,7 +83,7 @@ docs/content/docs/
 ```
 
 ### store — `meta.json` sections
-`Getting Started` → `Reference` → `Guides` → `Advanced` → `troubleshooting`
+`index` only while the docs rewrite is in progress.
 
 ## Adding a New Library
 

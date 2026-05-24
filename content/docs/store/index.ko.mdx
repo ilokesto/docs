@@ -1,9 +1,9 @@
 ---
-title: 개요
-description: 프레임워크에 묶이지 않는 Store 패키지를 위한 경로 안내입니다.
+title: store를 소개합니다
+description: 교체 기반 상태 업데이트와 구독 알림을 제공하는 프레임워크 중립 TypeScript store입니다.
 ---
 
-# Store
+# Introduce the `Store`
 
 `@ilokesto/store`는 하나의 TypeScript 상태 값을 저장하고, `setState`로 값을 교체하며, 교체가 성공하면 구독자에게 알립니다.
 
@@ -13,41 +13,11 @@ description: 프레임워크에 묶이지 않는 Store 패키지를 위한 경�
 
 이 패키지는 `@ilokesto/store`에서 `Store<T>`를 내보냅니다.
 
-다루는 범위:
-
-- 하나의 저장된 상태 값,
-- 현재 상태와 초기 상태 읽기,
-- 값 또는 업데이트 함수로 실행하는 교체 업데이트,
-- 성공한 상태 변경 구독,
-- 현재 공개 메서드 이름을 쓰는 소스 기반 미들웨어.
-
-다루지 않는 범위:
-
-- 프레임워크 hook,
-- selector 또는 reducer,
-- persistence 또는 data fetching,
-- devtools,
-- 비동기 스케줄링.
-
 ## 설치
 
 ```package-install
 @ilokesto/store
 ```
-
-## 여기서 시작하기
-
-- [빠른 시작](./quick-start): 첫 스토어 설치와 연결.
-- [핵심 개념](./core-concepts): 스냅샷과 교체 업데이트 이해.
-- [API 레퍼런스](./api): 공개 `Store<T>` 표면 확인.
-
-## 작업별 페이지 이어서 보기
-
-- [프레임워크 사용](./framework): 프레임워크 생명주기 연결.
-- [공통 패턴](./patterns): plain `Store` 레시피 적용.
-- [고급 시맨틱](./advanced-semantics): 업데이트와 알림 규칙 검토.
-- [Store 기반 구축하기](./building-on-store): 최소 계약 위에 어댑터 구축.
-- [문제 해결](./troubleshooting): 흔한 사용 실수 진단.
 
 ## 작은 예제
 
@@ -64,3 +34,7 @@ counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
 
 unsubscribe();
 ```
+
+## 다음 문서
+
+- [작은 장바구니 store 만들기](./tutorial)

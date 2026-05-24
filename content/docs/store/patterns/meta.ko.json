@@ -1,6 +1,0 @@
-{
-  "title": "공통 패턴",
-  "defaultOpen": true,
-  "collapsible": false,
-  "pages": ["organizing-stores", "updating-and-testing"]
-}

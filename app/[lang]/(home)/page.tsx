@@ -25,10 +25,9 @@ const packageCards = [
   {
     pkg: 'form',
     title: '@ilokesto/form',
-    comingSoon: true,
     descriptions: {
-      en: 'Type-safe form primitives for the next package in the family.',
-      ko: '다음 패키지로 준비 중인 타입 안전 form primitive.',
+      en: 'Framework-friendly form state and field bindings for React, Vue, Solid, and Svelte.',
+      ko: 'React, Vue, Solid, Svelte를 위한 폼 상태와 필드 바인딩 도구.',
     },
   },
   {
@@ -83,11 +82,11 @@ const homeCopy: Record<Locale, {
   comingSoon: string;
 }> = {
   en: {
-    subtitle: "[iloˈkɛsto], which means \"toolbox\" in Esperanto\nA small, explicit collection of packages for predictable front-end development",
+    subtitle: "[iloˈkɛsto], which means \"toolbox\" in Esperanto\nA small, explicit collection of packages for predictable front-end development.",
     comingSoon: 'Coming soon',
   },
   ko: {
-    subtitle: "[iloˈkɛsto], 에스페란토로 '도구상자'를 의미\n예측 가능한 프론트엔드 개발을 위한 작고 명시적인 패키지 모음",
+    subtitle: "[iloˈkɛsto], 에스페란토로 '도구상자'를 의미\n예측 가능한 프론트엔드 개발을 위한 작고 명시적인 패키지 모음.",
     comingSoon: '준비 중',
   },
 };

@@ -109,11 +109,10 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'Form',
       description: isKorean
-        ? '타입 안전 form primitive 준비 중'
-        : 'Type-safe form primitives coming soon',
-      url: '#',
+        ? '프레임워크 친화적인 폼 상태와 필드 바인딩'
+        : 'Framework-friendly form state and field bindings',
+      url: `/${lang}/form`,
       icon: <PackageIcon pkg="form" />,
-      props: disabledProps,
     },
     {
       title: 'Overlay',

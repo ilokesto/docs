@@ -88,7 +88,6 @@ const homeCopy: Record<Locale, {
   },
   ko: {
     subtitle: "[iloˈkɛsto], 에스페란토로 '도구상자'를 의미\n예측 가능한 프론트엔드 개발을 위한 작고 명시적인 패키지 모음",
-
     comingSoon: '준비 중',
   },
 };
@@ -145,7 +144,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   return (
     <main className="flex flex-1 flex-col bg-fd-background text-fd-foreground">
       <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-5 py-16 sm:px-8 lg:px-10 lg:py-24">
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
+
           <div className="space-y-6">
             <div className='flex items-center justify-left gap-6'>
             <div className="flex size-20 items-center justify-center rounded-3xl border border-fd-border bg-fd-card p-3 shadow-sm">
@@ -159,16 +158,15 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               />
             </div>
             <h1 className="text-5xl font-bold tracking-tight text-fd-foreground sm:text-6xl lg:text-7xl">
-                ilokesto
-              </h1>
-            </div>
-
-              <p className="max-w-2xl text-lg leading-8 text-fd-muted-foreground sm:text-xl whitespace-pre-wrap">
-               
-                  {copy.subtitle}
-                </p>
+              ilokesto
+            </h1>
           </div>
-        </div>
+
+            <p className="text-lg leading-8 text-fd-muted-foreground sm:text-xl whitespace-pre-wrap">
+              {copy.subtitle}
+            </p>
+          </div>
+
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {packageCards.map((card) => {

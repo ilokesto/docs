@@ -1,18 +1,13 @@
 ---
-title: Introduce the Store
-description: Framework-neutral TypeScript store with replace-only state updates and subscription notifications.
+title: "Store"
+description: "Official documentation for @ilokesto/store, a small framework-neutral TypeScript state container."
 ---
 
-# Introduce the `Store`
+# Store
 
-`@ilokesto/store` stores one TypeScript state value, replaces it through `setState`, and notifies subscribers after successful replacements.
+`@ilokesto/store` is a small TypeScript state container for one application-owned value. It gives you a `Store<T>` class, synchronous reads with `getState()`, replacement updates with `setState()`, change listeners with `subscribe()`, and an explicit middleware pipeline.
 
-The contract stays framework neutral so React, Vue, Svelte, Angular, and other runtimes can connect through adapters instead of owning the core state layer.
-
-## Package boundary
-
-The package exports `Store<T>` from `@ilokesto/store`.
-
+Use it when you want a tiny state primitive that is independent of React, Vue, Svelte, Angular, or any other UI runtime. The package does not render UI, persist data, fetch from networks, or merge nested objects for you.
 
 ## Install
 
@@ -20,22 +15,37 @@ The package exports `Store<T>` from `@ilokesto/store`.
 @ilokesto/store
 ```
 
-## Small example
+## What it gives you
 
 ```ts lineNumbers
 import { Store } from "@ilokesto/store";
 
-const counterStore = new Store({ count: 0 });
+type CounterState = { count: number };
+
+const counterStore = new Store<CounterState>({ count: 0 });
 
 const unsubscribe = counterStore.subscribe(() => {
-  console.log(counterStore.getState());
+  console.log(counterStore.getState().count);
 });
 
-counterStore.setState((prev) => ({ ...prev, count: prev.count + 1 }));
-
+counterStore.setState((prev) => ({ count: prev.count + 1 }));
 unsubscribe();
 ```
 
-## Next
+`setState()` replaces the stored value. If the resolved next value is `Object.is`-equal to the previous value, the store keeps the old value and does not notify listeners.
 
-- [Build a small cart store](./tutorial)
+## When to use it
+
+Choose `@ilokesto/store` for small shared state, domain state outside a component tree, framework adapter internals, or simple event-driven modules where a full state library would be more structure than you need.
+
+Avoid it when you need built-in selectors, reducers, devtools, persistence, async caching, normalized entities, or distributed synchronization. Those concerns can be built around the store, but they are not part of this package.
+
+## Documentation map
+
+- [Quick start](./quick-start): build and clean up a small cart store.
+- [Core concepts](./core-concepts): replacement updates, subscribers, and middleware at a glance.
+- [Store reference](./reference/store): constructor, `getState()`, and `getInitialState()`.
+- [setState reference](./reference/set-state): value updates, updater functions, and no-notify cases.
+- [subscribe reference](./reference/subscribe): listener lifecycle and cleanup.
+- [middleware reference](./reference/middleware): `pushMiddleware()` and `unshiftMiddleware()` ordering.
+- [Troubleshooting](./troubleshooting): common mistakes before using the package in real work.

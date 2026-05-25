@@ -1,5 +1,17 @@
 {
   "title": "Store",
   "root": true,
-  "pages": ["index", "tutorial"]
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "quick-start",
+    "core-concepts",
+    "---Reference---",
+    "reference",
+    "---Guides---",
+    "guides",
+    "---Advanced---",
+    "advanced",
+    "troubleshooting"
+  ]
 }

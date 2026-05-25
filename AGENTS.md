@@ -62,7 +62,7 @@ When a library has feature groups, represent them as folders inside the closest 
 - Task-oriented walkthroughs and recipes belong under `---Guides---`.
 - Edge cases, internals, and implementation notes belong under `---Advanced---`.
 
-For Fumadocs folder groups, prefer this shape:
+For Fumadocs folder groups, prefer this shape for primary Reference and Guides groups:
 
 ```json
 {
@@ -72,6 +72,8 @@ For Fumadocs folder groups, prefer this shape:
   "pages": ["child-page"]
 }
 ```
+
+Advanced groups may be collapsed by default (`"defaultOpen": false`, `"collapsible": true`) when they contain optional power-user or edge-case material. Treat that as an intentional exception, not the default shape for every group.
 
 Keep `index.mdx` in the folder so the folder label can navigate to the overview page, but omit `"index"` from `pages` to avoid a duplicated child item.
 
@@ -83,7 +85,7 @@ docs/content/docs/
 ```
 
 ### store — `meta.json` sections
-`index` only while the docs rewrite is in progress.
+Completed vertical slice: `index`, `quick-start`, `core-concepts`, grouped `reference`, grouped `guides`, grouped optional `advanced`, and `troubleshooting`. Reuse this rhythm for future packages, but do not copy the exact page set without package-specific source evidence.
 
 ## Adding a New Library
 

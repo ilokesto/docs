@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 type Locale = 'en' | 'ko';
-type PackageName = 'store' | 'state' | 'overlay' | 'modal' | 'toast' | 'utilinent' | 'form';
+type PackageName = 'store' | 'state' | 'overlay' | 'modal' | 'toast' | 'utilinent' | 'fetcher' | 'form';
 
 const packageCards = [
   {
@@ -66,6 +66,14 @@ const packageCards = [
       ko: '조건부, list, slot, lazy UI를 위한 React rendering utility.',
     },
   },
+  {
+    pkg: 'fetcher',
+    title: '@ilokesto/fetcher',
+    descriptions: {
+      en: 'OpenAPI-aware ky wrapper with typed routes, bodies, and safe results.',
+      ko: 'Typed route, body, safe result를 더한 OpenAPI-aware ky wrapper.',
+    },
+  },
 ] as const;
 
 type PackageCard = (typeof packageCards)[number];
@@ -76,15 +84,15 @@ const homeCopy: Record<Locale, {
   comingSoon: string;
 }> = {
   en: {
-    subtitle: 'Small state tools, UI primitives, and composition utilities for product interfaces.',
+    subtitle: 'Small, explicit building blocks for predictable front-end systems.',
     panel:
-      'Use only the layer you need today: a vanilla store, framework-friendly state helpers, and rendering utilities that stay explicit instead of magical. More UI primitives are on the way.',
+      'Pick only the layer you need: state, typed fetching, rendering utilities, and UI primitives that compose without hiding the runtime. More packages are on the way.',
     comingSoon: 'Coming soon',
   },
   ko: {
-    subtitle: '제품 인터페이스를 위한 작은 상태 도구, UI primitive, composition utility.',
+    subtitle: '예측 가능한 프론트엔드를 위한 작고 명시적인 빌딩 블록.',
     panel:
-      '지금 필요한 레이어만 골라 쓰세요. vanilla store, 프레임워크 친화적인 상태 헬퍼, 렌더링 유틸리티를 마법처럼 숨기기보다 명확하게 조합합니다. 더 많은 UI primitive는 준비 중입니다.',
+      '필요한 레이어만 골라 쓰세요. 상태, typed fetching, 렌더링 유틸리티, UI primitive를 런타임을 숨기지 않는 방식으로 조합합니다. 더 많은 패키지는 준비 중입니다.',
     comingSoon: '준비 중',
   },
 };

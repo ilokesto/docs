@@ -51,6 +51,13 @@ export const packageMetadata: Record<string, { colorClass: string; cssVarDark: s
     fgVarLight: 'hsl(0, 0%, 98%)',
     fgVarDark: 'hsl(0, 0%, 9%)',
   },
+  fetcher: {
+    colorClass: 'bg-sky-500',
+    cssVarLight: 'var(--color-sky-600)',
+    cssVarDark: 'var(--color-sky-400)',
+    fgVarLight: 'hsl(0, 0%, 98%)',
+    fgVarDark: 'hsl(0, 0%, 9%)',
+  },
 };
 
 function PackageIcon({ pkg }: { pkg: keyof typeof packageMetadata }) {
@@ -142,6 +149,14 @@ export function getPackageTabs(lang: string): LayoutTab[] {
         : 'React rendering utilities',
       url: `/${lang}/utilinent`,
       icon: <PackageIcon pkg="utilinent" />,
+    },
+    {
+      title: 'Fetcher',
+      description: isKorean
+        ? 'OpenAPI-aware ky wrapper'
+        : 'OpenAPI-aware ky wrapper',
+      url: `/${lang}/fetcher`,
+      icon: <PackageIcon pkg="fetcher" />,
     },
   ];
 }

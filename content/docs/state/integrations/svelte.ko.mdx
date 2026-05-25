@@ -1,0 +1,37 @@
+---
+title: "Svelte"
+description: "Svelte adapter for @ilokesto/state."
+---
+
+# Svelte
+
+Svelte adapter는 root package가 아니라 `@ilokesto/state/svelte`에서 import하세요.
+
+```svelte lineNumbers
+<script lang="ts">
+  import { create } from '@ilokesto/state/svelte';
+
+  const counter = create({ count: 0 });
+  const count = counter.select((state) => state.count);
+</script>
+
+<button on:click={() => counter.update((state) => ({ count: state.count + 1 }))}>
+  {$count}
+</button>
+```
+
+## Return shape
+
+plain state는 `set`, `update`, `setState`, `select`, `writeOnly`, `readOnly`를 가진 writable Svelte store입니다. reducer state는 readable이며 `dispatch`를 추가합니다.
+
+## Reducer state
+
+같은 `create(reduce, initialState)` overload는 selector를 유지하면서 writer를 `setState`에서 `dispatch`로 바꿉니다.
+
+## Outside lifecycle
+
+subscribe하지 않아야 하는 event bus, service function, test, synchronous snapshot read에는 `readOnly()`와 `writeOnly()`를 사용하세요.
+
+## Caveat
+
+Svelte는 표준 Svelte store 모양을 받습니다. component에서는 `$store`를 쓰고, derived readable만 필요하면 `select`를 호출하세요.

@@ -1,0 +1,39 @@
+---
+title: "Angular"
+description: "Angular adapter for @ilokesto/state."
+---
+
+# Angular
+
+Import the Angular adapter from `@ilokesto/state/angular`, not from the root package.
+
+```ts lineNumbers
+import { Component, DestroyRef, inject } from '@angular/core';
+import { create } from '@ilokesto/state/angular';
+
+const useCounter = create({ count: 0 });
+
+@Component({ selector: 'counter-view', template: `<button (click)="inc()">{{ count() }}</button>` })
+export class CounterView {
+  private destroyRef = inject(DestroyRef);
+  private counter = useCounter((state) => state.count, { destroyRef: this.destroyRef });
+  count = this.counter.state;
+  inc = () => this.counter.setState((state) => ({ count: state.count + 1 }));
+}
+```
+
+## Return shape
+
+Plain state returns `{ state: Signal<S>, setState, subscribe }`. Reducer state returns `{ state: Signal<S>, dispatch, subscribe }`.
+
+## Reducer state
+
+The same `create(reduce, initialState)` overload changes the writer from `setState` to `dispatch` while preserving selectors.
+
+## Outside lifecycle
+
+Use `readOnly()` for synchronous snapshot reads and `writeOnly()` for event buses, service functions, or tests that should not subscribe.
+
+## Caveat
+
+Reactive calls need an Angular injection context or an explicit `{ destroyRef }`; the adapter registers unsubscribe cleanup on `DestroyRef`.

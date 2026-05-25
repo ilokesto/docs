@@ -1,0 +1,86 @@
+---
+title: "Middleware"
+description: "logger, validate, debounce, devtools, persist를 한 reference page에서 다룹니다."
+---
+
+# Middleware
+
+`@ilokesto/state/middleware`는 초기 상태/store를 바로 받거나 `pipe`에 넘길 함수를 반환하는 middleware helper를 내보냅니다.
+
+## Composition pattern
+
+```ts lineNumbers
+import { logger, persist } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
+
+const store = pipe(
+  { count: 0 },
+  logger({ collapsed: true }),
+  persist({ local: 'counter' }),
+);
+```
+
+## `logger`
+
+`logger(options?)` 는 previous state, next state, time, optional diff, 가능한 경우 reducer action name을 로그로 남깁니다. production에서는 건너뜁니다.
+
+```ts lineNumbers
+const store = logger({ count: 0 }, { collapsed: true, diff: true, timestamp: true });
+```
+
+Caveat: diff output은 JSON serialization 기반 debugging helper이며 structural patch format이 아닙니다.
+
+## `validate`
+
+`validate(schema)` 는 Standard Schema v1을 사용합니다. invalid update는 멈추고 로그를 남깁니다.
+
+```ts lineNumbers
+const positiveCount = {
+  '~standard': {
+    version: 1,
+    vendor: 'example',
+    validate(value: unknown) {
+      return typeof value === 'object' && value !== null ? { value: value as { count: number } } : { issues: [{ message: 'Invalid state' }] };
+    },
+  },
+} as const;
+
+const store = validate({ count: 0 }, positiveCount);
+```
+
+Caveat: async Standard Schema validation은 지원하지 않습니다. Promise 결과는 error log를 남기고 update를 계속하지 않습니다.
+
+## `debounce`
+
+`debounce(wait?)` 는 빠른 update를 모아 wait window 뒤에 적용합니다. function update는 누적된 최신 상태를 기준으로 순서대로 replay됩니다.
+
+```ts lineNumbers
+const store = debounce({ query: '' }, 250);
+```
+
+Caveat: update가 지연되므로 timer가 실행되기 전 즉시 읽으면 이전 state가 보일 수 있습니다.
+
+## `devtools`
+
+`devtools(name)` 는 production 밖에서 Redux DevTools extension에 연결하고 current state로 초기화하며, named update를 보내고 RESET, COMMIT, ROLLBACK dispatch message를 처리합니다.
+
+```ts lineNumbers
+const store = devtools({ count: 0 }, 'counter');
+```
+
+Caveat: browser/devtools에 의존하며 production에서는 의도적으로 비활성화됩니다.
+
+## `persist`
+
+`persist(options)` 는 `localStorage`, `sessionStorage`, cookie에서 initial state를 읽고, 변경된 state를 `{ state, version }` JSON으로 다시 씁니다.
+
+```ts lineNumbers
+const store = persist({ theme: 'light' }, { local: 'theme' });
+
+const migrated = persist(
+  { theme: 'light', version: 2 },
+  { local: 'theme', migrate: [(old) => ({ theme: String(old), version: 2 })] },
+);
+```
+
+Caveat: migration은 `local`과 `cookie`에서 지원하고 `session`에서는 지원하지 않습니다. browser storage는 throw할 수 있으므로 실패한 read/write는 browser에서 catch 후 log됩니다.

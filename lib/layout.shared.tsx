@@ -94,11 +94,10 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'State',
       description: isKorean
-        ? 'State helper 문서 준비 중'
-        : 'State helper docs coming soon',
-      url: '#',
+        ? '프레임워크 친화적인 상태 헬퍼'
+        : 'Framework-friendly state helpers',
+      url: `/${lang}/state`,
       icon: <PackageIcon pkg="state" />,
-      props: disabledProps,
     },
     {
       title: 'Overlay',

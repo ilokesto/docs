@@ -1,0 +1,38 @@
+---
+title: "Solid"
+description: "Solid adapter for @ilokesto/state."
+---
+
+# Solid
+
+Import the Solid adapter from `@ilokesto/state/solid`, not from the root package.
+
+```tsx lineNumbers
+import { createRoot } from 'solid-js';
+import { create } from '@ilokesto/state/solid';
+
+const useCounter = create({ count: 0 });
+
+function Counter() {
+  const { state, setState } = useCounter((state) => state.count);
+  return <button onClick={() => setState((prev) => ({ count: prev.count + 1 }))}>{state()}</button>;
+}
+
+createRoot(() => useCounter((state) => state.count));
+```
+
+## Return shape
+
+Plain state returns `{ state: Accessor<S>, setState }`. Reducer state returns `{ state: Accessor<S>, dispatch }`.
+
+## Reducer state
+
+The same `create(reduce, initialState)` overload changes the writer from `setState` to `dispatch` while preserving selectors.
+
+## Outside lifecycle
+
+Use `readOnly()` for synchronous snapshot reads and `writeOnly()` for event buses, service functions, or tests that should not subscribe.
+
+## Caveat
+
+Reactive calls require a reactive owner such as a component or `createRoot`; outside that owner, use `readOnly()`.

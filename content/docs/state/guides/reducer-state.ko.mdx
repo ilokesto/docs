@@ -1,0 +1,25 @@
+---
+title: "Reducer state guide"
+description: "adapter에서 reducer action과 dispatch를 사용합니다."
+---
+
+# Reducer state guide
+
+상태 전이에 이름이 필요하거나 여러 UI event가 같은 transition logic을 공유해야 한다면 reducer state를 사용하세요.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/solid';
+
+type Action = { type: 'add'; amount: number } | { type: 'reset' };
+const reduce = (state: { count: number }, action: Action) => {
+  if (action.type === 'add') return { count: state.count + action.amount };
+  if (action.type === 'reset') return { count: 0 };
+  return state;
+};
+
+const useCounter = create(reduce, { count: 0 });
+```
+
+reducer adapter는 reactive call과 `writeOnly()`에서 `dispatch`를 노출합니다.
+
+Caveat: reducer action은 next state로 변환된 뒤 같은 store middleware pipeline을 통과합니다. `logger` 같은 middleware는 action name을 사용할 수 있습니다.

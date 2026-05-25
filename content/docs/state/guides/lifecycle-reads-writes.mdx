@@ -1,0 +1,25 @@
+---
+title: "Lifecycle reads and writes"
+description: "Read and write outside framework lifecycles safely."
+---
+
+# Lifecycle reads and writes
+
+Sometimes router guards, network callbacks, or tests need current state without creating a component subscription.
+
+```ts lineNumbers
+const readAuth = useAuth.readOnly;
+const writeAuth = useAuth.writeOnly();
+
+export function requireLogin() {
+  if (!readAuth((state) => state.user)) throw new Error('Login required');
+}
+
+export function logout() {
+  writeAuth({ user: null });
+}
+```
+
+Use reactive adapter calls only where the framework can clean them up. Use `readOnly` and `writeOnly` elsewhere.
+
+Caveat: `readOnly` is a snapshot read. It does not subscribe and will not rerun your code when state changes.

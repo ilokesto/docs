@@ -17,10 +17,9 @@ const packageCards = [
   {
     pkg: 'state',
     title: '@ilokesto/state',
-    comingSoon: true,
     descriptions: {
-      en: 'State helper docs are being prepared for a later release.',
-      ko: 'State helper 문서는 이후 공개를 준비 중입니다.',
+      en: 'Framework-friendly state helpers for React, Vue, Svelte, Solid, and Angular.',
+      ko: 'React, Vue, Svelte, Solid, Angular를 위한 프레임워크 친화적인 상태 헬퍼.',
     },
   },
   {

@@ -1,0 +1,24 @@
+---
+title: "Plain state guide"
+description: "Use setState-style updates across adapters."
+---
+
+# Plain state guide
+
+Use plain state when the next state is easy to describe directly.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/vue';
+
+const useFilter = create({ query: '', page: 1 });
+
+export function useSearchBox() {
+  const { state, setState } = useFilter((state) => state.query);
+  const setQuery = (query: string) => setState((prev) => ({ ...prev, query, page: 1 }));
+  return { query: state, setQuery };
+}
+```
+
+Plain state works well for forms, toggles, filters, and small shared state. Prefer immutable replacement because `@ilokesto/store` notifies after `setState` receives a new value.
+
+Caveat: framework adapters shape the return differently. Check your Integration page before destructuring.

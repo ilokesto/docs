@@ -1,0 +1,25 @@
+---
+title: "Reducer state guide"
+description: "Use reducer actions and dispatch across adapters."
+---
+
+# Reducer state guide
+
+Use reducer state when state transitions deserve names or multiple UI events should share the same transition logic.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/solid';
+
+type Action = { type: 'add'; amount: number } | { type: 'reset' };
+const reduce = (state: { count: number }, action: Action) => {
+  if (action.type === 'add') return { count: state.count + action.amount };
+  if (action.type === 'reset') return { count: 0 };
+  return state;
+};
+
+const useCounter = create(reduce, { count: 0 });
+```
+
+Reducer adapters expose `dispatch` from reactive calls and from `writeOnly()`.
+
+Caveat: reducer actions flow through the same store middleware pipeline after being converted to next state. Middleware such as `logger` can use the action name.

@@ -1,0 +1,38 @@
+---
+title: "Vue"
+description: "Vue adapter for @ilokesto/state."
+---
+
+# Vue
+
+Import the Vue adapter from `@ilokesto/state/vue`, not from the root package.
+
+```ts lineNumbers
+import { create } from '@ilokesto/state/vue';
+
+const useCounter = create({ count: 0 });
+
+export default {
+  setup() {
+    const { state, setState } = useCounter((state) => state.count);
+    const inc = () => setState((prev) => ({ count: prev.count + 1 }));
+    return { count: state, inc };
+  },
+};
+```
+
+## Return shape
+
+Plain state returns `{ state: ComputedRef<S>, setState }`. Reducer state returns `{ state: ComputedRef<S>, dispatch }`.
+
+## Reducer state
+
+The same `create(reduce, initialState)` overload changes the writer from `setState` to `dispatch` while preserving selectors.
+
+## Outside lifecycle
+
+Use `readOnly()` for synchronous snapshot reads and `writeOnly()` for event buses, service functions, or tests that should not subscribe.
+
+## Caveat
+
+Reactive calls require `setup` or an active `effectScope`; outside that scope, use `readOnly()`.

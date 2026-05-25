@@ -1,0 +1,86 @@
+---
+title: "Middleware"
+description: "logger, validate, debounce, devtools, and persist in one reference page."
+---
+
+# Middleware
+
+`@ilokesto/state/middleware` exports middleware helpers that accept either an initial state/store immediately or return a function for `pipe`.
+
+## Composition pattern
+
+```ts lineNumbers
+import { logger, persist } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
+
+const store = pipe(
+  { count: 0 },
+  logger({ collapsed: true }),
+  persist({ local: 'counter' }),
+);
+```
+
+## `logger`
+
+`logger(options?)` logs previous state, next state, time, optional diff, and the reducer action name when available. It is skipped in production.
+
+```ts lineNumbers
+const store = logger({ count: 0 }, { collapsed: true, diff: true, timestamp: true });
+```
+
+Caveat: diff output is based on JSON serialization and is a debugging helper, not a structural patch format.
+
+## `validate`
+
+`validate(schema)` uses Standard Schema v1. Invalid updates are stopped and logged.
+
+```ts lineNumbers
+const positiveCount = {
+  '~standard': {
+    version: 1,
+    vendor: 'example',
+    validate(value: unknown) {
+      return typeof value === 'object' && value !== null ? { value: value as { count: number } } : { issues: [{ message: 'Invalid state' }] };
+    },
+  },
+} as const;
+
+const store = validate({ count: 0 }, positiveCount);
+```
+
+Caveat: async Standard Schema validation is not supported. A Promise result logs an error and the update does not continue.
+
+## `debounce`
+
+`debounce(wait?)` batches rapid updates and applies them after the wait window. Function updates are replayed in order against the latest accumulated state.
+
+```ts lineNumbers
+const store = debounce({ query: '' }, 250);
+```
+
+Caveat: updates are delayed, so immediate reads before the timer fires can still see the previous state.
+
+## `devtools`
+
+`devtools(name)` connects to the Redux DevTools extension outside production, initializes with current state, sends named updates, and handles RESET, COMMIT, and ROLLBACK dispatch messages.
+
+```ts lineNumbers
+const store = devtools({ count: 0 }, 'counter');
+```
+
+Caveat: it is browser/devtools dependent and intentionally disabled in production.
+
+## `persist`
+
+`persist(options)` reads initial state from `localStorage`, `sessionStorage`, or cookie, then writes changed state back as `{ state, version }` JSON.
+
+```ts lineNumbers
+const store = persist({ theme: 'light' }, { local: 'theme' });
+
+const migrated = persist(
+  { theme: 'light', version: 2 },
+  { local: 'theme', migrate: [(old) => ({ theme: String(old), version: 2 })] },
+);
+```
+
+Caveat: migrations are supported for `local` and `cookie`, not `session`. Browser storage can throw, so failed reads/writes are caught and logged in the browser.

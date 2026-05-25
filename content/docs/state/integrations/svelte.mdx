@@ -1,0 +1,37 @@
+---
+title: "Svelte"
+description: "Svelte adapter for @ilokesto/state."
+---
+
+# Svelte
+
+Import the Svelte adapter from `@ilokesto/state/svelte`, not from the root package.
+
+```svelte lineNumbers
+<script lang="ts">
+  import { create } from '@ilokesto/state/svelte';
+
+  const counter = create({ count: 0 });
+  const count = counter.select((state) => state.count);
+</script>
+
+<button on:click={() => counter.update((state) => ({ count: state.count + 1 }))}>
+  {$count}
+</button>
+```
+
+## Return shape
+
+Plain state is a writable Svelte store with `set`, `update`, `setState`, `select`, `writeOnly`, and `readOnly`. Reducer state is readable and adds `dispatch`.
+
+## Reducer state
+
+The same `create(reduce, initialState)` overload changes the writer from `setState` to `dispatch` while preserving selectors.
+
+## Outside lifecycle
+
+Use `readOnly()` for synchronous snapshot reads and `writeOnly()` for event buses, service functions, or tests that should not subscribe.
+
+## Caveat
+
+Svelte gets a standard Svelte store shape. Use `$store` in components, and call `select` when a derived readable is enough.

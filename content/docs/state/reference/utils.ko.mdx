@@ -1,0 +1,39 @@
+---
+title: "Utils"
+description: "middleware composition과 Immer update를 위한 pipe, adaptor 유틸리티입니다."
+---
+
+# Utils
+
+`@ilokesto/state/utils`는 `pipe`와 `adaptor`를 내보냅니다.
+
+## `pipe`
+
+`pipe(initialState, ...middlewares)`는 새 `Store<T>`를 만들고 middleware function을 왼쪽에서 오른쪽으로 적용합니다.
+
+```ts lineNumbers
+import { logger, persist } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
+
+const store = pipe(
+  { count: 0 },
+  logger({ collapsed: true }),
+  persist({ local: 'counter' }),
+);
+```
+
+Caveat: `pipe`는 새 `Store`를 만듭니다. 이미 `Store<T>`를 소유하고 있다면 middleware를 직접 붙이거나 그 store를 middleware helper에 넘기세요.
+
+## `adaptor`
+
+`adaptor(fn)`는 object state update를 위해 Immer `produce`를 감쌉니다. optional peer dependency인 `immer`가 필요합니다.
+
+```ts lineNumbers
+import { adaptor } from '@ilokesto/state/utils';
+
+setState(adaptor((draft) => {
+  draft.count += 1;
+}));
+```
+
+Caveat: `adaptor`는 object state로 제한됩니다. primitive state에는 직접 next value나 updater function을 사용하세요.

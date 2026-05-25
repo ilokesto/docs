@@ -1,0 +1,38 @@
+---
+title: "Solid"
+description: "Solid adapter for @ilokesto/state."
+---
+
+# Solid
+
+Solid adapter는 root package가 아니라 `@ilokesto/state/solid`에서 import하세요.
+
+```tsx lineNumbers
+import { createRoot } from 'solid-js';
+import { create } from '@ilokesto/state/solid';
+
+const useCounter = create({ count: 0 });
+
+function Counter() {
+  const { state, setState } = useCounter((state) => state.count);
+  return <button onClick={() => setState((prev) => ({ count: prev.count + 1 }))}>{state()}</button>;
+}
+
+createRoot(() => useCounter((state) => state.count));
+```
+
+## Return shape
+
+plain state는 `{ state: Accessor<S>, setState }`를 반환합니다. reducer state는 `{ state: Accessor<S>, dispatch }`를 반환합니다.
+
+## Reducer state
+
+같은 `create(reduce, initialState)` overload는 selector를 유지하면서 writer를 `setState`에서 `dispatch`로 바꿉니다.
+
+## Outside lifecycle
+
+subscribe하지 않아야 하는 event bus, service function, test, synchronous snapshot read에는 `readOnly()`와 `writeOnly()`를 사용하세요.
+
+## Caveat
+
+reactive call은 component 또는 `createRoot` 같은 reactive owner가 필요합니다. 그 밖에서는 `readOnly()`를 사용하세요.

@@ -1,0 +1,35 @@
+---
+title: "React"
+description: "React adapter for @ilokesto/state."
+---
+
+# React
+
+React adapter는 root package가 아니라 `@ilokesto/state/react`에서 import하세요.
+
+```tsx lineNumbers
+import { create } from '@ilokesto/state/react';
+
+const useCounter = create({ count: 0 });
+
+export function Counter() {
+  const [count, setCounter] = useCounter((state) => state.count);
+  return <button onClick={() => setCounter((state) => ({ count: state.count + 1 }))}>{count}</button>;
+}
+```
+
+## Return shape
+
+plain state는 `[selection, setState]`를 반환합니다. reducer state는 `[selection, dispatch]`를 반환합니다. `readOnly`와 `writeOnly`는 hook function에 붙어 있습니다.
+
+## Reducer state
+
+같은 `create(reduce, initialState)` overload는 selector를 유지하면서 writer를 `setState`에서 `dispatch`로 바꿉니다.
+
+## Outside lifecycle
+
+subscribe하지 않아야 하는 event bus, service function, test, synchronous snapshot read에는 `readOnly()`와 `writeOnly()`를 사용하세요.
+
+## Caveat
+
+React는 `useSyncExternalStore`를 사용하므로 반환된 hook은 React component 또는 custom hook 안에서만 호출하세요.

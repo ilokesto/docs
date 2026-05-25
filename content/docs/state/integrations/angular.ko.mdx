@@ -1,0 +1,39 @@
+---
+title: "Angular"
+description: "Angular adapter for @ilokesto/state."
+---
+
+# Angular
+
+Angular adapter는 root package가 아니라 `@ilokesto/state/angular`에서 import하세요.
+
+```ts lineNumbers
+import { Component, DestroyRef, inject } from '@angular/core';
+import { create } from '@ilokesto/state/angular';
+
+const useCounter = create({ count: 0 });
+
+@Component({ selector: 'counter-view', template: `<button (click)="inc()">{{ count() }}</button>` })
+export class CounterView {
+  private destroyRef = inject(DestroyRef);
+  private counter = useCounter((state) => state.count, { destroyRef: this.destroyRef });
+  count = this.counter.state;
+  inc = () => this.counter.setState((state) => ({ count: state.count + 1 }));
+}
+```
+
+## Return shape
+
+plain state는 `{ state: Signal<S>, setState, subscribe }`를 반환합니다. reducer state는 `{ state: Signal<S>, dispatch, subscribe }`를 반환합니다.
+
+## Reducer state
+
+같은 `create(reduce, initialState)` overload는 selector를 유지하면서 writer를 `setState`에서 `dispatch`로 바꿉니다.
+
+## Outside lifecycle
+
+subscribe하지 않아야 하는 event bus, service function, test, synchronous snapshot read에는 `readOnly()`와 `writeOnly()`를 사용하세요.
+
+## Caveat
+
+reactive call은 Angular injection context 또는 명시적인 `{ destroyRef }`가 필요합니다. adapter는 `DestroyRef`에 unsubscribe cleanup을 등록합니다.

@@ -1,0 +1,35 @@
+---
+title: "React"
+description: "React adapter for @ilokesto/state."
+---
+
+# React
+
+Import the React adapter from `@ilokesto/state/react`, not from the root package.
+
+```tsx lineNumbers
+import { create } from '@ilokesto/state/react';
+
+const useCounter = create({ count: 0 });
+
+export function Counter() {
+  const [count, setCounter] = useCounter((state) => state.count);
+  return <button onClick={() => setCounter((state) => ({ count: state.count + 1 }))}>{count}</button>;
+}
+```
+
+## Return shape
+
+Plain state returns `[selection, setState]`. Reducer state returns `[selection, dispatch]`. `readOnly` and `writeOnly` are attached to the hook function.
+
+## Reducer state
+
+The same `create(reduce, initialState)` overload changes the writer from `setState` to `dispatch` while preserving selectors.
+
+## Outside lifecycle
+
+Use `readOnly()` for synchronous snapshot reads and `writeOnly()` for event buses, service functions, or tests that should not subscribe.
+
+## Caveat
+
+React uses `useSyncExternalStore`, so call the returned hook only inside React components or custom hooks.

@@ -1,9 +1,9 @@
 ---
-title: "Read and write APIs"
+title: "읽기와 쓰기 API"
 description: "readOnly, writeOnly, subscribe와 생명주기 안전 사용법입니다."
 ---
 
-# Read and write APIs
+# 읽기와 쓰기 API
 
 `readOnly`와 `writeOnly`는 프레임워크 subscription을 만들지 않아야 하는 코드에서 사용합니다.
 
@@ -31,6 +31,6 @@ setCounter((state) => ({ count: state.count + 1 }));
 
 Angular는 result와 adapter object에 `subscribe`를 노출합니다. Svelte는 표준 Svelte store method로 `subscribe`를 노출합니다. 다른 adapter는 reactive read를 위해 내부적으로 subscribe합니다.
 
-## Caveat
+## 주의할 점
 
 현재 상태만 읽으려고 reactive adapter function을 lifecycle owner 밖에서 호출하지 마세요. 그럴 때는 `readOnly()`를 쓰세요. Vue, Solid, Angular는 이런 사용에 대해 의도적으로 lifecycle error를 던집니다.

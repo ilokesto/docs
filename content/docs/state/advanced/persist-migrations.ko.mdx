@@ -1,19 +1,19 @@
 ---
-title: "Persist migrations"
+title: "Persist migration"
 description: "persist의 storage type, versioning, migration caveat입니다."
 ---
 
-# Persist migrations
+# Persist migration
 
 `persist`는 `{ state, version }`을 browser storage에 serialize합니다. version은 migration array 길이입니다.
 
-## Storage types
+## Storage type
 
 - `{ local: key }`는 `localStorage`를 사용합니다.
 - `{ session: key }`는 `sessionStorage`를 사용합니다.
 - `{ cookie: key }`는 `document.cookie`를 사용합니다.
 
-## Migrations
+## Migration
 
 migration function은 stored version index부터 최신 migration까지 실행됩니다. 결과는 새 version과 함께 다시 저장됩니다.
 
@@ -27,7 +27,7 @@ persist({ theme: 'light', count: 0 }, {
 });
 ```
 
-## Caveats
+## 주의할 점
 
 - migration은 `local`과 `cookie` storage에서만 시도됩니다.
 - `session` storage는 public type에서 `migrate`를 받지 않습니다.

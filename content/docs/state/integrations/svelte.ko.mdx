@@ -1,37 +1,65 @@
 ---
-title: "Svelte"
-description: "Svelte adapter for @ilokesto/state."
+title: "Svelte 연동"
+description: "@ilokesto/state를 Svelte readable/writable store로 사용합니다."
 ---
 
-# Svelte
+# Svelte 연동
 
-Svelte adapter는 root package가 아니라 `@ilokesto/state/svelte`에서 import하세요.
+Svelte adapter는 Svelte store 기대에 맞는 store object를 반환합니다. `@ilokesto/state/svelte`에서 import합니다.
+
+## Plain writable store
 
 ```svelte lineNumbers
 <script lang="ts">
   import { create } from '@ilokesto/state/svelte';
 
-  const counter = create({ count: 0 });
+  const counter = create({ count: 0, label: 'Clicks' });
   const count = counter.select((state) => state.count);
+  const increment = () => counter.update((state) => ({ ...state, count: state.count + 1 }));
 </script>
 
-<button on:click={() => counter.update((state) => ({ count: state.count + 1 }))}>
+<button on:click={increment}>
   {$count}
 </button>
 ```
 
-## Return shape
+plain state는 writable이며 `set`, `update`, `setState`, `select`, `writeOnly`, `readOnly`를 포함합니다.
 
-plain state는 `set`, `update`, `setState`, `select`, `writeOnly`, `readOnly`를 가진 writable Svelte store입니다. reducer state는 readable이며 `dispatch`를 추가합니다.
+## Reducer readable store
 
-## Reducer state
+```svelte lineNumbers
+<script lang="ts">
+  import { create } from '@ilokesto/state/svelte';
 
-같은 `create(reduce, initialState)` overload는 selector를 유지하면서 writer를 `setState`에서 `dispatch`로 바꿉니다.
+  type Action = { type: 'increment' } | { type: 'reset' };
+  
+  const reduce = (state: { count: number }, action: Action) => {
+    if (action.type === 'increment') return { count: state.count + 1 };
+    if (action.type === 'reset') return { count: 0 };
+    return state;
+  };
 
-## Outside lifecycle
+  const counter = create(reduce, { count: 0 });
+  const count = counter.select((state) => state.count);
+</script>
 
-subscribe하지 않아야 하는 event bus, service function, test, synchronous snapshot read에는 `readOnly()`와 `writeOnly()`를 사용하세요.
+<button on:click={() => counter.dispatch({ type: 'increment' })}>
+  {$count}
+</button>
+```
 
-## Caveat
+reducer state는 write가 `dispatch`를 통해 일어나야 하므로 readable입니다.
 
-Svelte는 표준 Svelte store 모양을 받습니다. component에서는 `$store`를 쓰고, derived readable만 필요하면 `select`를 호출하세요.
+## 컴포넌트 밖에서 사용하기
+
+```ts lineNumbers
+const current = counter.readOnly((state) => state.count);
+const setCounter = counter.writeOnly();
+setCounter((state) => ({ ...state, count: state.count + 1 }));
+```
+
+## 주의할 점
+
+- `subscribe`는 Svelte 기대에 맞게 현재 state로 subscriber를 즉시 호출합니다.
+- `select`는 하나의 projection을 위한 readable store를 만듭니다.
+- reducer mode에서는 `dispatch`를 선호하세요. direct writable method는 노출되지 않습니다.

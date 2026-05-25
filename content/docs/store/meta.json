@@ -7,11 +7,13 @@
     "quick-start",
     "core-concepts",
     "---Reference---",
-    "reference",
+    "...reference",
     "---Guides---",
-    "guides",
+    "...guides",
+    "---Integrations---",
+    "...integrations",
     "---Advanced---",
-    "advanced",
+    "...advanced",
     "troubleshooting"
   ]
 }

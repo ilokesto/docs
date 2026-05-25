@@ -20,6 +20,8 @@ Every library doc uses the following section order in `meta.json`:
     "<api surface pages>",
     "---Guides---",
     "<task-oriented pages>",
+    "---Integrations---",
+    "<framework integration pages>",
     "---Advanced---",
     "<edge case / internals pages>",
     "troubleshooting"
@@ -35,6 +37,7 @@ Every library doc uses the following section order in `meta.json`:
 | Getting Started | `---Getting Started---` | `quick-start` + `core-concepts`. Entry path for new users. |
 | Reference | `---Reference---` | One page per major API export or feature group. Spec-level. |
 | Guides | `---Guides---` | Task and scenario-oriented how-to pages. |
+| Integrations | `---Integrations---` | Framework and ecosystem adapter pages such as React, Vue, Svelte, Solid, and Angular. Add only when the package has a real integration story. |
 | Advanced | `---Advanced---` | Edge cases, internal mechanics, building on the library. |
 | _(none)_ | — | `troubleshooting` always comes last with no separator if present. |
 
@@ -60,6 +63,7 @@ When a library has feature groups, represent them as folders inside the closest 
 
 - API exports, middleware, utilities, and other spec-level surfaces belong under `---Reference---`.
 - Task-oriented walkthroughs and recipes belong under `---Guides---`.
+- Framework adapter recipes and ecosystem connection pages belong under `---Integrations---`, placed after Guides and before Advanced.
 - Edge cases, internals, and implementation notes belong under `---Advanced---`.
 
 For Fumadocs folder groups, prefer this shape for primary Reference and Guides groups:
@@ -85,7 +89,7 @@ docs/content/docs/
 ```
 
 ### store — `meta.json` sections
-Completed vertical slice: `index`, `quick-start`, `core-concepts`, grouped `reference`, grouped `guides`, grouped optional `advanced`, and `troubleshooting`. Reuse this rhythm for future packages, but do not copy the exact page set without package-specific source evidence.
+Completed vertical slice: `index`, `quick-start`, `core-concepts`, grouped `reference`, grouped `guides`, inline `integrations` for React/Vue/Svelte/Solid/Angular adapters, grouped optional `advanced`, and `troubleshooting`. Reuse this rhythm for future packages, but do not copy the exact page set without package-specific source evidence.
 
 ## Adding a New Library
 

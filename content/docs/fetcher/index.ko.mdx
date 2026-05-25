@@ -1,21 +1,21 @@
 ---
 title: "Fetcher"
-description: "ky의 런타임 사용감을 유지하는 얇은 OpenAPI-aware facade입니다."
+description: "ky의 사용감을 유지하면서 OpenAPI 타입 안전성을 더하는 얇은 래퍼입니다."
 ---
 
 # Fetcher
 
-`@ilokesto/fetcher`는 실제 `ky` 런타임 위에 얇게 얹히는 OpenAPI-aware wrapper입니다. `ky.create`, `extend`, hooks, `prefixUrl`, custom `fetch`, lazy `ResponsePromise` parsing, `ky` error를 유지하면서 typed route template, grouped shortcut request, `.json()` 결과 추론, throw하지 않는 `safe` surface를 추가합니다.
+`@ilokesto/fetcher`는 실제 `ky` 런타임 위에 얇게 얹히는 래퍼입니다. `ky.create`, `extend`, 훅, `prefixUrl`, 커스텀 `fetch`, 지연 `ResponsePromise` 파싱, `ky` 오류 동작은 유지하면서 타입 안전한 경로 템플릿, 묶음형 단축 요청, `.json()` 결과 추론, 오류를 던지지 않는 `safe` API를 추가합니다.
 
 ## 설치
 
-`fetcher`는 peer dependency인 `ky`와 함께 설치합니다.
+`fetcher`는 함께 필요한 패키지인 `ky`와 같이 설치합니다.
 
-```bash
-pnpm add @ilokesto/fetcher ky
+```package-install
+@ilokesto/fetcher ky
 ```
 
-패키지는 dist 기반 ESM package로 배포됩니다. 패키지 tooling 기준은 Node.js 22 이상이며, 실제 HTTP 런타임은 `ky`에 위임하므로 browser, server, test 환경 제약은 사용하는 `ky` 환경과 같습니다.
+패키지는 빌드된 ESM 형태로 배포됩니다. 패키지 도구 기준은 Node.js 22 이상이며, 실제 HTTP 런타임은 `ky`에 위임하므로 브라우저, 서버, 테스트 환경 제약은 사용하는 `ky` 환경과 같습니다.
 
 ## 빠른 예시
 
@@ -73,8 +73,8 @@ const quote = await api
 
 ## 다음에 볼 문서
 
-- [Quick start](/ko/fetcher/quick-start)에서 typed client를 처음부터 만듭니다.
-- [Core concepts](/ko/fetcher/core-concepts)에서 ky-first model을 설명합니다.
-- [Entrypoints](/ko/fetcher/reference/entrypoints)에서 public import surface를 확인합니다.
-- [Grouped request](/ko/fetcher/reference/request-grouped-request)에서 shortcut request shape를 다룹니다.
-- [Safe](/ko/fetcher/reference/safe)에서 throw하지 않는 request를 설명합니다.
+- [빠른 시작](/ko/fetcher/quick-start)에서 타입 안전한 클라이언트를 처음부터 만듭니다.
+- [핵심 개념](/ko/fetcher/core-concepts)에서 ky를 중심에 둔 모델을 설명합니다.
+- [엔트리포인트](/ko/fetcher/reference/entrypoints)에서 공개 import 경로를 확인합니다.
+- [그룹 요청](/ko/fetcher/reference/request-grouped-request)에서 단축 요청의 형태를 다룹니다.
+- [Safe](/ko/fetcher/reference/safe)에서 오류를 던지지 않는 요청을 설명합니다.

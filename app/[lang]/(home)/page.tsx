@@ -18,8 +18,8 @@ const packageCards = [
     pkg: 'state',
     title: '@ilokesto/state',
     descriptions: {
-      en: 'Framework-friendly state helpers for React, Vue, Svelte, Solid, and Angular.',
-      ko: 'React, Vue, Svelte, Solid, Angular를 위한 프레임워크 친화적인 상태 헬퍼.',
+      en: 'Framework-friendly state management tools for React, Vue, Svelte, Solid, and Angular.',
+      ko: 'React, Vue, Svelte, Solid, Angular를 위한 프레임워크 친화적인 상태 관리 도구.',
     },
   },
   {
@@ -63,7 +63,7 @@ const packageCards = [
     title: '@ilokesto/utilinent',
     descriptions: {
       en: 'React rendering utilities for conditionals, lists, slots, and lazy UI.',
-      ko: '조건부, list, slot, lazy UI를 위한 React rendering utility.',
+      ko: '조건부 렌더링, 목록, 슬롯, 지연 UI를 명확하게 작성하는 React 유틸리티.',
     },
   },
   {
@@ -71,7 +71,7 @@ const packageCards = [
     title: '@ilokesto/fetcher',
     descriptions: {
       en: 'OpenAPI-aware ky wrapper with typed routes, bodies, and safe results.',
-      ko: 'Typed route, body, safe result를 더한 OpenAPI-aware ky wrapper.',
+      ko: '타입 안전한 경로, 요청 본문, 실패를 던지지 않는 결과를 더한 ky 래퍼.',
     },
   },
 ] as const;
@@ -84,15 +84,15 @@ const homeCopy: Record<Locale, {
   comingSoon: string;
 }> = {
   en: {
-    subtitle: 'Small, explicit building blocks for predictable front-end systems.',
+    subtitle: 'A small, explicit collection of packages for predictable front-end development.',
     panel:
       'Pick only the layer you need: state, typed fetching, rendering utilities, and UI primitives that compose without hiding the runtime. More packages are on the way.',
     comingSoon: 'Coming soon',
   },
   ko: {
-    subtitle: '예측 가능한 프론트엔드를 위한 작고 명시적인 빌딩 블록.',
+    subtitle: '예측 가능한 프론트엔드 개발을 위한 작고 명시적인 패키지 모음.',
     panel:
-      '필요한 레이어만 골라 쓰세요. 상태, typed fetching, 렌더링 유틸리티, UI primitive를 런타임을 숨기지 않는 방식으로 조합합니다. 더 많은 패키지는 준비 중입니다.',
+      '필요한 레이어만 골라 쓰세요. 상태 관리, 타입 안전한 데이터 요청, 렌더링 유틸리티, UI 기본 요소를 런타임을 숨기지 않는 방식으로 조합합니다. 더 많은 패키지는 준비 중입니다.',
     comingSoon: '준비 중',
   },
 };

@@ -101,8 +101,8 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'State',
       description: isKorean
-        ? '프레임워크 친화적인 상태 헬퍼'
-        : 'Framework-friendly state helpers',
+        ? '프레임워크 친화적인 상태 관리 도구'
+        : 'Framework-friendly state management tools',
       url: `/${lang}/state`,
       icon: <PackageIcon pkg="state" />,
     },
@@ -145,7 +145,7 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'Utilinent',
       description: isKorean
-        ? 'React rendering utility'
+        ? 'React 렌더링 유틸리티'
         : 'React rendering utilities',
       url: `/${lang}/utilinent`,
       icon: <PackageIcon pkg="utilinent" />,
@@ -153,7 +153,7 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'Fetcher',
       description: isKorean
-        ? 'OpenAPI-aware ky wrapper'
+        ? 'OpenAPI 타입 안전성을 더한 ky 래퍼'
         : 'OpenAPI-aware ky wrapper',
       url: `/${lang}/fetcher`,
       icon: <PackageIcon pkg="fetcher" />,

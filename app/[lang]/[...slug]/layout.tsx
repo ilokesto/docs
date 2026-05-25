@@ -1,4 +1,4 @@
-import { source } from '@/lib/source';
+import { getDocsPageTree } from '@/lib/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { baseOptions, getPackageTabs, packageMetadata } from '@/lib/layout.shared';
 import { ReactNode } from 'react';
@@ -27,7 +27,7 @@ export default async function Layout({
         }
       `}</style>
       <DocsLayout
-        tree={source.getPageTree(resolvedParams.lang)}
+        tree={getDocsPageTree(resolvedParams.lang)}
         tabs={getPackageTabs(resolvedParams.lang)}
         {...baseOptions()}
       >

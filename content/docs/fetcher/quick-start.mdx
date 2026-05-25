@@ -7,6 +7,14 @@ description: "Create a typed fetcher, call OpenAPI paths, and keep ky options av
 
 Start with an OpenAPI `paths` type. Most projects generate it with tools such as `openapi-typescript`, but any compatible TypeScript type works.
 
+## 1. Install
+
+Install `fetcher` together with its peer dependency `ky`.
+
+```package-install
+@ilokesto/fetcher ky
+```
+
 ```ts lineNumbers
 import { createFetcher } from '@ilokesto/fetcher/openapi';
 import type { paths } from './__generated__/openapi';

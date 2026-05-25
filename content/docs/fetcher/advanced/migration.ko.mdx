@@ -1,11 +1,11 @@
 ---
-title: "Migration"
-description: "Plain ky 또는 예전 prototype request shape에서 현재 contract로 옮깁니다."
+title: "마이그레이션"
+description: "기본 ky 사용 방식이나 예전 요청 형태에서 현재 규칙으로 옮깁니다."
 ---
 
 # Migration
 
-Fetcher v1은 ky replacement가 아니라 ky wrapper입니다. Migration은 먼저 ky defaults를 보존하고, 필요한 곳에 OpenAPI typing을 추가하는 방식이 좋습니다.
+Fetcher v1은 ky를 대체하지 않고 감싸는 래퍼입니다. 마이그레이션은 먼저 ky 기본값을 보존하고, 필요한 곳에 OpenAPI 타입 안전성을 추가하는 방식이 좋습니다.
 
 ## Plain ky에서 이동하기
 
@@ -23,7 +23,7 @@ const api = createFetcher<paths>({ prefixUrl: '/api' });
 
 ## Flat shortcut alias에서 이동하기
 
-Grouped request shape를 선호하세요.
+그룹 요청 형태를 우선 사용하세요.
 
 ```ts
 api.get('/users/{id}', {

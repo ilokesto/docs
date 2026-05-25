@@ -52,9 +52,9 @@ export const packageMetadata: Record<string, { colorClass: string; cssVarDark: s
     fgVarDark: 'hsl(0, 0%, 9%)',
   },
   fetcher: {
-    colorClass: 'bg-sky-500',
-    cssVarLight: 'var(--color-sky-600)',
-    cssVarDark: 'var(--color-sky-400)',
+    colorClass: 'bg-pink-500',
+    cssVarLight: 'var(--color-pink-600)',
+    cssVarDark: 'var(--color-pink-400)',
     fgVarLight: 'hsl(0, 0%, 98%)',
     fgVarDark: 'hsl(0, 0%, 9%)',
   },

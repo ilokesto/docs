@@ -100,6 +100,15 @@ export function getPackageTabs(lang: string): LayoutTab[] {
       icon: <PackageIcon pkg="state" />,
     },
     {
+      title: 'Form',
+      description: isKorean
+        ? '타입 안전 form primitive 준비 중'
+        : 'Type-safe form primitives coming soon',
+      url: '#',
+      icon: <PackageIcon pkg="form" />,
+      props: disabledProps,
+    },
+    {
       title: 'Overlay',
       description: isKorean
         ? 'Overlay primitive 준비 중'
@@ -127,22 +136,12 @@ export function getPackageTabs(lang: string): LayoutTab[] {
       props: disabledProps,
     },
     {
-      title: 'Form',
-      description: isKorean
-        ? '타입 안전 form primitive 준비 중'
-        : 'Type-safe form primitives coming soon',
-      url: '#',
-      icon: <PackageIcon pkg="form" />,
-      props: disabledProps,
-    },
-    {
       title: 'Utilinent',
       description: isKorean
-        ? 'Rendering utility 문서 준비 중'
-        : 'Rendering utility docs coming soon',
-      url: '#',
+        ? 'React rendering utility'
+        : 'React rendering utilities',
+      url: `/${lang}/utilinent`,
       icon: <PackageIcon pkg="utilinent" />,
-      props: disabledProps,
     },
   ];
 }

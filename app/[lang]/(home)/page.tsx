@@ -23,6 +23,15 @@ const packageCards = [
     },
   },
   {
+    pkg: 'form',
+    title: '@ilokesto/form',
+    comingSoon: true,
+    descriptions: {
+      en: 'Type-safe form primitives for the next package in the family.',
+      ko: '다음 패키지로 준비 중인 타입 안전 form primitive.',
+    },
+  },
+  {
     pkg: 'overlay',
     title: '@ilokesto/overlay',
     comingSoon: true,
@@ -52,19 +61,9 @@ const packageCards = [
   {
     pkg: 'utilinent',
     title: '@ilokesto/utilinent',
-    comingSoon: true,
     descriptions: {
-      en: 'Rendering utility docs are being prepared for a later release.',
-      ko: 'Rendering utility 문서는 이후 공개를 준비 중입니다.',
-    },
-  },
-  {
-    pkg: 'form',
-    title: '@ilokesto/form',
-    comingSoon: true,
-    descriptions: {
-      en: 'Type-safe form primitives for the next package in the family.',
-      ko: '다음 패키지로 준비 중인 타입 안전 form primitive.',
+      en: 'React rendering utilities for conditionals, lists, slots, and lazy UI.',
+      ko: '조건부, list, slot, lazy UI를 위한 React rendering utility.',
     },
   },
 ] as const;

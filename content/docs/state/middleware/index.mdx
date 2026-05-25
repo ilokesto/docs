@@ -44,11 +44,11 @@ const store = pipe(
 
 | Middleware | Use it for | Key caveat |
 |---|---|---|
-| [`logger`](/en/state/reference/middleware/logger) | Development-time state update logs | Disabled in production; diff is debug output. |
-| [`validate`](/en/state/reference/middleware/validate) | Synchronous Standard Schema validation | Async schema results are rejected. |
-| [`debounce`](/en/state/reference/middleware/debounce) | Delaying and coalescing rapid updates | Reads before the timer fires still see previous state. |
-| [`devtools`](/en/state/reference/middleware/devtools) | Redux DevTools inspection | Browser extension dependent; disabled in production. |
-| [`persist`](/en/state/reference/middleware/persist) | Browser storage persistence | Migration support differs by storage type. |
+| [`logger`](/en/state/middleware/logger) | Development-time state update logs | Disabled in production; diff is debug output. |
+| [`validate`](/en/state/middleware/validate) | Synchronous Standard Schema validation | Async schema results are rejected. |
+| [`debounce`](/en/state/middleware/debounce) | Delaying and coalescing rapid updates | Reads before the timer fires still see previous state. |
+| [`devtools`](/en/state/middleware/devtools) | Redux DevTools inspection | Browser extension dependent; disabled in production. |
+| [`persist`](/en/state/middleware/persist) | Browser storage persistence | Migration support differs by storage type. |
 
 ## Ordering advice
 

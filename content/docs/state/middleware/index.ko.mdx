@@ -44,11 +44,11 @@ const store = pipe(
 
 | Middleware | 쓰는 상황 | 핵심 주의점 |
 |---|---|---|
-| [`logger`](/ko/state/reference/middleware/logger) | 개발 중 state update 로그 | production에서는 비활성화되며 diff는 debug output입니다. |
-| [`validate`](/ko/state/reference/middleware/validate) | synchronous Standard Schema validation | async schema 결과는 거부됩니다. |
-| [`debounce`](/ko/state/reference/middleware/debounce) | 빠른 update 지연 및 병합 | timer 전 read는 이전 state를 볼 수 있습니다. |
-| [`devtools`](/ko/state/reference/middleware/devtools) | Redux DevTools निरीpection | browser extension에 의존하며 production에서는 비활성화됩니다. |
-| [`persist`](/ko/state/reference/middleware/persist) | browser storage persistence | storage type마다 migration 지원이 다릅니다. |
+| [`logger`](/ko/state/middleware/logger) | 개발 중 state update 로그 | production에서는 비활성화되며 diff는 debug output입니다. |
+| [`validate`](/ko/state/middleware/validate) | synchronous Standard Schema validation | async schema 결과는 거부됩니다. |
+| [`debounce`](/ko/state/middleware/debounce) | 빠른 update 지연 및 병합 | timer 전 read는 이전 state를 볼 수 있습니다. |
+| [`devtools`](/ko/state/middleware/devtools) | Redux DevTools निरीpection | browser extension에 의존하며 production에서는 비활성화됩니다. |
+| [`persist`](/ko/state/middleware/persist) | browser storage persistence | storage type마다 migration 지원이 다릅니다. |
 
 ## 순서 잡는 법
 

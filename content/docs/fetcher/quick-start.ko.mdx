@@ -1,0 +1,82 @@
+---
+title: "빠른 시작"
+description: "typed fetcher를 만들고 OpenAPI path를 호출하면서 ky options를 유지합니다."
+---
+
+# 빠른 시작
+
+먼저 OpenAPI `paths` type을 준비합니다. 보통 `openapi-typescript` 같은 도구로 생성하지만, 호환되는 TypeScript type이면 직접 작성한 type도 사용할 수 있습니다.
+
+```ts lineNumbers
+import { createFetcher } from '@ilokesto/fetcher/openapi';
+import type { paths } from './__generated__/openapi';
+
+const api = createFetcher<paths>({
+  prefixUrl: 'https://api.example.com',
+  retry: { limit: 1 },
+});
+```
+
+## Typed shortcut 호출하기
+
+Shortcut method는 grouped request contract를 사용합니다.
+
+```ts lineNumbers
+const profile = await api
+  .get('/users/{id}', {
+    params: {
+      path: { id: '42' },
+      query: { include: 'profile' },
+    },
+  })
+  .json();
+```
+
+Path template은 `ky`에 도달하기 전에 interpolation됩니다. Query parameter는 `searchParams`로 변환되고, `.json()` 결과 type은 OpenAPI operation의 preferred JSON response에서 추론됩니다.
+
+## Typed body 보내기
+
+```ts lineNumbers
+const post = await api
+  .post('/posts', {
+    json: {
+      title: 'Typed facade',
+    },
+  })
+  .json();
+```
+
+`json`, `formData`, `formUrlEncoded`는 서로 배타적인 shortcut body shape입니다. 세 번째 인자는 `timeout`, `signal`, `hooks`, `context`, explicit override body 같은 일반 `ky` option에 사용하세요.
+
+## ky composition 유지하기
+
+```ts lineNumbers
+const authed = api.extend({
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
+await authed.get('/users/{id}', {
+  params: { path: { id: '42' } },
+});
+```
+
+`create`, `extend`, hooks, retry, timeout, custom `fetch`, `HTTPError` 동작은 ky-compatible하게 유지됩니다. `fetcher`는 OpenAPI-shaped input을 준비한 뒤 underlying `KyInstance`에 request를 위임합니다.
+
+## Exception을 원하지 않으면 safe 사용하기
+
+```ts lineNumbers
+const result = await api.safe.get('/users/{id}', {
+  params: { path: { id: '42' } },
+});
+
+if (result.ok) {
+  result.data;
+} else {
+  result.error;
+  result.response;
+}
+```
+
+기본 surface는 여전히 `ky`처럼 throw합니다. `safe`는 같은 request를 discriminated result로 변환합니다.

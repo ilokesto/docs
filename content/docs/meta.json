@@ -2,6 +2,7 @@
   "pages": [
     "store",
     "state",
-    "utilinent"
+    "utilinent",
+    "fetcher"
   ]
 }

@@ -33,10 +33,9 @@ const packageCards = [
   {
     pkg: 'overlay',
     title: '@ilokesto/overlay',
-    comingSoon: true,
     descriptions: {
-      en: 'Overlay primitives are being prepared for a later docs release.',
-      ko: 'Overlay primitive 문서는 이후 공개를 준비 중입니다.',
+      en: 'Provider-scoped React overlay runtime for modals, toasts, and custom layers.',
+      ko: '모달, 토스트, 커스텀 레이어를 위한 provider 단위 React 오버레이 런타임.',
     },
   },
   {

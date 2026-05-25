@@ -3,6 +3,7 @@
     "store",
     "state",
     "form",
+    "overlay",
     "utilinent",
     "fetcher"
   ]

@@ -117,11 +117,10 @@ export function getPackageTabs(lang: string): LayoutTab[] {
     {
       title: 'Overlay',
       description: isKorean
-        ? 'Overlay primitive 준비 중'
-        : 'Overlay primitives coming soon',
-      url: '#',
+        ? 'Provider 단위 React 오버레이 런타임'
+        : 'Provider-scoped React overlay runtime',
+      url: `/${lang}/overlay`,
       icon: <PackageIcon pkg="overlay" />,
-      props: disabledProps,
     },
     {
       title: 'Modal',

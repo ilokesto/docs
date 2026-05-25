@@ -79,23 +79,16 @@ const packageCards = [
 type PackageCard = (typeof packageCards)[number];
 
 const homeCopy: Record<Locale, {
-  subtitleEtymology: string;
   subtitle: string;
-  panel: string;
   comingSoon: string;
 }> = {
   en: {
-    subtitleEtymology: "[iloˈkɛsto], which means \"toolbox\" in Esperanto",
-    subtitle: 'A small, explicit collection of packages for predictable front-end development.',
-    panel:
-      'Pick only the layer you need: state, typed fetching, rendering utilities, and UI primitives that compose without hiding the runtime. More packages are on the way.',
+    subtitle: "[iloˈkɛsto], which means \"toolbox\" in Esperanto\nA small, explicit collection of packages for predictable front-end development",
     comingSoon: 'Coming soon',
   },
   ko: {
-    subtitleEtymology: "[iloˈkɛsto], 에스페란토로 '도구상자'를 의미",
-    subtitle: '예측 가능한 프론트엔드 개발을 위한 작고 명시적인 패키지 모음.',
-    panel:
-      '필요한 레이어만 골라 쓰세요. 상태 관리, 타입 안전한 데이터 요청, 렌더링 유틸리티, UI 기본 요소를 런타임을 숨기지 않는 방식으로 조합합니다. 더 많은 패키지는 준비 중입니다.',
+    subtitle: "[iloˈkɛsto], 에스페란토로 '도구상자'를 의미\n예측 가능한 프론트엔드 개발을 위한 작고 명시적인 패키지 모음",
+
     comingSoon: '준비 중',
   },
 };
@@ -170,9 +163,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               </h1>
             </div>
 
-              <p className="max-w-2xl text-lg leading-8 text-fd-muted-foreground sm:text-xl">
-                  {copy.subtitleEtymology}
-                  <br />
+              <p className="max-w-2xl text-lg leading-8 text-fd-muted-foreground sm:text-xl whitespace-pre-wrap">
+               
                   {copy.subtitle}
                 </p>
           </div>

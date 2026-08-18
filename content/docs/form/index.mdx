@@ -21,7 +21,7 @@ Install the framework peer you use as well: `react`, `vue`, `solid-js`, or `svel
 import { CreateForm } from '@ilokesto/form';
 
 const form = new CreateForm({
-  initialValues: {
+  defaultValues: {
     email: '',
     profile: { name: 'Ada' },
     tags: ['docs'],
@@ -48,3 +48,5 @@ The most important rule is path semantics. A string is a literal field name, so 
 ## Where to go next
 
 Read [Quick start](/en/form/quick-start) for a working React example, [Core concepts](/en/form/core-concepts) for the mental model, [CreateForm](/en/form/reference/create-form) for the core API, and the integration page for your framework when you are ready to bind DOM inputs.
+
+> This documentation lives in the `@ilokesto/form` repository and is synced to the ilokesto docs site.

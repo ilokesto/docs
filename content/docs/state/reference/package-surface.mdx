@@ -12,13 +12,14 @@ The public package surface is defined by `state/package.json` exports.
 | Import | Purpose |
 |---|---|
 | `@ilokesto/state` | Package identity and current empty runtime root. The source is `export {}`. |
-| `@ilokesto/state/react` | React `create()` adapter. |
+| `@ilokesto/state/react` | React `create()` adapter and the `UseState` and `UseReducer` types. |
 | `@ilokesto/state/vue` | Vue `create()` adapter. |
 | `@ilokesto/state/svelte` | Svelte `create()` adapter. |
 | `@ilokesto/state/solid` | Solid `create()` adapter. |
 | `@ilokesto/state/angular` | Angular `create()` adapter. |
 | `@ilokesto/state/middleware` | `logger`, `validate`, `debounce`, `devtools`, `persist`. |
-| `@ilokesto/state/utils` | `pipe`, `adaptor`. |
+| `@ilokesto/state/utils` | `pipe`. |
+| `@ilokesto/state/adaptor` | `adaptor`; requires the optional `immer` peer. |
 
 ## Root entrypoint caveat
 
@@ -35,4 +36,4 @@ import { create } from '@ilokesto/state';
 
 ## Peer dependencies
 
-Framework peers are optional: install only the adapter framework you use. `immer` is optional and only needed when you use `adaptor` from `@ilokesto/state/utils`.
+Framework peers are optional: install only the adapter framework you use. `immer` is optional and only needed when you use `adaptor` from `@ilokesto/state/adaptor`.

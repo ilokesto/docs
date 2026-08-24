@@ -10,21 +10,46 @@ description: "Delay rapid updates and apply the latest accumulated state."
 ## Signature
 
 ```ts lineNumbers
-debounce<T>(initialState: T | Store<T>, wait: number | undefined): Store<T>
-debounce(wait?: number): <T>(initialState: T | Store<T>) => Store<T>
+debounce(wait?: number): PipeAnyMiddleware
 ```
 
 ## Example
 
 ```ts lineNumbers
 import { debounce } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
 
-const store = debounce({ query: '' }, 250);
+const store = pipe
+  .use(debounce(250))
+  .create({ query: '' });
 
 store.setState({ query: 'i' });
 store.setState({ query: 'il' });
 store.setState({ query: 'ilo' });
 ```
+
+## Using with persist
+
+When both middleware are used, declare `debounce` before `persist` so persistence observes the debounced commit:
+
+```ts lineNumbers
+import { debounce, persist } from '@ilokesto/state/middleware';
+import { pipe } from '@ilokesto/state/utils';
+
+type SearchState = { readonly query: string };
+
+const decodeSearch = (value: unknown): SearchState | null => {
+  if (typeof value !== 'object' || value === null || !('query' in value)) return null;
+  return typeof value.query === 'string' ? { query: value.query } : null;
+};
+
+const store = pipe
+  .use(debounce(250))
+  .use(persist({ local: 'search', decode: decodeSearch }))
+  .create<SearchState>({ query: '' });
+```
+
+`pipe.use(persist(...)).use(debounce(...))` is rejected because it would skip persistence for deferred commits.
 
 ## Function updates
 

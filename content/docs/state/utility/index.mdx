@@ -5,9 +5,11 @@ description: "Compose middleware with pipe and write Immer-style object updates 
 
 # Utility
 
-`@ilokesto/state/utils` exports small helpers for the parts of state management that are not tied to a framework adapter:
+`@ilokesto/state/utils` exports the pipe helpers that are not tied to a framework adapter. The separate `@ilokesto/state/adaptor` subpath exports the Immer-backed update helper:
 
-- [`pipe`](/en/state/utility/pipe) creates an `@ilokesto/store` instance and applies middleware in order.
+- [`pipe`](/en/state/utility/pipe) creates an `@ilokesto/store` instance and applies registered middleware in order.
+- [`definePipeableMiddleware`](/en/state/utility/pipe#custom-middleware) registers custom middleware metadata for `pipe.use(...)`.
+- [`PipeConfigurationError`](/en/state/utility/pipe#configuration-errors) reports invalid runtime pipe configurations.
 - [`adaptor`](/en/state/utility/adaptor) wraps Immer `produce` so object updates can be written with draft mutation syntax.
 
 Use Utility pages when you are building the store before connecting it to React, Vue, Svelte, Solid, or Angular.
@@ -21,11 +23,19 @@ import { create } from '@ilokesto/state/react';
 import { logger, persist } from '@ilokesto/state/middleware';
 import { pipe } from '@ilokesto/state/utils';
 
-const preferencesStore = pipe(
-  { theme: 'system' as 'system' | 'light' | 'dark' },
-  persist({ local: 'preferences' }),
-  logger({ collapsed: true }),
-);
+type PreferencesState = { theme: 'system' | 'light' | 'dark' };
+
+const decodePreferences = (value: unknown): PreferencesState | null => {
+  if (typeof value !== 'object' || value === null || !('theme' in value)) return null;
+  return value.theme === 'system' || value.theme === 'light' || value.theme === 'dark'
+    ? { theme: value.theme }
+    : null;
+};
+
+const preferencesStore = pipe
+  .use(persist({ local: 'preferences', decode: decodePreferences }))
+  .use(logger({ collapsed: true }))
+  .create<PreferencesState>({ theme: 'system' });
 
 export const usePreferences = create(preferencesStore);
 ```
@@ -46,7 +56,8 @@ pnpm add immer
 
 | Utility | Use it when | Avoid it when |
 | --- | --- | --- |
-| [`pipe`](/en/state/utility/pipe) | You want to create a store and apply middleware left-to-right. | You already own a `Store<T>` and want to mutate that exact instance manually. |
+| [`pipe`](/en/state/utility/pipe) | You want to create a store and apply registered middleware left-to-right. | You already own a `Store<T>` and want to mutate that exact instance manually. |
+| [`definePipeableMiddleware`](/en/state/utility/pipe#custom-middleware) | You are exposing custom middleware to a pipe chain. | The middleware is only used outside `pipe`. |
 | [`adaptor`](/en/state/utility/adaptor) | Object updates are easier to express as draft mutations. | State is primitive, or you do not want to install `immer`. |
 
 ## Typical composition flow
@@ -59,12 +70,12 @@ pnpm add immer
 ```tsx lineNumbers
 import { create } from '@ilokesto/state/react';
 import { validate } from '@ilokesto/state/middleware';
-import { adaptor, pipe } from '@ilokesto/state/utils';
+import { adaptor } from '@ilokesto/state/adaptor';
+import { pipe } from '@ilokesto/state/utils';
 
-const profileStore = pipe(
-  { name: '', tags: [] as string[] },
-  validate(profileSchema),
-);
+const profileStore = pipe
+  .use(validate(profileSchema))
+  .create({ name: '', tags: [] as string[] });
 
 const useProfile = create(profileStore);
 

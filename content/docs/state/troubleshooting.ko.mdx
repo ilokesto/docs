@@ -7,7 +7,7 @@ description: "@ilokesto/state에서 자주 만나는 문제와 해결법입니�
 
 ## root import에서 `create`가 undefined입니다
 
-subpath에서 import하세요. root `@ilokesto/state` entrypoint는 현재 empty runtime root입니다.
+프레임워크 subpath에서 `bind` 또는 편의 함수 `create`를 import하세요. 루트는 프레임워크 hook 대신 `createStore`와 `createReducer`를 내보냅니다.
 
 ```ts lineNumbers
 import { create } from '@ilokesto/state/react';
@@ -39,4 +39,4 @@ validate middleware는 async Standard Schema result를 지원하지 않습니다
 
 ## `adaptor`를 import하거나 사용할 수 없습니다
 
-optional peer dependency인 `immer`를 설치하고 object state에서 `adaptor`를 사용하세요.
+optional peer dependency인 `immer`를 설치하고, `@ilokesto/state/adaptor`에서 `adaptor`를 import한 뒤 object state에서 사용하세요.
